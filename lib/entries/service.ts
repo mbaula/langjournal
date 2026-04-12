@@ -58,3 +58,27 @@ export async function getOrCreateJournalEntryForDate(
 
   return { entry, created: true as const };
 }
+
+export async function updateJournalEntryTitle(
+  entryId: string,
+  userId: string,
+  rawTitle: string,
+) {
+  const normalized = rawTitle.trim() ? rawTitle.trim() : null;
+
+  const entry = await prisma.journalEntry.findFirst({
+    where: { id: entryId, userId },
+    select: { id: true },
+  });
+
+  if (!entry) {
+    return { ok: false as const, error: "not_found" as const };
+  }
+
+  await prisma.journalEntry.update({
+    where: { id: entryId },
+    data: { title: normalized },
+  });
+
+  return { ok: true as const };
+}

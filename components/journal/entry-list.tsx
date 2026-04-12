@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { cn } from "@/lib/utils";
+
 type EntryRow = {
   id: string;
   title: string | null;
@@ -19,29 +21,39 @@ function formatEntryDay(d: Date) {
 export function EntryList({ entries }: { entries: EntryRow[] }) {
   if (entries.length === 0) {
     return (
-      <p className="text-center text-sm text-muted-foreground">
-        No entries yet. Start today&apos;s entry below.
+      <p className="max-w-md text-center text-sm text-muted-foreground">
+        No entries yet.
       </p>
     );
   }
 
   return (
-    <ul className="mx-auto w-full max-w-xl space-y-2">
-      {entries.map((entry) => (
-        <li key={entry.id}>
-          <Link
-            href={`/app/entry/${entry.id}`}
-            className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-3 text-sm shadow-sm transition-colors hover:bg-muted/50"
-          >
-            <span className="font-medium">
-              {entry.title?.trim() || formatEntryDay(entry.entryDate)}
-            </span>
-            <span className="text-muted-foreground">
-              {formatEntryDay(entry.entryDate)}
-            </span>
-          </Link>
-        </li>
-      ))}
+    <ul className="mx-auto flex w-full max-w-xl flex-col gap-2.5">
+      {entries.map((entry) => {
+        const title = entry.title?.trim();
+        const dateLabel = formatEntryDay(entry.entryDate);
+
+        return (
+          <li key={entry.id}>
+            <Link
+              href={`/app/entry/${entry.id}`}
+              className={cn(
+                "block min-w-0 truncate rounded-2xl border border-border/70 bg-background/90 px-4 py-3.5 text-sm shadow-sm backdrop-blur-sm transition-colors",
+                "hover:border-border hover:bg-muted/30",
+              )}
+            >
+              {title ? (
+                <>
+                  <span className="font-medium text-foreground">{title}</span>
+                  <span className="text-muted-foreground"> : {dateLabel}</span>
+                </>
+              ) : (
+                <span className="text-muted-foreground">{dateLabel}</span>
+              )}
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }

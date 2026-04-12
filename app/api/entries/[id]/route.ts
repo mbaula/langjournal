@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
-import { getJournalEntryForUser } from "@/lib/entries/service";
+import {
+  getJournalEntryForUser,
+  updateJournalEntryTitle,
+} from "@/lib/entries/service";
+import { patchJournalEntryBodySchema } from "@/lib/validations/entry";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -18,5 +22,42 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  return NextResponse.json({ entry });
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const user = await getAuthenticatedAppUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const parsed = patchJournalEntryBodySchema.safeParse(json);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", issues: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const result = await updateJournalEntryTitle(
+    id,
+    user.id,
+    parsed.data.title,
+  );
+
+  if (!result.ok) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const entry = await getJournalEntryForUser(id, user.id);
   return NextResponse.json({ entry });
 }

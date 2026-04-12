@@ -39,14 +39,15 @@ export function CreateEntryButton() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex w-full flex-col gap-2">
       <Button
         type="button"
         size="lg"
+        className="w-full"
         disabled={pending}
         onClick={() => void createTodayEntry()}
       >
-        {pending ? "Opening…" : "Today’s entry"}
+        {pending ? "Opening…" : "New entry for today"}
       </Button>
       {error ? (
         <p className="text-center text-sm text-destructive" role="alert">

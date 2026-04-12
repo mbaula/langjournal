@@ -8,15 +8,17 @@ export default async function JournalPage() {
   const entries = await listJournalEntries(user.id);
 
   return (
-    <div className="flex flex-col items-center gap-8 pt-6">
+    <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-8 pt-6">
       <div className="space-y-1 text-center">
-        <h1 className="text-xl font-medium text-muted-foreground">Journal</h1>
-        <p className="text-sm text-muted-foreground">
-          Your entries by day. One entry per calendar day (UTC).
-        </p>
+        <h1 className="text-xl font-medium tracking-tight text-muted-foreground">
+          Journal
+        </h1>
+        <p className="text-sm text-muted-foreground">One note per calendar day (UTC).</p>
       </div>
-      <CreateEntryButton />
-      <EntryList entries={entries} />
+      <div className="flex w-full flex-col gap-4">
+        <EntryList entries={entries} />
+        <CreateEntryButton />
+      </div>
     </div>
   );
 }
