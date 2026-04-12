@@ -27,7 +27,7 @@ export function getSupabasePublicEnvOrThrow(): SupabasePublicEnv {
   const env = getSupabasePublicEnv();
   if (!env) {
     throw new Error(
-      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL (https://… .supabase.co) and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.",
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL (full https://… URL) and NEXT_PUBLIC_SUPABASE_ANON_KEY in `.env`, then restart `next dev` (NEXT_PUBLIC_* values are read when the dev server starts).",
     );
   }
   return env;

@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Mirrors the signed-in Supabase user (`auth.users.id`).
+model User {
+  id        String   @id @db.Uuid
+  email     String
+  createdAt DateTime @default(now())
+
+  languageProfile LanguageProfile?
+  entries         JournalEntry[]
+}
+
+model LanguageProfile {
+  id              String @id @default(uuid()) @db.Uuid
+  userId          String @unique @db.Uuid
+  nativeLanguage  String
+  targetLanguage  String
+  uiLocale        String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JournalEntry {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  title     String?
+  entryDate DateTime  @db.Date
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blocks EntryBlock[]
+
+  @@unique([userId, entryDate])
+  @@index([userId])
+}
+
+enum BlockType {
+  text
+  translation
+}
+
+model EntryBlock {
+  id             String    @id @default(uuid()) @db.Uuid
+  entryId        String    @db.Uuid
+  parentBlockId  String?   @db.Uuid
+  type           BlockType
+  sourceText     String    @db.Text
+  translatedText String?   @db.Text
+  sourceLanguage String
+  targetLanguage String?
+  command        String?
+  position       Int
+  createdAt      DateTime  @default(now())
+
+  entry    JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  parent   EntryBlock?  @relation("BlockHierarchy", fields: [parentBlockId], references: [id], onDelete: SetNull)
+  children EntryBlock[] @relation("BlockHierarchy")
+
+  @@index([entryId])
+}
