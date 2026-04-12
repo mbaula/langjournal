@@ -15,11 +15,8 @@ export default function MarketingHomePage() {
           translated text in one timeline.
         </p>
       </div>
-      <Link
-        href="/app/journal"
-        className={cn(buttonVariants({ size: "lg" }))}
-      >
-        Open journal
+      <Link href="/login" className={cn(buttonVariants({ size: "lg" }))}>
+        Sign in to journal
       </Link>
     </div>
   );

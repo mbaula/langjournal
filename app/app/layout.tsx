@@ -28,6 +28,12 @@ export default function AppLayout({
             >
               Settings
             </Link>
+            <Link
+              href="/auth/signout"
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+            >
+              Sign out
+            </Link>
           </nav>
         </div>
       </header>
