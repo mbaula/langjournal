@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { safeNextPath } from "@/lib/auth/redirect";
+import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -15,10 +16,17 @@ export async function GET(request: Request) {
     );
   }
 
+  const env = getSupabasePublicEnv();
+  if (!env) {
+    return NextResponse.redirect(
+      new URL("/login?error=supabase_not_configured", url.origin).href,
+    );
+  }
+
   const cookieStore = await cookies();
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.url,
+    env.anonKey,
     {
       cookies: {
         getAll() {

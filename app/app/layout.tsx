@@ -9,9 +9,9 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col bg-secondary/50">
       <header className="border-border border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex h-12 max-w-3xl items-center justify-between gap-4 px-4">
           <Link href="/app/journal" className="text-sm font-semibold">
             Language Journal
           </Link>
