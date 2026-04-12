@@ -23,3 +23,9 @@ export function parseEntryDate(input?: string | null): Date {
   const [y, m, d] = input.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d));
 }
+
+export const patchJournalEntryBodySchema = z
+  .object({
+    title: z.string().max(500),
+  })
+  .strict();
