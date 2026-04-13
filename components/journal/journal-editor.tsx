@@ -4,11 +4,13 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 
 import { journalTextareaClassName } from "@/components/journal/field-styles";
+import { countWords, wordCountLabel } from "@/lib/text/word-count";
 
 const AUTOSAVE_MS = 900;
 
@@ -293,6 +295,7 @@ export function JournalEditor({
 
   /* ---- render ---- */
   const lines = body.split("\n");
+  const wordCount = useMemo(() => countWords(body), [body]);
 
   if (editing) {
     return (
@@ -316,16 +319,21 @@ export function JournalEditor({
               translating ? "opacity-60" : "",
             )}
           />
-          <p className="px-4 pb-2 text-xs text-muted-foreground">
-            <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
-              Enter
-            </kbd>{" "}
-            to translate{" "}
-            <code className="rounded bg-muted px-1">//</code> text ·{" "}
-            <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
-              Ctrl+Enter
-            </kbd>{" "}
-            new line
+          <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-2 text-xs text-muted-foreground">
+            <span>
+              <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
+                Enter
+              </kbd>{" "}
+              to translate{" "}
+              <code className="rounded bg-muted px-1">{"//"}</code> text ·{" "}
+              <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
+                Ctrl+Enter
+              </kbd>{" "}
+              new line
+            </span>
+            <span className="shrink-0 tabular-nums">
+              {wordCountLabel(wordCount)}
+            </span>
           </p>
         </div>
         {translating && (
@@ -390,8 +398,11 @@ export function JournalEditor({
             })
           )}
         </div>
-        <p className="px-4 pb-2 text-xs text-muted-foreground">
-          Click to edit. Hover highlighted words to see the original.
+        <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-2 text-xs text-muted-foreground">
+          <span>Click to edit. Hover highlighted words to see the original.</span>
+          <span className="shrink-0 tabular-nums">
+            {wordCountLabel(wordCount)}
+          </span>
         </p>
       </div>
       {error && (
