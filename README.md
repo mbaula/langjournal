@@ -10,6 +10,12 @@ A small web app for keeping a daily journal in a language you’re learning. You
 - **Prisma** for talking to Postgres (`prisma/schema.prisma`)
 - **Google Cloud Translation** for the actual translate calls (see env vars below)
 
+## Languages
+
+Native and learning languages are per user (`LanguageProfile` in Prisma). Change them from **Settings** (`/app/settings`) or from the **language bar** on the journal list and entry pages: click the codes, pick native + learning, Save. The gear still opens Settings for the full form.
+
+`GET /api/languages` returns everything Cloud Translation exposes for your credentials (same API key or service account as translate). If that call cannot run, the UI falls back to a long static list in `lib/languages/fallback-languages.ts` so the app still works offline or before Google is wired up.
+
 ## Local setup
 
 1. **Node** — use a current LTS (e.g. 20+). Install deps:
@@ -58,7 +64,8 @@ A small web app for keeping a daily journal in a language you’re learning. You
 - `app/` — routes, layouts, API route handlers under `app/api/`
 - `components/journal/` — entry editor, title field, language bar
 - `lib/entries/` — entry CRUD-ish helpers, `translate.ts` for translation records
-- `lib/translate/google.ts` — calls Google Translation (API key or client library)
+- `lib/translate/google.ts` — translate text + list supported languages
+- `lib/languages/fallback-languages.ts` — dropdown fallback when Google’s list API is unavailable
 - `lib/auth/` — session + API user helpers
 - `lib/db/` — Prisma client, language pair lookup
 
@@ -69,7 +76,7 @@ A small web app for keeping a daily journal in a language you’re learning. You
 - **Ctrl+Enter** (Cmd+Enter on Mac) — insert a newline.
 - Click outside the textarea to leave edit mode: body autosaves, translated spans show with a muted highlight; hover shows the source phrase. Click back in to edit plain text again.
 
-API: `POST /api/entries/[id]/translate` with `{ "text": "..." }` adds or reuses a translation record; `DELETE` with `{ "translationId": "..." }` drops the highlight metadata (the word stays in the body).
+API: `POST /api/entries/[id]/translate` with `{ "text": "..." }` adds or reuses a translation record; `DELETE` with `{ "translationId": "..." }` drops the highlight metadata (the word stays in the body). `PATCH /api/settings/language-profile` with `{ "nativeLanguage": "en", "targetLanguage": "ja" }` updates the pair used for those calls.
 
 ## Deploying
 
