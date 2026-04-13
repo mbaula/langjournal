@@ -1,10 +1,20 @@
-export default function SettingsPage() {
+import { notFound } from "next/navigation";
+
+import { LanguageProfileForm } from "@/components/settings/language-profile-form";
+import { requireUser } from "@/lib/auth/session";
+import { getLanguageProfile } from "@/lib/db/language";
+
+export default async function SettingsPage() {
+  const user = await requireUser();
+  const profile = await getLanguageProfile(user.id);
+  if (!profile) {
+    notFound();
+  }
+
   return (
-    <div className="space-y-2">
-      <h1 className="text-2xl font-semibold">Settings</h1>
-      <p className="text-sm text-muted-foreground">
-        Source and target language preferences will live here.
-      </p>
-    </div>
+    <LanguageProfileForm
+      initialNative={profile.nativeLanguage}
+      initialTarget={profile.targetLanguage}
+    />
   );
 }

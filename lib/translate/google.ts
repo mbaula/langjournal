@@ -119,3 +119,65 @@ export async function translatePlainText(
   }
   return result;
 }
+
+export type TranslationLanguageOption = { code: string; name: string };
+
+function sortLanguageOptions(rows: TranslationLanguageOption[]) {
+  return [...rows].sort((a, b) => a.name.localeCompare(b.name, "en"));
+}
+
+type LanguagesRestResponse = {
+  data?: { languages?: { language?: string; name?: string }[] };
+  error?: { message?: string };
+};
+
+/**
+ * Languages Cloud Translation can translate to/from, with English labels.
+ * Uses the same credentials as {@link translatePlainText}: API key REST first,
+ * otherwise the Node client (ADC / service account).
+ */
+export async function listGoogleTranslationLanguages(): Promise<
+  TranslationLanguageOption[] | null
+> {
+  if (hasApiKey()) {
+    try {
+      const key = process.env.GOOGLE_TRANSLATE_API_KEY!.trim();
+      const url = new URL(
+        "https://translation.googleapis.com/language/translate/v2/languages",
+      );
+      url.searchParams.set("key", key);
+      url.searchParams.set("target", "en");
+      const res = await fetch(url.toString());
+      const json = (await res.json()) as LanguagesRestResponse;
+      if (!res.ok || json.error) return null;
+      const rows = json.data?.languages;
+      if (!Array.isArray(rows)) return null;
+      const mapped = rows
+        .map((r) =>
+          r.language && r.name
+            ? { code: r.language, name: r.name }
+            : null,
+        )
+        .filter((x): x is TranslationLanguageOption => x !== null);
+      return sortLanguageOptions(mapped);
+    } catch {
+      return null;
+    }
+  }
+
+  if (!isConfigured()) return null;
+
+  try {
+    const translate = getTranslateClient();
+    const [languages] = await translate.getLanguages("en");
+    if (!Array.isArray(languages)) return null;
+    return sortLanguageOptions(
+      languages.map((l) => ({
+        code: l.code,
+        name: l.name ?? l.code,
+      })),
+    );
+  } catch {
+    return null;
+  }
+}
