@@ -6,11 +6,12 @@ import { prisma } from "@/lib/db/prisma";
 import {
   type InlineTranslation,
   removeTranslation,
-  translateSlashLines,
+  translateSingleText,
 } from "@/lib/entries/translate";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+/** Translate a single text segment and persist the new translation record. */
 export async function POST(request: Request, context: RouteContext) {
   const user = await getAuthenticatedAppUser();
   if (!user) {
@@ -26,14 +27,14 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const bodyText =
-    typeof json === "object" && json !== null && "body" in json
-      ? (json as { body: unknown }).body
+  const text =
+    typeof json === "object" && json !== null && "text" in json
+      ? (json as { text: unknown }).text
       : undefined;
 
-  if (typeof bodyText !== "string") {
+  if (typeof text !== "string" || !text.trim()) {
     return NextResponse.json(
-      { error: "body (string) is required" },
+      { error: "text (non-empty string) is required" },
       { status: 400 },
     );
   }
@@ -53,26 +54,25 @@ export async function POST(request: Request, context: RouteContext) {
 
   const { source, target } = await getLanguagePair(user.id);
 
-  const result = await translateSlashLines(
-    bodyText,
-    existing,
-    source,
-    target,
-  );
+  const result = await translateSingleText(text, existing, source, target);
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  await prisma.journalEntry.update({
-    where: { id: entryId },
-    data: {
-      body: bodyText.replace(/\r\n/g, "\n"),
-      translations: JSON.parse(JSON.stringify(result.translations)),
-    },
-  });
+  if (result.isNew) {
+    await prisma.journalEntry.update({
+      where: { id: entryId },
+      data: {
+        translations: JSON.parse(
+          JSON.stringify(result.translations),
+        ) as object[],
+      },
+    });
+  }
 
   return NextResponse.json({
+    translation: result.translation,
     translations: result.translations,
   });
 }
@@ -122,7 +122,7 @@ export async function DELETE(request: Request, context: RouteContext) {
   await prisma.journalEntry.update({
     where: { id: entryId },
     data: {
-      translations: JSON.parse(JSON.stringify(updated)),
+      translations: JSON.parse(JSON.stringify(updated)) as object[],
     },
   });
 

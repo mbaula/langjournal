@@ -1,11 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { journalTextareaClassName } from "@/components/journal/field-styles";
 
 const AUTOSAVE_MS = 900;
-const DOUBLE_SLASH_RE = /^\/\/\s?/;
 
 export type InlineTranslation = {
   id: string;
@@ -18,6 +23,68 @@ type JournalEditorProps = {
   initialBody: string;
   initialTranslations: InlineTranslation[];
 };
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Find the **last** `//` on a line that is either at position 0 or preceded by
+ * whitespace (avoids matching URLs like https://).
+ * Only the last `//` is used so `//word1 blah //word2` translates just `word2`.
+ */
+function findSlashIndex(line: string): number {
+  let result = -1;
+  let from = 0;
+  while (true) {
+    const idx = line.indexOf("//", from);
+    if (idx === -1) return result;
+    if (idx === 0 || /\s/.test(line[idx - 1])) result = idx;
+    from = idx + 1;
+  }
+}
+
+/**
+ * Split a line into segments, marking which segments correspond to known
+ * translations so they can be highlighted.
+ */
+function segmentLine(
+  line: string,
+  translations: InlineTranslation[],
+): Array<{ text: string; translation?: InlineTranslation }> {
+  if (!translations.length || !line) return [{ text: line || "\u00A0" }];
+
+  const sorted = [...translations].sort(
+    (a, b) => b.translatedText.length - a.translatedText.length,
+  );
+
+  type Seg = { text: string; translation?: InlineTranslation };
+  let segments: Seg[] = [{ text: line }];
+
+  for (const t of sorted) {
+    const next: Seg[] = [];
+    for (const seg of segments) {
+      if (seg.translation) {
+        next.push(seg);
+        continue;
+      }
+      const parts = seg.text.split(t.translatedText);
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i]) next.push({ text: parts[i] });
+        if (i < parts.length - 1)
+          next.push({ text: t.translatedText, translation: t });
+      }
+    }
+    segments = next;
+  }
+
+  if (segments.length === 0) return [{ text: "\u00A0" }];
+  return segments;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
 
 export function JournalEditor({
   entryId,
@@ -36,17 +103,31 @@ export function JournalEditor({
   const translationsRef = useRef(translations);
   translationsRef.current = translations;
   const savedBodyRef = useRef(initialBody);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const translatingRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pendingCursorRef = useRef<number | null>(null);
 
+  /* sync when entry changes */
   useEffect(() => {
     setBody(initialBody);
     savedBodyRef.current = initialBody;
-  }, [entryId]);
+  }, [entryId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setTranslations(initialTranslations);
   }, [entryId, initialTranslations]);
 
-  // --- save ---
+  /* ---- cursor restore after programmatic body changes ---- */
+  useLayoutEffect(() => {
+    if (pendingCursorRef.current !== null && textareaRef.current) {
+      textareaRef.current.selectionStart = pendingCursorRef.current;
+      textareaRef.current.selectionEnd = pendingCursorRef.current;
+      pendingCursorRef.current = null;
+    }
+  }, [body]);
+
+  /* ---- save ---- */
   const saveBody = useCallback(
     async (text: string) => {
       if (text === savedBodyRef.current) return;
@@ -59,11 +140,9 @@ export function JournalEditor({
     },
     [entryId],
   );
-
   const saveBodyRef = useRef(saveBody);
   saveBodyRef.current = saveBody;
 
-  // autosave while editing
   useEffect(() => {
     if (!editing) return;
     const handle = window.setTimeout(() => {
@@ -72,60 +151,45 @@ export function JournalEditor({
     return () => window.clearTimeout(handle);
   }, [body, editing, saveBody]);
 
-  // flush on unmount
   useEffect(() => {
-    return () => {
-      void saveBodyRef.current(bodyRef.current);
-    };
+    return () => void saveBodyRef.current(bodyRef.current);
   }, []);
 
-  // --- check for untranslated // lines client-side ---
-  const hasNewSlashLines = useCallback(() => {
-    const existing = new Set(translationsRef.current.map((t) => t.sourceText));
-    for (const line of bodyRef.current.replace(/\r\n/g, "\n").split("\n")) {
-      if (!DOUBLE_SLASH_RE.test(line)) continue;
-      const raw = line.replace(DOUBLE_SLASH_RE, "").trim();
-      if (raw && !existing.has(raw)) return true;
-    }
-    return false;
-  }, []);
-
-  // --- translate + render ---
-  const submitAndRender = useCallback(async () => {
-    const text = bodyRef.current;
-
-    if (!hasNewSlashLines()) {
-      void saveBody(text);
-      setEditing(false);
-      return;
-    }
-
-    setTranslating(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/entries/${entryId}/translate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: text }),
-      });
-      const data = (await res.json()) as {
-        error?: string;
-        translations?: InlineTranslation[];
-      };
-      if (!res.ok) {
-        setError(data.error ?? "Translation failed");
-        return;
+  /* ---- translate a single segment ---- */
+  const translateText = useCallback(
+    async (text: string): Promise<InlineTranslation | null> => {
+      translatingRef.current = true;
+      setTranslating(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/entries/${entryId}/translate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        const data = (await res.json()) as {
+          error?: string;
+          translation?: InlineTranslation;
+          translations?: InlineTranslation[];
+        };
+        if (!res.ok) {
+          setError(data.error ?? "Translation failed");
+          return null;
+        }
+        if (data.translations) setTranslations(data.translations);
+        return data.translation ?? null;
+      } catch {
+        setError("Translation failed");
+        return null;
+      } finally {
+        translatingRef.current = false;
+        setTranslating(false);
       }
-      if (data.translations) setTranslations(data.translations);
-      setEditing(false);
-    } catch {
-      setError("Translation failed");
-    } finally {
-      setTranslating(false);
-    }
-  }, [entryId, hasNewSlashLines, saveBody]);
+    },
+    [entryId],
+  );
 
-  // --- delete translation ---
+  /* ---- delete translation ---- */
   const deleteTranslation = useCallback(
     async (translationId: string) => {
       setError(null);
@@ -151,62 +215,132 @@ export function JournalEditor({
     [entryId],
   );
 
-  // --- keyboard ---
+  /* ---- keyboard ---- */
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      /* Ctrl+Enter → newline */
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        void submitAndRender();
+        const start = e.currentTarget.selectionStart;
+        const end = e.currentTarget.selectionEnd;
+        const text = bodyRef.current;
+        const next = text.slice(0, start) + "\n" + text.slice(end);
+        pendingCursorRef.current = start + 1;
+        setBody(next);
+        return;
+      }
+
+      /* Enter → translate if // on current line */
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (translating) return;
+
+        const cursorPos = e.currentTarget.selectionStart;
+        const text = bodyRef.current;
+
+        const lineStart = text.lastIndexOf("\n", cursorPos - 1) + 1;
+        const lineEndIdx = text.indexOf("\n", lineStart);
+        const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx;
+        const currentLine = text.slice(lineStart, lineEnd);
+
+        const slashIdx = findSlashIndex(currentLine);
+        if (slashIdx === -1) return;
+
+        const afterSlash = currentLine.slice(slashIdx + 2).trim();
+        if (!afterSlash) return;
+
+        void (async () => {
+          const translation = await translateText(afterSlash);
+          if (!translation) return;
+
+          const cur = bodyRef.current;
+          const absStart = lineStart + slashIdx;
+
+          if (cur.slice(absStart, absStart + 2) !== "//") return;
+
+          const before = cur.slice(0, absStart);
+          const after = cur.slice(lineEnd);
+          const newBody = before + translation.translatedText + after;
+
+          pendingCursorRef.current =
+            absStart + translation.translatedText.length;
+          setBody(newBody);
+          void saveBody(newBody);
+
+          requestAnimationFrame(() => textareaRef.current?.focus());
+        })();
       }
     },
-    [submitAndRender],
+    [translating, translateText, saveBody],
   );
 
-  // --- build lookup ---
-  const translationMap = new Map<string, InlineTranslation>();
-  for (const t of translations) {
-    translationMap.set(t.sourceText, t);
-  }
+  /* ---- blur → display mode ---- */
+  const handleBlur = useCallback(
+    (e: React.FocusEvent) => {
+      if (translatingRef.current) return;
+      const container = containerRef.current;
+      if (
+        container &&
+        e.relatedTarget instanceof Node &&
+        container.contains(e.relatedTarget)
+      )
+        return;
+      void saveBody(bodyRef.current);
+      setEditing(false);
+    },
+    [saveBody],
+  );
 
+  /* ---- render ---- */
   const lines = body.split("\n");
 
-  // --- render ---
   if (editing) {
     return (
-      <div className="flex w-full max-w-xl flex-col gap-3">
+      <div
+        ref={containerRef}
+        className="flex w-full max-w-xl flex-col gap-3"
+      >
         <div className="rounded-2xl border border-border/60 bg-background/80 shadow-sm backdrop-blur-sm">
           <textarea
+            ref={textareaRef}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             onKeyDown={onKeyDown}
+            onBlur={handleBlur}
+            readOnly={translating}
             rows={Math.max(12, lines.length + 2)}
-            disabled={translating}
             autoFocus
-            placeholder="Start writing… type // before text, then Ctrl+Enter"
+            placeholder="Start writing… type // before a word, then Enter to translate"
             className={journalTextareaClassName(
-              "min-h-[30vh] resize-y border-0 bg-transparent shadow-none focus-visible:ring-offset-0 disabled:opacity-60",
+              "min-h-[30vh] resize-y border-0 bg-transparent shadow-none focus-visible:ring-offset-0",
+              translating ? "opacity-60" : "",
             )}
           />
           <p className="px-4 pb-2 text-xs text-muted-foreground">
             <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
+              Enter
+            </kbd>{" "}
+            to translate{" "}
+            <code className="rounded bg-muted px-1">//</code> text ·{" "}
+            <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
               Ctrl+Enter
             </kbd>{" "}
-            to save &amp; translate{" "}
-            <code className="rounded bg-muted px-1">//</code> lines.
+            new line
           </p>
         </div>
-        {translating ? (
+        {translating && (
           <p className="text-sm text-muted-foreground">Translating…</p>
-        ) : null}
-        {error ? (
+        )}
+        {error && (
           <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
-        ) : null}
+        )}
       </div>
     );
   }
 
+  /* ---- display mode ---- */
   return (
     <div className="flex w-full max-w-xl flex-col gap-3">
       <div
@@ -220,67 +354,51 @@ export function JournalEditor({
             </p>
           ) : (
             lines.map((line, idx) => {
-              if (DOUBLE_SLASH_RE.test(line)) {
-                const raw = line.replace(DOUBLE_SLASH_RE, "").trim();
-                const t = raw ? translationMap.get(raw) : null;
-
-                if (t) {
-                  return (
-                    <div
-                      key={`t-${idx}-${t.id}`}
-                      className="group/tline -mx-1 flex items-start gap-1 rounded-lg border-l-2 border-primary/60 bg-muted/40 px-3 py-1"
-                    >
-                      <p
-                        title={raw}
-                        className="flex-1 cursor-help whitespace-pre-wrap text-base leading-relaxed text-foreground"
-                      >
-                        {t.translatedText}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void deleteTranslation(t.id);
-                        }}
-                        aria-label="Remove translation"
-                        className="mt-0.5 hidden shrink-0 rounded px-1.5 text-xs text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground group-hover/tline:inline-block"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  );
-                }
-
-                return (
-                  <p
-                    key={`slash-${idx}`}
-                    className="whitespace-pre-wrap text-base leading-relaxed text-muted-foreground italic"
-                  >
-                    {line}
-                  </p>
-                );
-              }
-
+              const segs = segmentLine(line, translations);
               return (
                 <p
-                  key={`line-${idx}`}
+                  key={idx}
                   className="min-h-7 whitespace-pre-wrap text-base leading-relaxed text-foreground"
                 >
-                  {line || "\u00A0"}
+                  {segs.map((seg, si) =>
+                    seg.translation ? (
+                      <span key={si} className="group/tw relative inline">
+                        <span
+                          title={seg.translation.sourceText}
+                          className="cursor-help rounded bg-muted/60 px-0.5"
+                        >
+                          {seg.text}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void deleteTranslation(seg.translation!.id);
+                          }}
+                          aria-label="Remove translation"
+                          className="ml-0.5 hidden align-super text-[10px] leading-none text-muted-foreground hover:text-destructive group-hover/tw:inline"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ) : (
+                      <span key={si}>{seg.text}</span>
+                    ),
+                  )}
                 </p>
               );
             })
           )}
         </div>
         <p className="px-4 pb-2 text-xs text-muted-foreground">
-          Click to edit. Hover translations to see original or delete.
+          Click to edit. Hover highlighted words to see the original.
         </p>
       </div>
-      {error ? (
+      {error && (
         <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }
