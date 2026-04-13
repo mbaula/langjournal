@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
 import {
   getJournalEntryForUser,
+  updateJournalEntryBody,
   updateJournalEntryTitle,
 } from "@/lib/entries/service";
 import { patchJournalEntryBodySchema } from "@/lib/validations/entry";
@@ -48,14 +49,18 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const result = await updateJournalEntryTitle(
-    id,
-    user.id,
-    parsed.data.title,
-  );
+  if (parsed.data.title !== undefined) {
+    const result = await updateJournalEntryTitle(id, user.id, parsed.data.title);
+    if (!result.ok) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+  }
 
-  if (!result.ok) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (parsed.data.body !== undefined) {
+    const result = await updateJournalEntryBody(id, user.id, parsed.data.body);
+    if (!result.ok) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
   }
 
   const entry = await getJournalEntryForUser(id, user.id);

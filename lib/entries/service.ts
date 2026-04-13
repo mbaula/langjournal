@@ -24,6 +24,8 @@ export async function getJournalEntryForUser(entryId: string, userId: string) {
     select: {
       id: true,
       title: true,
+      body: true,
+      translations: true,
       entryDate: true,
       createdAt: true,
       updatedAt: true,
@@ -78,6 +80,30 @@ export async function updateJournalEntryTitle(
   await prisma.journalEntry.update({
     where: { id: entryId },
     data: { title: normalized },
+  });
+
+  return { ok: true as const };
+}
+
+export async function updateJournalEntryBody(
+  entryId: string,
+  userId: string,
+  rawBody: string,
+) {
+  const body = rawBody.replace(/\r\n/g, "\n");
+
+  const entry = await prisma.journalEntry.findFirst({
+    where: { id: entryId, userId },
+    select: { id: true },
+  });
+
+  if (!entry) {
+    return { ok: false as const, error: "not_found" as const };
+  }
+
+  await prisma.journalEntry.update({
+    where: { id: entryId },
+    data: { body },
   });
 
   return { ok: true as const };
