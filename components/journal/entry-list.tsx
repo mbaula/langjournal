@@ -45,10 +45,15 @@ export function EntryList({ entries }: { entries: EntryRow[] }) {
               {title ? (
                 <>
                   <span className="font-medium text-foreground">{title}</span>
-                  <span className="text-muted-foreground"> : {dateLabel}</span>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    : {dateLabel}
+                  </span>
                 </>
               ) : (
-                <span className="text-muted-foreground">{dateLabel}</span>
+                <span className="text-muted-foreground">
+                  {dateLabel}
+                </span>
               )}
             </Link>
           </li>
