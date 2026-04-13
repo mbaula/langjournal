@@ -11,8 +11,13 @@ import {
 
 import { journalTextareaClassName } from "@/components/journal/field-styles";
 import { countWords, wordCountLabel } from "@/lib/text/word-count";
+import {
+  normalizeTranslationSource,
+  translationMemoryCacheKey,
+} from "@/lib/text/translation-cache-key";
 
 const AUTOSAVE_MS = 900;
+const PREFETCH_DEBOUNCE_MS = 400;
 
 export type InlineTranslation = {
   id: string;
@@ -24,17 +29,14 @@ type JournalEditorProps = {
   entryId: string;
   initialBody: string;
   initialTranslations: InlineTranslation[];
+  sourceLanguage: string;
+  targetLanguage: string;
 };
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/**
- * Find the **last** `//` on a line that is either at position 0 or preceded by
- * whitespace (avoids matching URLs like https://).
- * Only the last `//` is used so `//word1 blah //word2` translates just `word2`.
- */
 function findSlashIndex(line: string): number {
   let result = -1;
   let from = 0;
@@ -46,10 +48,22 @@ function findSlashIndex(line: string): number {
   }
 }
 
-/**
- * Split a line into segments, marking which segments correspond to known
- * translations so they can be highlighted.
- */
+function parseCurrentSlashSegment(text: string, cursorPos: number) {
+  const lineStart = text.lastIndexOf("\n", cursorPos - 1) + 1;
+  const lineEndIdx = text.indexOf("\n", lineStart);
+  const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx;
+  const currentLine = text.slice(lineStart, lineEnd);
+
+  const slashIdx = findSlashIndex(currentLine);
+  if (slashIdx === -1) return null;
+
+  const afterSlash = currentLine.slice(slashIdx + 2).trim();
+  if (!afterSlash) return null;
+
+  const absStart = lineStart + slashIdx;
+  return { lineStart, lineEnd, slashIdx, absStart, afterSlash, currentLine };
+}
+
 function segmentLine(
   line: string,
   translations: InlineTranslation[],
@@ -84,6 +98,45 @@ function segmentLine(
   return segments;
 }
 
+/** Re-reads line bounds so paste + instant Enter still replaces the right span. */
+function tryApplySlashTranslation(
+  body: string,
+  absStart: number,
+  expectedNorm: string,
+  translatedText: string,
+): { next: string; cursor: number } | null {
+  const lineEndIdx = body.indexOf("\n", absStart);
+  const end = lineEndIdx === -1 ? body.length : lineEndIdx;
+  const line = body.slice(absStart, end);
+  const si = findSlashIndex(line);
+  if (si === -1) return null;
+  const rawAfter = line.slice(si + 2);
+  if (normalizeTranslationSource(rawAfter.trim()) !== expectedNorm) return null;
+  const chunkStart = absStart + si;
+  return {
+    next: body.slice(0, chunkStart) + translatedText + body.slice(end),
+    cursor: chunkStart + translatedText.length,
+  };
+}
+
+/** Removes abandoned inline pending tokens from older clients (never show UUIDs). */
+function stripLegacyPendingMarkers(body: string): string {
+  return body.replace(/⟦tr:[0-9a-f-]{36}⟧/gi, "");
+}
+
+function mergeTranslationState(
+  prev: InlineTranslation[],
+  t: InlineTranslation,
+): InlineTranslation[] {
+  if (prev.some((x) => x.id === t.id)) return prev;
+  const filtered = prev.filter(
+    (x) =>
+      normalizeTranslationSource(x.sourceText) !==
+      normalizeTranslationSource(t.sourceText),
+  );
+  return [...filtered, t];
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -92,12 +145,13 @@ export function JournalEditor({
   entryId,
   initialBody,
   initialTranslations,
+  sourceLanguage,
+  targetLanguage,
 }: JournalEditorProps) {
   const [body, setBody] = useState(initialBody);
   const [translations, setTranslations] =
     useState<InlineTranslation[]>(initialTranslations);
   const [error, setError] = useState<string | null>(null);
-  const [translating, setTranslating] = useState(false);
   const [editing, setEditing] = useState(!initialBody);
 
   const bodyRef = useRef(body);
@@ -106,21 +160,39 @@ export function JournalEditor({
   translationsRef.current = translations;
   const savedBodyRef = useRef(initialBody);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const translatingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingCursorRef = useRef<number | null>(null);
 
-  /* sync when entry changes */
+  const clientSessionCacheRef = useRef(
+    new Map<string, { sourceText: string; translatedText: string }>(),
+  );
+  const prefetchAbortRef = useRef<AbortController | null>(null);
+  const prefetchDebounceTimerRef = useRef<number | null>(null);
+  const prefetchInflightRef = useRef(
+    new Map<string, Promise<{ sourceText: string; translatedText: string } | null>>(),
+  );
+
   useEffect(() => {
-    setBody(initialBody);
+    const cleaned = stripLegacyPendingMarkers(initialBody);
+    setBody(cleaned);
     savedBodyRef.current = initialBody;
-  }, [entryId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [entryId, initialBody]);
 
   useEffect(() => {
     setTranslations(initialTranslations);
   }, [entryId, initialTranslations]);
 
-  /* ---- cursor restore after programmatic body changes ---- */
+  useEffect(() => {
+    clientSessionCacheRef.current.clear();
+    prefetchInflightRef.current.clear();
+    prefetchAbortRef.current?.abort();
+    prefetchAbortRef.current = null;
+    if (prefetchDebounceTimerRef.current !== null) {
+      window.clearTimeout(prefetchDebounceTimerRef.current);
+      prefetchDebounceTimerRef.current = null;
+    }
+  }, [entryId]);
+
   useLayoutEffect(() => {
     if (pendingCursorRef.current !== null && textareaRef.current) {
       textareaRef.current.selectionStart = pendingCursorRef.current;
@@ -129,7 +201,6 @@ export function JournalEditor({
     }
   }, [body]);
 
-  /* ---- save ---- */
   const saveBody = useCallback(
     async (text: string) => {
       if (text === savedBodyRef.current) return;
@@ -157,41 +228,118 @@ export function JournalEditor({
     return () => void saveBodyRef.current(bodyRef.current);
   }, []);
 
-  /* ---- translate a single segment ---- */
-  const translateText = useCallback(
-    async (text: string): Promise<InlineTranslation | null> => {
-      translatingRef.current = true;
-      setTranslating(true);
+  useEffect(() => {
+    return () => {
+      if (prefetchDebounceTimerRef.current !== null) {
+        window.clearTimeout(prefetchDebounceTimerRef.current);
+      }
+      prefetchAbortRef.current?.abort();
+    };
+  }, []);
+
+  /** Server commit only — callers apply body then merge translations (avoids id/placeholder flashes). */
+  const fetchCommitTranslation = useCallback(
+    async (sourceSegment: string): Promise<InlineTranslation | null> => {
       setError(null);
       try {
         const res = await fetch(`/api/entries/${entryId}/translate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text: sourceSegment, intent: "commit" }),
         });
         const data = (await res.json()) as {
           error?: string;
           translation?: InlineTranslation;
-          translations?: InlineTranslation[];
         };
         if (!res.ok) {
           setError(data.error ?? "Translation failed");
           return null;
         }
-        if (data.translations) setTranslations(data.translations);
         return data.translation ?? null;
       } catch {
         setError("Translation failed");
         return null;
-      } finally {
-        translatingRef.current = false;
-        setTranslating(false);
       }
     },
     [entryId],
   );
 
-  /* ---- delete translation ---- */
+  const schedulePrefetch = useCallback(() => {
+    if (prefetchDebounceTimerRef.current !== null) {
+      window.clearTimeout(prefetchDebounceTimerRef.current);
+    }
+    prefetchDebounceTimerRef.current = window.setTimeout(() => {
+      prefetchDebounceTimerRef.current = null;
+      const ta = textareaRef.current;
+      if (!ta) return;
+      const cursor = ta.selectionStart;
+      const doc = bodyRef.current;
+      const parsed = parseCurrentSlashSegment(doc, cursor);
+      if (!parsed) return;
+
+      const trimmed = parsed.afterSlash.trim();
+      const key = translationMemoryCacheKey(
+        sourceLanguage,
+        targetLanguage,
+        trimmed,
+      );
+      if (clientSessionCacheRef.current.has(key)) return;
+      if (prefetchInflightRef.current.has(key)) return;
+
+      prefetchAbortRef.current?.abort();
+      const ac = new AbortController();
+      prefetchAbortRef.current = ac;
+
+      const prefetchCell: {
+        p?: Promise<{ sourceText: string; translatedText: string } | null>;
+      } = {};
+      prefetchCell.p = (async (): Promise<{
+        sourceText: string;
+        translatedText: string;
+      } | null> => {
+        try {
+          const res = await fetch(`/api/entries/${entryId}/translate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: trimmed, intent: "prefetch" }),
+            signal: ac.signal,
+          });
+          const data = (await res.json()) as {
+            error?: string;
+            sourceText?: string;
+            translatedText?: string;
+          };
+          if (!res.ok) return null;
+          if (
+            typeof data.sourceText === "string" &&
+            typeof data.translatedText === "string"
+          ) {
+            clientSessionCacheRef.current.set(key, {
+              sourceText: data.sourceText,
+              translatedText: data.translatedText,
+            });
+            return {
+              sourceText: data.sourceText,
+              translatedText: data.translatedText,
+            };
+          }
+          return null;
+        } catch {
+          return null;
+        } finally {
+          if (prefetchInflightRef.current.get(key) === prefetchCell.p) {
+            prefetchInflightRef.current.delete(key);
+          }
+          if (prefetchAbortRef.current === ac) {
+            prefetchAbortRef.current = null;
+          }
+        }
+      })();
+
+      prefetchInflightRef.current.set(key, prefetchCell.p);
+    }, PREFETCH_DEBOUNCE_MS);
+  }, [entryId, sourceLanguage, targetLanguage]);
+
   const deleteTranslation = useCallback(
     async (translationId: string) => {
       setError(null);
@@ -217,10 +365,8 @@ export function JournalEditor({
     [entryId],
   );
 
-  /* ---- keyboard ---- */
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      /* Ctrl+Enter → newline */
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         const start = e.currentTarget.selectionStart;
@@ -232,54 +378,162 @@ export function JournalEditor({
         return;
       }
 
-      /* Enter → translate if // on current line */
       if (e.key === "Enter") {
         e.preventDefault();
-        if (translating) return;
-
         const cursorPos = e.currentTarget.selectionStart;
         const text = bodyRef.current;
+        const parsed = parseCurrentSlashSegment(text, cursorPos);
+        if (!parsed) return;
 
-        const lineStart = text.lastIndexOf("\n", cursorPos - 1) + 1;
-        const lineEndIdx = text.indexOf("\n", lineStart);
-        const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx;
-        const currentLine = text.slice(lineStart, lineEnd);
+        const { absStart, afterSlash } = parsed;
+        const trimmed = afterSlash.trim();
+        const key = translationMemoryCacheKey(
+          sourceLanguage,
+          targetLanguage,
+          trimmed,
+        );
 
-        const slashIdx = findSlashIndex(currentLine);
-        if (slashIdx === -1) return;
-
-        const afterSlash = currentLine.slice(slashIdx + 2).trim();
-        if (!afterSlash) return;
+        const norm = normalizeTranslationSource(trimmed);
+        const fromState = translationsRef.current.find(
+          (t) => normalizeTranslationSource(t.sourceText) === norm,
+        );
+        if (fromState) {
+          const applied = tryApplySlashTranslation(
+            text,
+            absStart,
+            norm,
+            fromState.translatedText,
+          );
+          if (!applied) return;
+          pendingCursorRef.current = applied.cursor;
+          setBody(applied.next);
+          void saveBody(applied.next);
+          requestAnimationFrame(() => textareaRef.current?.focus());
+          return;
+        }
 
         void (async () => {
-          const translation = await translateText(afterSlash);
-          if (!translation) return;
+          const rollbackBody = text;
 
-          const cur = bodyRef.current;
-          const absStart = lineStart + slashIdx;
+          const applyCommitted = (t: InlineTranslation) => {
+            const cur = bodyRef.current;
+            const applied = tryApplySlashTranslation(
+              cur,
+              absStart,
+              norm,
+              t.translatedText,
+            );
+            if (!applied) return;
+            pendingCursorRef.current = applied.cursor;
+            setBody(applied.next);
+            setTranslations((prev) => mergeTranslationState(prev, t));
+            void saveBody(applied.next);
+            clientSessionCacheRef.current.set(key, {
+              sourceText: t.sourceText,
+              translatedText: t.translatedText,
+            });
+            requestAnimationFrame(() => textareaRef.current?.focus());
+          };
 
-          if (cur.slice(absStart, absStart + 2) !== "//") return;
+          const cached = clientSessionCacheRef.current.get(key);
+          if (cached) {
+            const optimistic = tryApplySlashTranslation(
+              text,
+              absStart,
+              norm,
+              cached.translatedText,
+            );
+            if (!optimistic) return;
+            pendingCursorRef.current = optimistic.cursor;
+            setBody(optimistic.next);
+            void saveBody(optimistic.next);
 
-          const before = cur.slice(0, absStart);
-          const after = cur.slice(lineEnd);
-          const newBody = before + translation.translatedText + after;
+            const t = await fetchCommitTranslation(trimmed);
+            if (!t) {
+              setBody(rollbackBody);
+              void saveBody(rollbackBody);
+              return;
+            }
+            setTranslations((prev) => mergeTranslationState(prev, t));
+            clientSessionCacheRef.current.set(key, {
+              sourceText: t.sourceText,
+              translatedText: t.translatedText,
+            });
+            if (t.translatedText !== cached.translatedText) {
+              const fix = tryApplySlashTranslation(
+                bodyRef.current,
+                absStart,
+                norm,
+                t.translatedText,
+              );
+              if (fix) {
+                pendingCursorRef.current = fix.cursor;
+                setBody(fix.next);
+                void saveBody(fix.next);
+              }
+            }
+            requestAnimationFrame(() => textareaRef.current?.focus());
+            return;
+          }
 
-          pendingCursorRef.current =
-            absStart + translation.translatedText.length;
-          setBody(newBody);
-          void saveBody(newBody);
+          const inflight = prefetchInflightRef.current.get(key);
+          if (inflight) {
+            const pref = await inflight;
+            if (!pref) return;
+            const cur = bodyRef.current;
+            if (cur.slice(absStart, absStart + 2) !== "//") return;
+            const optimistic = tryApplySlashTranslation(
+              cur,
+              absStart,
+              norm,
+              pref.translatedText,
+            );
+            if (!optimistic) return;
+            pendingCursorRef.current = optimistic.cursor;
+            setBody(optimistic.next);
+            void saveBody(optimistic.next);
 
-          requestAnimationFrame(() => textareaRef.current?.focus());
+            const t = await fetchCommitTranslation(trimmed);
+            if (!t) {
+              setBody(rollbackBody);
+              void saveBody(rollbackBody);
+              return;
+            }
+            setTranslations((prev) => mergeTranslationState(prev, t));
+            clientSessionCacheRef.current.set(key, {
+              sourceText: t.sourceText,
+              translatedText: t.translatedText,
+            });
+            if (t.translatedText !== pref.translatedText) {
+              const fix = tryApplySlashTranslation(
+                bodyRef.current,
+                absStart,
+                norm,
+                t.translatedText,
+              );
+              if (fix) {
+                pendingCursorRef.current = fix.cursor;
+                setBody(fix.next);
+                void saveBody(fix.next);
+              }
+            }
+            requestAnimationFrame(() => textareaRef.current?.focus());
+            return;
+          }
+
+          if (text.slice(absStart, absStart + 2) !== "//") return;
+
+          const t = await fetchCommitTranslation(trimmed);
+          if (!t) return;
+          applyCommitted(t);
         })();
       }
     },
-    [translating, translateText, saveBody],
+    [fetchCommitTranslation, saveBody, sourceLanguage, targetLanguage],
   );
 
-  /* ---- blur → display mode ---- */
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
-      if (translatingRef.current) return;
       const container = containerRef.current;
       if (
         container &&
@@ -287,13 +541,21 @@ export function JournalEditor({
         container.contains(e.relatedTarget)
       )
         return;
+
       void saveBody(bodyRef.current);
       setEditing(false);
     },
     [saveBody],
   );
 
-  /* ---- render ---- */
+  const onBodyChange = useCallback(
+    (next: string) => {
+      setBody(next);
+      schedulePrefetch();
+    },
+    [schedulePrefetch],
+  );
+
   const lines = body.split("\n");
   const wordCount = useMemo(() => countWords(body), [body]);
 
@@ -307,16 +569,15 @@ export function JournalEditor({
           <textarea
             ref={textareaRef}
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={(e) => onBodyChange(e.target.value)}
+            onSelect={schedulePrefetch}
             onKeyDown={onKeyDown}
             onBlur={handleBlur}
-            readOnly={translating}
             rows={Math.max(12, lines.length + 2)}
             autoFocus
-            placeholder="Start writing… type // before a word, then Enter to translate"
+            placeholder="Start writing… type // before a word, pause briefly to prefetch, then Enter to apply"
             className={journalTextareaClassName(
               "min-h-[30vh] resize-y border-0 bg-transparent shadow-none focus-visible:ring-offset-0",
-              translating ? "opacity-60" : "",
             )}
           />
           <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-2 text-xs text-muted-foreground">
@@ -324,8 +585,9 @@ export function JournalEditor({
               <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
                 Enter
               </kbd>{" "}
-              to translate{" "}
-              <code className="rounded bg-muted px-1">{"//"}</code> text ·{" "}
+              applies translation (often already prefetched after a short pause
+              on{" "}
+              <code className="rounded bg-muted px-1">{"//"}</code>) ·{" "}
               <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
                 Ctrl+Enter
               </kbd>{" "}
@@ -336,9 +598,6 @@ export function JournalEditor({
             </span>
           </p>
         </div>
-        {translating && (
-          <p className="text-sm text-muted-foreground">Translating…</p>
-        )}
         {error && (
           <p className="text-sm text-destructive" role="alert">
             {error}
@@ -348,7 +607,6 @@ export function JournalEditor({
     );
   }
 
-  /* ---- display mode ---- */
   return (
     <div className="flex w-full max-w-xl flex-col gap-3">
       <div

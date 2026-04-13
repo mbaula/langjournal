@@ -1,17 +1,28 @@
+import { randomUUID } from "crypto";
+
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
-import { getLanguagePair } from "@/lib/db/language";
+import { languagePairFromProfile } from "@/lib/db/language";
 import { prisma } from "@/lib/db/prisma";
 import {
   type InlineTranslation,
   removeTranslation,
-  translateSingleText,
+  resolveTranslationText,
 } from "@/lib/entries/translate";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-/** Translate a single text segment and persist the new translation record. */
+function parseIntent(json: unknown): "prefetch" | "commit" {
+  if (typeof json !== "object" || json === null || !("intent" in json)) {
+    return "commit";
+  }
+  const v = (json as { intent: unknown }).intent;
+  return v === "prefetch" ? "prefetch" : "commit";
+}
+
+/** Prefetch: translate only (no DB). Commit: translate + persist when new. */
 export async function POST(request: Request, context: RouteContext) {
   const user = await getAuthenticatedAppUser();
   if (!user) {
@@ -39,9 +50,21 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
+  const intent = parseIntent(json);
+
   const entry = await prisma.journalEntry.findFirst({
     where: { id: entryId, userId: user.id },
-    select: { id: true, translations: true },
+    select: {
+      id: true,
+      translations: true,
+      user: {
+        select: {
+          languageProfile: {
+            select: { nativeLanguage: true, targetLanguage: true },
+          },
+        },
+      },
+    },
   });
 
   if (!entry) {
@@ -52,29 +75,42 @@ export async function POST(request: Request, context: RouteContext) {
     ? (entry.translations as InlineTranslation[])
     : [];
 
-  const { source, target } = await getLanguagePair(user.id);
+  const { source, target } = languagePairFromProfile(
+    entry.user.languageProfile,
+  );
 
-  const result = await translateSingleText(text, existing, source, target);
+  const result = await resolveTranslationText(text, existing, source, target);
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  if (result.isNew) {
-    await prisma.journalEntry.update({
-      where: { id: entryId },
-      data: {
-        translations: JSON.parse(
-          JSON.stringify(result.translations),
-        ) as object[],
-      },
+  if (intent === "prefetch") {
+    return NextResponse.json({
+      requestId: randomUUID(),
+      sourceText: result.sourceText,
+      translatedText: result.translatedText,
     });
   }
 
-  return NextResponse.json({
-    translation: result.translation,
-    translations: result.translations,
+  if (result.fromExisting) {
+    return NextResponse.json({ translation: result.fromExisting });
+  }
+
+  const record: InlineTranslation = {
+    id: randomUUID(),
+    sourceText: result.sourceText,
+    translatedText: result.translatedText,
+  };
+
+  await prisma.journalEntry.update({
+    where: { id: entryId },
+    data: {
+      translations: [...existing, record] as Prisma.InputJsonValue,
+    },
   });
+
+  return NextResponse.json({ translation: record });
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
@@ -122,7 +158,7 @@ export async function DELETE(request: Request, context: RouteContext) {
   await prisma.journalEntry.update({
     where: { id: entryId },
     data: {
-      translations: JSON.parse(JSON.stringify(updated)) as object[],
+      translations: updated as Prisma.InputJsonValue,
     },
   });
 

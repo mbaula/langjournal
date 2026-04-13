@@ -75,6 +75,8 @@ export default async function EntryPage({ params }: EntryPageProps) {
         entryId={entry.id}
         initialBody={entry.body ?? ""}
         initialTranslations={translations}
+        sourceLanguage={source}
+        targetLanguage={target}
       />
     </div>
   );
