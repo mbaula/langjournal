@@ -4,71 +4,69 @@ import { translatePlainText } from "@/lib/translate/google";
 
 export type InlineTranslation = {
   id: string;
-  /** The native text the user typed after `//`. */
   sourceText: string;
   translatedText: string;
 };
 
-const DOUBLE_SLASH_RE = /^\/\/\s?/;
-
 /**
- * Scan `body` for `//`-prefixed lines that don't already have a translation.
- * Translate them one at a time (first untranslated `//` wins).
- *
- * The body is **not modified** — `//` markers stay so the user can always
- * click into the textarea and see/edit raw text.
+ * Translate a single text segment. If `sourceText` already exists in the
+ * translations array the existing record is returned (no API call).
  */
-export async function translateSlashLines(
-  body: string,
+export async function translateSingleText(
+  text: string,
   existingTranslations: InlineTranslation[],
   sourceLanguage: string,
   targetLanguage: string,
 ): Promise<
-  | { ok: true; translations: InlineTranslation[] }
+  | {
+      ok: true;
+      translation: InlineTranslation;
+      translations: InlineTranslation[];
+      isNew: boolean;
+    }
   | { ok: false; error: string }
 > {
-  const lines = body.replace(/\r\n/g, "\n").split("\n");
+  const trimmed = text.trim();
+  if (!trimmed) return { ok: false, error: "Nothing to translate" };
+  if (trimmed.length > 3000)
+    return { ok: false, error: "Text too long (max 3 000 chars)" };
 
-  const alreadyTranslated = new Set(
-    existingTranslations.map((t) => t.sourceText),
-  );
-
-  let found = false;
-  const newTranslations: InlineTranslation[] = [...existingTranslations];
-
-  for (const line of lines) {
-    if (!DOUBLE_SLASH_RE.test(line)) continue;
-
-    const raw = line.replace(DOUBLE_SLASH_RE, "").trim();
-    if (!raw) continue;
-    if (alreadyTranslated.has(raw)) continue;
-
-    if (raw.length > 3000) {
-      return { ok: false, error: "Text after // is too long (max 3000 chars)." };
-    }
-
-    let translatedText: string;
-    try {
-      translatedText = await translatePlainText(
-        raw,
-        sourceLanguage,
-        targetLanguage,
-      );
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Translation failed";
-      return { ok: false, error: msg };
-    }
-
-    newTranslations.push({
-      id: randomUUID(),
-      sourceText: raw,
-      translatedText,
-    });
-    alreadyTranslated.add(raw);
-    found = true;
+  const existing = existingTranslations.find((t) => t.sourceText === trimmed);
+  if (existing) {
+    return {
+      ok: true,
+      translation: existing,
+      translations: existingTranslations,
+      isNew: false,
+    };
   }
 
-  return { ok: true, translations: newTranslations };
+  let translatedText: string;
+  try {
+    translatedText = await translatePlainText(
+      trimmed,
+      sourceLanguage,
+      targetLanguage,
+    );
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Translation failed",
+    };
+  }
+
+  const record: InlineTranslation = {
+    id: randomUUID(),
+    sourceText: trimmed,
+    translatedText,
+  };
+
+  return {
+    ok: true,
+    translation: record,
+    translations: [...existingTranslations, record],
+    isNew: true,
+  };
 }
 
 export function removeTranslation(
