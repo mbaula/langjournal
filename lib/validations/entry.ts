@@ -26,6 +26,10 @@ export function parseEntryDate(input?: string | null): Date {
 
 export const patchJournalEntryBodySchema = z
   .object({
-    title: z.string().max(500),
+    title: z.string().max(500).optional(),
+    body: z.string().max(200_000).optional(),
   })
-  .strict();
+  .strict()
+  .refine((d) => d.title !== undefined || d.body !== undefined, {
+    message: "Provide title or body",
+  });

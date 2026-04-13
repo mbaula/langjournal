@@ -29,41 +29,17 @@ model LanguageProfile {
 }
 
 model JournalEntry {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @db.Uuid
-  title     String?
-  entryDate DateTime  @db.Date
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  title        String?
+  body         String?  @db.Text
+  translations Json?
+  entryDate    DateTime @db.Date
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  blocks EntryBlock[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, entryDate])
   @@index([userId])
-}
-
-enum BlockType {
-  text
-  translation
-}
-
-model EntryBlock {
-  id             String    @id @default(uuid()) @db.Uuid
-  entryId        String    @db.Uuid
-  parentBlockId  String?   @db.Uuid
-  type           BlockType
-  sourceText     String    @db.Text
-  translatedText String?   @db.Text
-  sourceLanguage String
-  targetLanguage String?
-  command        String?
-  position       Int
-  createdAt      DateTime  @default(now())
-
-  entry    JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  parent   EntryBlock?  @relation("BlockHierarchy", fields: [parentBlockId], references: [id], onDelete: SetNull)
-  children EntryBlock[] @relation("BlockHierarchy")
-
-  @@index([entryId])
 }

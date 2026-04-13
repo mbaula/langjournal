@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { BlockComposer } from "@/components/journal/block-composer";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
+import {
+  type InlineTranslation,
+  JournalEditor,
+} from "@/components/journal/journal-editor";
 import { LanguageBar } from "@/components/journal/language-bar";
 import { buttonVariants } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
-import { listTextBlocksForEntry } from "@/lib/blocks/service";
 import { getLanguagePair } from "@/lib/db/language";
 import { getJournalEntryForUser } from "@/lib/entries/service";
 import { cn } from "@/lib/utils";
@@ -33,16 +35,9 @@ export default async function EntryPage({ params }: EntryPageProps) {
     notFound();
   }
 
-  const blockRows = await listTextBlocksForEntry(id, user.id);
-  if (blockRows === null) {
-    notFound();
-  }
-
-  const blocks = blockRows.map((b) => ({
-    id: b.id,
-    sourceText: b.sourceText,
-    createdAt: b.createdAt.toISOString(),
-  }));
+  const translations: InlineTranslation[] = Array.isArray(entry.translations)
+    ? (entry.translations as InlineTranslation[])
+    : [];
 
   const { source, target } = await getLanguagePair(user.id);
 
@@ -75,7 +70,12 @@ export default async function EntryPage({ params }: EntryPageProps) {
         </div>
       </header>
 
-      <BlockComposer key={entry.id} entryId={entry.id} blocks={blocks} />
+      <JournalEditor
+        key={entry.id}
+        entryId={entry.id}
+        initialBody={entry.body ?? ""}
+        initialTranslations={translations}
+      />
     </div>
   );
 }
