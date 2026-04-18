@@ -11,13 +11,13 @@ export default async function JournalPage() {
   const { source, target } = await getLanguagePair(user.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-8 pt-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="flex w-full flex-col gap-10 pt-2">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-xl font-medium tracking-tight text-muted-foreground">
+          <h1 className="text-[1.875rem] font-bold tracking-[-0.02em] text-foreground">
             Journal
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             One note per calendar day (UTC).
           </p>
         </div>
@@ -25,7 +25,7 @@ export default async function JournalPage() {
           <LanguageBar source={source} target={target} />
         </div>
       </div>
-      <div className="flex w-full flex-col gap-4">
+      <div className="flex w-full flex-col gap-3">
         <EntryList entries={entries} />
         <CreateEntryButton />
       </div>

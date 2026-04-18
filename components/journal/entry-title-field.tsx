@@ -60,9 +60,9 @@ export function EntryTitleField({ entryId, initialTitle }: EntryTitleFieldProps)
       placeholder="Entry title"
       aria-label="Entry title"
       className={cn(
-        "font-sans w-full min-w-0 border-0 border-b border-transparent bg-transparent pb-1 text-xl font-semibold tracking-tight text-foreground outline-none transition-colors",
-        "placeholder:text-muted-foreground/70",
-        "hover:border-border/80 focus-visible:border-ring focus-visible:ring-0",
+        "font-sans w-full min-w-0 border-0 bg-transparent py-1 text-[2.5rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground outline-none transition-colors",
+        "placeholder:text-muted-foreground/50",
+        "focus-visible:ring-0",
       )}
     />
   );
