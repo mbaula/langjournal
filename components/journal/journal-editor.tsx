@@ -563,9 +563,9 @@ export function JournalEditor({
     return (
       <div
         ref={containerRef}
-        className="flex w-full max-w-xl flex-col gap-3"
+        className="flex w-full max-w-none flex-col gap-3"
       >
-        <div className="rounded-2xl border border-border/60 bg-background/80 shadow-sm backdrop-blur-sm">
+        <div className="rounded-md border border-transparent bg-transparent transition-colors focus-within:border-border">
           <textarea
             ref={textareaRef}
             value={body}
@@ -575,27 +575,13 @@ export function JournalEditor({
             onBlur={handleBlur}
             rows={Math.max(12, lines.length + 2)}
             autoFocus
-            placeholder="Start writing… type // before a word, pause briefly to prefetch, then Enter to apply"
+            placeholder="Start writing…"
             className={journalTextareaClassName(
-              "min-h-[30vh] resize-y border-0 bg-transparent shadow-none focus-visible:ring-offset-0",
+              "min-h-[30vh] resize-y placeholder:text-muted-foreground/70",
             )}
           />
-          <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-2 text-xs text-muted-foreground">
-            <span>
-              <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
-                Enter
-              </kbd>{" "}
-              applies translation (often already prefetched after a short pause
-              on{" "}
-              <code className="rounded bg-muted px-1">{"//"}</code>) ·{" "}
-              <kbd className="rounded border border-border px-1 font-sans text-[0.7rem]">
-                Ctrl+Enter
-              </kbd>{" "}
-              new line
-            </span>
-            <span className="shrink-0 tabular-nums">
-              {wordCountLabel(wordCount)}
-            </span>
+          <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
+            {wordCountLabel(wordCount)}
           </p>
         </div>
         {error && (
@@ -608,14 +594,14 @@ export function JournalEditor({
   }
 
   return (
-    <div className="flex w-full max-w-xl flex-col gap-3">
+    <div className="flex w-full max-w-none flex-col gap-3">
       <div
-        className="cursor-text rounded-2xl border border-border/60 bg-background/80 shadow-sm backdrop-blur-sm"
+        className="cursor-text rounded-md border border-transparent bg-transparent"
         onClick={() => setEditing(true)}
       >
-        <div className="flex min-h-[30vh] flex-col gap-0 px-4 py-3">
+        <div className="flex min-h-[30vh] flex-col gap-0 py-1">
           {lines.length === 0 || (lines.length === 1 && !lines[0]) ? (
-            <p className="text-base leading-relaxed text-muted-foreground/60">
+            <p className="text-[15px] leading-[1.65] text-muted-foreground/70">
               Click to start writing…
             </p>
           ) : (
@@ -624,14 +610,14 @@ export function JournalEditor({
               return (
                 <p
                   key={idx}
-                  className="min-h-7 whitespace-pre-wrap text-base leading-relaxed text-foreground"
+                  className="min-h-[1.65em] whitespace-pre-wrap text-[15px] leading-[1.65] text-foreground"
                 >
                   {segs.map((seg, si) =>
                     seg.translation ? (
                       <span key={si} className="group/tw relative inline">
                         <span
                           title={seg.translation.sourceText}
-                          className="cursor-help rounded bg-muted/60 px-0.5"
+                          className="cursor-help rounded-[2px] bg-amber-100 px-0.5 [box-decoration-break:clone] dark:bg-amber-950/55"
                         >
                           {seg.text}
                         </span>
@@ -656,11 +642,8 @@ export function JournalEditor({
             })
           )}
         </div>
-        <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-2 text-xs text-muted-foreground">
-          <span>Click to edit. Hover highlighted words to see the original.</span>
-          <span className="shrink-0 tabular-nums">
-            {wordCountLabel(wordCount)}
-          </span>
+        <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
+          {wordCountLabel(wordCount)}
         </p>
       </div>
       {error && (

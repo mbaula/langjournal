@@ -1,7 +1,4 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { AppSidebar } from "@/components/app/app-sidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -11,37 +8,15 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-secondary/50">
-      <header className="border-border border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-        <div className="mx-auto flex h-12 max-w-3xl items-center justify-between gap-4 px-4">
-          <Link href="/app/journal" className="text-sm font-semibold">
-            Language Journal
-          </Link>
-          <nav className="flex items-center gap-1">
-            <Link
-              href="/app/journal"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-            >
-              Journal
-            </Link>
-            <Link
-              href="/app/settings"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-            >
-              Settings
-            </Link>
-            <Link
-              href="/auth/signout"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-            >
-              Sign out
-            </Link>
-          </nav>
-        </div>
-      </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
-        {children}
-      </main>
+    <div className="flex min-h-full flex-1 bg-background transition-[background-color,color] duration-300 ease-out">
+      <AppSidebar />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col transition-[background-color,color] duration-300 ease-out">
+        <main className="flex-1 overflow-auto transition-[background-color,color] duration-300 ease-out">
+          <div className="mx-auto max-w-[900px] px-8 py-10 md:px-20 md:py-14 transition-[background-color,color] duration-300 ease-out">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

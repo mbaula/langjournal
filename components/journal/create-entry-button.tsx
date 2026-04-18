@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function CreateEntryButton() {
   const router = useRouter();
@@ -39,14 +42,19 @@ export function CreateEntryButton() {
   }
 
   return (
-    <div className="flex w-full flex-col gap-2">
+    <div className="flex w-full max-w-sm flex-col gap-2">
       <Button
         type="button"
-        size="lg"
-        className="w-full"
+        variant="outline"
+        size="sm"
+        className={cn(
+          "h-9 w-full justify-start gap-2 border-border bg-transparent font-normal text-[13px] text-foreground shadow-none",
+          "hover:bg-muted",
+        )}
         disabled={pending}
         onClick={() => void createTodayEntry()}
       >
+        <Plus className="size-4 opacity-70" strokeWidth={1.75} />
         {pending ? "Opening…" : "New entry for today"}
       </Button>
       {error ? (
