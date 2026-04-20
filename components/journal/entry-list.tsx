@@ -21,14 +21,12 @@ function formatEntryDay(d: Date) {
 export function EntryList({ entries }: { entries: EntryRow[] }) {
   if (entries.length === 0) {
     return (
-      <p className="max-w-md text-center text-sm text-muted-foreground">
-        No entries yet.
-      </p>
+      <p className="text-[13px] text-muted-foreground">No entries yet.</p>
     );
   }
 
   return (
-    <ul className="mx-auto flex w-full max-w-xl flex-col gap-2.5">
+    <ul className="flex w-full flex-col">
       {entries.map((entry) => {
         const title = entry.title?.trim();
         const dateLabel = formatEntryDay(entry.entryDate);
@@ -38,22 +36,20 @@ export function EntryList({ entries }: { entries: EntryRow[] }) {
             <Link
               href={`/app/entry/${entry.id}`}
               className={cn(
-                "block min-w-0 truncate rounded-2xl border border-border/70 bg-background/90 px-4 py-3.5 text-sm shadow-sm backdrop-blur-sm transition-colors",
-                "hover:border-border hover:bg-muted/30",
+                "block min-w-0 truncate rounded-md px-2 py-2 text-[14px] transition-colors",
+                "text-foreground hover:bg-muted",
               )}
             >
               {title ? (
                 <>
-                  <span className="font-medium text-foreground">{title}</span>
+                  <span className="font-medium">{title}</span>
                   <span className="text-muted-foreground">
                     {" "}
-                    : {dateLabel}
+                    · {dateLabel}
                   </span>
                 </>
               ) : (
-                <span className="text-muted-foreground">
-                  {dateLabel}
-                </span>
+                <span className="text-muted-foreground">{dateLabel}</span>
               )}
             </Link>
           </li>
