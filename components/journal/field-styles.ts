@@ -3,14 +3,14 @@ import { cn } from "@/lib/utils";
 /** Shared look for journal textareas (sans, theme border, no browser-default serif). */
 export function journalTextareaClassName(...extra: (string | undefined)[]) {
   return cn(
-    "font-sans w-full resize-y rounded-xl border border-border/70 bg-background px-4 py-3 text-base leading-relaxed text-foreground antialiased caret-foreground shadow-sm outline-none transition-[border-color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35",
+    "font-sans w-full resize-y rounded-md border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased caret-foreground shadow-none outline-none transition-[box-shadow] selection:bg-primary/15 focus-visible:ring-0",
     ...extra,
   );
 }
 
 export function journalBlockShellClassName(extra?: string) {
   return cn(
-    "rounded-2xl border border-border/60 bg-background/80 p-1 shadow-sm backdrop-blur-sm",
+    "rounded-md border border-border/80 bg-transparent p-0 shadow-none",
     extra,
   );
 }
