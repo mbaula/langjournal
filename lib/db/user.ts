@@ -7,18 +7,16 @@ export async function ensureAppUser(userId: string, email: string) {
     update: { email },
   });
 
-  const profile = await prisma.languageProfile.findUnique({
+  // Use upsert to handle race conditions where multiple requests
+  // might try to create the profile simultaneously
+  await prisma.languageProfile.upsert({
     where: { userId },
+    create: {
+      userId,
+      nativeLanguage: "en",
+      targetLanguage: "fr",
+      uiLocale: "en",
+    },
+    update: {},
   });
-
-  if (!profile) {
-    await prisma.languageProfile.create({
-      data: {
-        userId,
-        nativeLanguage: "en",
-        targetLanguage: "fr",
-        uiLocale: "en",
-      },
-    });
-  }
 }
