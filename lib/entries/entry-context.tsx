@@ -13,6 +13,22 @@ import {
 
 import { type InlineTranslation } from "@/components/journal/journal-editor";
 
+/** Why opening an entry from the URL failed (used for UI, not raw API strings). */
+export type EntryLoadError =
+  | { kind: "inaccessible" }
+  | { kind: "session" }
+  | { kind: "network" };
+
+class EntryFetchError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super(`HTTP ${status}`);
+    this.name = "EntryFetchError";
+    this.status = status;
+  }
+}
+
 export type JournalEntry = {
   id: string;
   title: string | null;
@@ -26,7 +42,7 @@ export type JournalEntry = {
 type EntryContextValue = {
   currentEntry: JournalEntry | null;
   isLoading: boolean;
-  error: string | null;
+  loadError: EntryLoadError | null;
   switchEntry: (id: string) => void;
   refreshEntry: () => void;
   updateEntryInCache: (id: string, updates: Partial<JournalEntry>) => void;
@@ -59,7 +75,7 @@ export function EntryProvider({
     initialEntryId ?? initialEntry?.id ?? null
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<EntryLoadError | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const currentEntry = currentEntryId ? entries.get(currentEntryId) ?? null : null;
@@ -67,7 +83,7 @@ export function EntryProvider({
   const fetchEntry = useCallback(async (id: string, signal?: AbortSignal) => {
     const res = await fetch(`/api/entries/${id}`, { signal });
     if (!res.ok) {
-      throw new Error("Failed to fetch entry");
+      throw new EntryFetchError(res.status);
     }
     const data = (await res.json()) as { entry: JournalEntry };
     // Normalize translations to always be an array
@@ -88,13 +104,13 @@ export function EntryProvider({
       const cached = entries.get(id);
       if (cached) {
         setCurrentEntryId(id);
-        setError(null);
+        setLoadError(null);
         router.replace(`/app/entry/${id}`, { scroll: false });
         return;
       }
 
       setIsLoading(true);
-      setError(null);
+      setLoadError(null);
       setCurrentEntryId(id);
       router.replace(`/app/entry/${id}`, { scroll: false });
 
@@ -106,7 +122,13 @@ export function EntryProvider({
         setEntries((prev) => new Map(prev).set(id, entry));
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
-        setError("Failed to load entry");
+        if (err instanceof EntryFetchError) {
+          if (err.status === 404) setLoadError({ kind: "inaccessible" });
+          else if (err.status === 401) setLoadError({ kind: "session" });
+          else setLoadError({ kind: "network" });
+        } else {
+          setLoadError({ kind: "network" });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -173,7 +195,7 @@ export function EntryProvider({
     () => ({
       currentEntry,
       isLoading,
-      error,
+      loadError,
       switchEntry,
       refreshEntry,
       updateEntryInCache,
@@ -182,7 +204,7 @@ export function EntryProvider({
     [
       currentEntry,
       isLoading,
-      error,
+      loadError,
       switchEntry,
       refreshEntry,
       updateEntryInCache,
