@@ -108,3 +108,23 @@ export async function updateJournalEntryBody(
 
   return { ok: true as const };
 }
+
+export async function deleteJournalEntryForUser(
+  entryId: string,
+  userId: string,
+): Promise<{ ok: true } | { ok: false; error: "not_found" }> {
+  const entry = await prisma.journalEntry.findFirst({
+    where: { id: entryId, userId },
+    select: { id: true },
+  });
+
+  if (!entry) {
+    return { ok: false, error: "not_found" };
+  }
+
+  await prisma.journalEntry.delete({
+    where: { id: entryId },
+  });
+
+  return { ok: true };
+}

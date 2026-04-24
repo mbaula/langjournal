@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { DeleteEntryControl } from "@/components/journal/delete-entry-control";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import {
   type InlineTranslation,
@@ -59,6 +60,10 @@ export default async function EntryPage({ params }: EntryPageProps) {
               /
             </span>
             <span className="truncate text-muted-foreground">{dayLabel}</span>
+            <span className="text-muted-foreground/50" aria-hidden>
+              /
+            </span>
+            <DeleteEntryControl entryId={entry.id} />
           </nav>
           <div className="shrink-0">
             <LanguageBar source={source} target={target} />
