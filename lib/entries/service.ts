@@ -1,3 +1,5 @@
+import { revalidateTag, unstable_cache } from "next/cache";
+
 import { prisma } from "@/lib/db/prisma";
 
 export function utcCalendarDate(d: Date): Date {
@@ -18,19 +20,27 @@ export async function listJournalEntries(userId: string) {
   });
 }
 
+const getCachedEntry = unstable_cache(
+  async (entryId: string, userId: string) => {
+    return prisma.journalEntry.findFirst({
+      where: { id: entryId, userId },
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        translations: true,
+        entryDate: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  },
+  ["journal-entry"],
+  { revalidate: 30, tags: ["journal-entry"] }
+);
+
 export async function getJournalEntryForUser(entryId: string, userId: string) {
-  return prisma.journalEntry.findFirst({
-    where: { id: entryId, userId },
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      translations: true,
-      entryDate: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  return getCachedEntry(entryId, userId);
 }
 
 export async function getOrCreateJournalEntryForDate(
@@ -82,6 +92,7 @@ export async function updateJournalEntryTitle(
     data: { title: normalized },
   });
 
+  revalidateTag("journal-entry", { expire: 0 });
   return { ok: true as const };
 }
 
@@ -106,6 +117,7 @@ export async function updateJournalEntryBody(
     data: { body },
   });
 
+  revalidateTag("journal-entry", { expire: 0 });
   return { ok: true as const };
 }
 
@@ -126,5 +138,6 @@ export async function deleteJournalEntryForUser(
     where: { id: entryId },
   });
 
+  revalidateTag("journal-entry", { expire: 0 });
   return { ok: true };
 }

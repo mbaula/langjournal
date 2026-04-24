@@ -1,3 +1,5 @@
+import { revalidateTag, unstable_cache } from "next/cache";
+
 import { prisma } from "@/lib/db/prisma";
 
 export function languagePairFromProfile(
@@ -12,13 +14,24 @@ export function languagePairFromProfile(
   };
 }
 
-export async function getLanguagePair(userId: string) {
-  const profile = await prisma.languageProfile.findUnique({
-    where: { userId },
-    select: { nativeLanguage: true, targetLanguage: true },
-  });
+const getCachedLanguagePair = unstable_cache(
+  async (userId: string) => {
+    const profile = await prisma.languageProfile.findUnique({
+      where: { userId },
+      select: { nativeLanguage: true, targetLanguage: true },
+    });
+    return languagePairFromProfile(profile);
+  },
+  ["language-pair"],
+  { revalidate: 300, tags: ["language-pair"] }
+);
 
-  return languagePairFromProfile(profile);
+export async function getLanguagePair(userId: string) {
+  return getCachedLanguagePair(userId);
+}
+
+export function invalidateLanguagePairCache() {
+  revalidateTag("language-pair", { expire: 0 });
 }
 
 export async function getLanguageProfile(userId: string) {
@@ -29,11 +42,13 @@ export async function updateLanguageProfile(
   userId: string,
   data: { nativeLanguage: string; targetLanguage: string },
 ) {
-  return prisma.languageProfile.update({
+  const result = await prisma.languageProfile.update({
     where: { userId },
     data: {
       nativeLanguage: data.nativeLanguage,
       targetLanguage: data.targetLanguage,
     },
   });
+  invalidateLanguagePairCache();
+  return result;
 }
