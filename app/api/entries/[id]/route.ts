@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
 import {
+  deleteJournalEntryForUser,
   getJournalEntryForUser,
   updateJournalEntryBody,
   updateJournalEntryTitle,
@@ -65,4 +66,20 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const entry = await getJournalEntryForUser(id, user.id);
   return NextResponse.json({ entry });
+}
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  const user = await getAuthenticatedAppUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+  const result = await deleteJournalEntryForUser(id, user.id);
+
+  if (!result.ok) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  return new NextResponse(null, { status: 204 });
 }
