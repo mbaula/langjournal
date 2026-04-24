@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Trash2 } from "lucide-react";
 
+import { useEntry } from "@/lib/entries/entry-context";
 import { cn } from "@/lib/utils";
 
 export async function deleteJournalEntryRequest(
@@ -40,6 +41,7 @@ export function DeleteEntryControl({
   className,
 }: DeleteEntryControlProps) {
   const router = useRouter();
+  const { removeEntryFromCache } = useEntry();
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
 
@@ -47,8 +49,8 @@ export function DeleteEntryControl({
     setPending(true);
     const result = await deleteJournalEntryRequest(entryId);
     if (result.ok) {
+      removeEntryFromCache(entryId);
       router.push(redirectTo);
-      router.refresh();
     }
     setPending(false);
     setConfirming(false);

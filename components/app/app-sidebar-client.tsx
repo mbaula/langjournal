@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   useCallback,
@@ -19,6 +19,7 @@ import {
   Sun,
 } from "lucide-react";
 
+import { useEntry } from "@/lib/entries/entry-context";
 import { cn } from "@/lib/utils";
 
 export type RecentEntry = {
@@ -32,17 +33,24 @@ type AppSidebarClientProps = {
   recents: RecentEntry[];
 };
 
+function formatDefaultTitle(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export function AppSidebarClient({
   userEmail,
   recents,
 }: AppSidebarClientProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
+  const { switchEntry } = useEntry();
   const [mounted, setMounted] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [newEntryPending, setNewEntryPending] = useState(false);
-  const [newEntryError, setNewEntryError] = useState<string | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,31 +67,23 @@ export function AppSidebarClient({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [userMenuOpen]);
 
-  const createTodayEntry = useCallback(async () => {
+  const createEntry = useCallback(async () => {
+    if (newEntryPending) return;
     setNewEntryPending(true);
-    setNewEntryError(null);
     try {
       const res = await fetch("/api/entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: "{}",
+        body: JSON.stringify({ title: formatDefaultTitle() }),
       });
-      const data = (await res.json()) as {
-        error?: string;
-        entry?: { id: string };
-      };
-      if (!res.ok || !data.entry?.id) {
-        setNewEntryError(data.error ?? "Could not create entry");
-        return;
+      const data = (await res.json()) as { entry?: { id: string } };
+      if (data.entry?.id) {
+        switchEntry(data.entry.id);
       }
-      router.push(`/app/entry/${data.entry.id}`);
-      router.refresh();
-    } catch {
-      setNewEntryError("Something went wrong");
     } finally {
       setNewEntryPending(false);
     }
-  }, [router]);
+  }, [newEntryPending, switchEntry]);
 
   const toggleColorMode = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -150,24 +150,16 @@ export function AppSidebarClient({
           <button
             type="button"
             disabled={newEntryPending}
-            onClick={() => void createTodayEntry()}
+            onClick={() => void createEntry()}
             className={cn(
               "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors",
               "hover:bg-sidebar-accent",
-              newEntryPending && "pointer-events-none opacity-60",
+              newEntryPending && "opacity-60",
             )}
           >
             <Plus className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
             {newEntryPending ? "Opening…" : "New entry"}
           </button>
-          {newEntryError ? (
-            <p
-              className="px-2 text-[12px] text-destructive leading-snug"
-              role="alert"
-            >
-              {newEntryError}
-            </p>
-          ) : null}
 
           <button
             type="button"
@@ -233,21 +225,21 @@ export function AppSidebarClient({
           ) : (
             <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto overscroll-contain pr-0.5">
               {recents.map((entry) => {
-                const href = `/app/entry/${entry.id}`;
-                const active = pathname === href;
+                const active = pathname === `/app/entry/${entry.id}`;
                 const primary = entry.title?.trim() || entry.dayLabel;
                 const subtitle = entry.title?.trim() ? entry.dayLabel : null;
                 return (
                   <li key={entry.id}>
-                    <Link
-                      href={href}
+                    <button
+                      type="button"
+                      onClick={() => switchEntry(entry.id)}
                       title={
                         subtitle
                           ? `${entry.title} · ${entry.dayLabel}`
                           : primary
                       }
                       className={cn(
-                        "block rounded-md px-2 py-1.5 text-[13px] transition-colors",
+                        "block w-full text-left rounded-md px-2 py-1.5 text-[13px] transition-colors",
                         active
                           ? "bg-sidebar-accent font-medium"
                           : "hover:bg-sidebar-accent/80",
@@ -259,7 +251,7 @@ export function AppSidebarClient({
                           {subtitle}
                         </span>
                       ) : null}
-                    </Link>
+                    </button>
                   </li>
                 );
               })}
