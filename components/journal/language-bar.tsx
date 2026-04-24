@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 
+import type { TranslateTrigger } from "@/components/journal/journal-editor";
+
 type Lang = { code: string; name: string };
 
 type LanguageBarProps = {
   source: string;
   target: string;
+  translateTrigger?: TranslateTrigger;
 };
 
 const selectClass =
@@ -20,7 +23,9 @@ const selectClass =
 export function LanguageBar({
   source: initialSource,
   target: initialTarget,
+  translateTrigger = "enter",
 }: LanguageBarProps) {
+  const triggerKeyLabel = translateTrigger === "tab" ? "Tab" : "Enter";
   const [source, setSource] = useState(initialSource);
   const [target, setTarget] = useState(initialTarget);
 
@@ -264,7 +269,7 @@ export function LanguageBar({
               translate with <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>.
               Pressing{" "}
               <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
-                Enter
+                {triggerKeyLabel}
               </kbd>{" "}
               runs translation on the text <strong className="text-foreground">after</strong>{" "}
               <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>{" "}
@@ -288,7 +293,7 @@ export function LanguageBar({
                 <span className="text-muted-foreground">
                   You press{" "}
                   <kbd className="rounded border border-border bg-background px-1">
-                    Enter
+                    {triggerKeyLabel}
                   </kbd>
                   :
                 </span>

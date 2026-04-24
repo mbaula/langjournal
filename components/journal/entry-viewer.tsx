@@ -4,13 +4,17 @@ import Link from "next/link";
 
 import { DeleteEntryControl } from "@/components/journal/delete-entry-control";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
-import { JournalEditor } from "@/components/journal/journal-editor";
+import {
+  JournalEditor,
+  type TranslateTrigger,
+} from "@/components/journal/journal-editor";
 import { LanguageBar } from "@/components/journal/language-bar";
 import { useEntry } from "@/lib/entries/entry-context";
 
 type EntryViewerProps = {
   sourceLanguage: string;
   targetLanguage: string;
+  translateTrigger?: TranslateTrigger;
 };
 
 function formatEntryDay(d: string) {
@@ -23,7 +27,11 @@ function formatEntryDay(d: string) {
   });
 }
 
-export function EntryViewer({ sourceLanguage, targetLanguage }: EntryViewerProps) {
+export function EntryViewer({
+  sourceLanguage,
+  targetLanguage,
+  translateTrigger,
+}: EntryViewerProps) {
   const { currentEntry, isLoading, error } = useEntry();
 
   if (error) {
@@ -103,7 +111,11 @@ export function EntryViewer({ sourceLanguage, targetLanguage }: EntryViewerProps
             <DeleteEntryControl entryId={currentEntry.id} />
           </nav>
           <div className="shrink-0">
-            <LanguageBar source={sourceLanguage} target={targetLanguage} />
+            <LanguageBar
+              source={sourceLanguage}
+              target={targetLanguage}
+              translateTrigger={translateTrigger}
+            />
           </div>
         </div>
         <EntryTitleField
@@ -120,6 +132,7 @@ export function EntryViewer({ sourceLanguage, targetLanguage }: EntryViewerProps
         initialTranslations={currentEntry.translations ?? []}
         sourceLanguage={sourceLanguage}
         targetLanguage={targetLanguage}
+        translateTrigger={translateTrigger}
       />
     </div>
   );

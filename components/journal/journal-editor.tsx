@@ -25,12 +25,15 @@ export type InlineTranslation = {
   translatedText: string;
 };
 
+export type TranslateTrigger = "enter" | "tab";
+
 type JournalEditorProps = {
   entryId: string;
   initialBody: string;
   initialTranslations: InlineTranslation[];
   sourceLanguage: string;
   targetLanguage: string;
+  translateTrigger?: TranslateTrigger;
 };
 
 /* ------------------------------------------------------------------ */
@@ -147,6 +150,7 @@ export function JournalEditor({
   initialTranslations,
   sourceLanguage,
   targetLanguage,
+  translateTrigger = "enter",
 }: JournalEditorProps) {
   const [body, setBody] = useState(initialBody);
   const [translations, setTranslations] =
@@ -367,7 +371,11 @@ export function JournalEditor({
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      const triggerKey = translateTrigger === "tab" ? "Tab" : "Enter";
+      const isTriggerKey = e.key === triggerKey;
+
+      // When using Enter trigger: Ctrl/Cmd+Enter inserts newline
+      if (translateTrigger === "enter" && e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         const start = e.currentTarget.selectionStart;
         const end = e.currentTarget.selectionEnd;
@@ -378,158 +386,170 @@ export function JournalEditor({
         return;
       }
 
-      if (e.key === "Enter") {
+      // Check if we're in a translation segment
+      const cursorPos = e.currentTarget.selectionStart;
+      const text = bodyRef.current;
+      const parsed = parseCurrentSlashSegment(text, cursorPos);
+
+      // Tab trigger: only intercept Tab if we're in a // segment
+      if (translateTrigger === "tab" && e.key === "Tab") {
+        if (!parsed) return; // Let Tab behave normally (or do nothing)
         e.preventDefault();
-        const cursorPos = e.currentTarget.selectionStart;
-        const text = bodyRef.current;
-        const parsed = parseCurrentSlashSegment(text, cursorPos);
+      }
+
+      // Enter trigger: always intercept Enter, but only translate if in // segment
+      if (translateTrigger === "enter" && e.key === "Enter") {
+        e.preventDefault();
         if (!parsed) return;
+      }
 
-        const { absStart, afterSlash } = parsed;
-        const trimmed = afterSlash.trim();
-        const key = translationMemoryCacheKey(
-          sourceLanguage,
-          targetLanguage,
-          trimmed,
-        );
+      // If this isn't the trigger key, or we're not in a // segment, bail
+      if (!isTriggerKey || !parsed) return;
 
-        const norm = normalizeTranslationSource(trimmed);
-        const fromState = translationsRef.current.find(
-          (t) => normalizeTranslationSource(t.sourceText) === norm,
+      const { absStart, afterSlash } = parsed;
+      const trimmed = afterSlash.trim();
+      const key = translationMemoryCacheKey(
+        sourceLanguage,
+        targetLanguage,
+        trimmed,
+      );
+
+      const norm = normalizeTranslationSource(trimmed);
+      const fromState = translationsRef.current.find(
+        (t) => normalizeTranslationSource(t.sourceText) === norm,
+      );
+      if (fromState) {
+        const applied = tryApplySlashTranslation(
+          text,
+          absStart,
+          norm,
+          fromState.translatedText,
         );
-        if (fromState) {
+        if (!applied) return;
+        pendingCursorRef.current = applied.cursor;
+        setBody(applied.next);
+        void saveBody(applied.next);
+        requestAnimationFrame(() => textareaRef.current?.focus());
+        return;
+      }
+
+      void (async () => {
+        const rollbackBody = text;
+
+        const applyCommitted = (t: InlineTranslation) => {
+          const cur = bodyRef.current;
           const applied = tryApplySlashTranslation(
-            text,
+            cur,
             absStart,
             norm,
-            fromState.translatedText,
+            t.translatedText,
           );
           if (!applied) return;
           pendingCursorRef.current = applied.cursor;
           setBody(applied.next);
+          setTranslations((prev) => mergeTranslationState(prev, t));
           void saveBody(applied.next);
+          clientSessionCacheRef.current.set(key, {
+            sourceText: t.sourceText,
+            translatedText: t.translatedText,
+          });
           requestAnimationFrame(() => textareaRef.current?.focus());
-          return;
-        }
+        };
 
-        void (async () => {
-          const rollbackBody = text;
+        const cached = clientSessionCacheRef.current.get(key);
+        if (cached) {
+          const optimistic = tryApplySlashTranslation(
+            text,
+            absStart,
+            norm,
+            cached.translatedText,
+          );
+          if (!optimistic) return;
+          pendingCursorRef.current = optimistic.cursor;
+          setBody(optimistic.next);
+          void saveBody(optimistic.next);
 
-          const applyCommitted = (t: InlineTranslation) => {
-            const cur = bodyRef.current;
-            const applied = tryApplySlashTranslation(
-              cur,
+          const t = await fetchCommitTranslation(trimmed);
+          if (!t) {
+            setBody(rollbackBody);
+            void saveBody(rollbackBody);
+            return;
+          }
+          setTranslations((prev) => mergeTranslationState(prev, t));
+          clientSessionCacheRef.current.set(key, {
+            sourceText: t.sourceText,
+            translatedText: t.translatedText,
+          });
+          if (t.translatedText !== cached.translatedText) {
+            const fix = tryApplySlashTranslation(
+              bodyRef.current,
               absStart,
               norm,
               t.translatedText,
             );
-            if (!applied) return;
-            pendingCursorRef.current = applied.cursor;
-            setBody(applied.next);
-            setTranslations((prev) => mergeTranslationState(prev, t));
-            void saveBody(applied.next);
-            clientSessionCacheRef.current.set(key, {
-              sourceText: t.sourceText,
-              translatedText: t.translatedText,
-            });
-            requestAnimationFrame(() => textareaRef.current?.focus());
-          };
-
-          const cached = clientSessionCacheRef.current.get(key);
-          if (cached) {
-            const optimistic = tryApplySlashTranslation(
-              text,
-              absStart,
-              norm,
-              cached.translatedText,
-            );
-            if (!optimistic) return;
-            pendingCursorRef.current = optimistic.cursor;
-            setBody(optimistic.next);
-            void saveBody(optimistic.next);
-
-            const t = await fetchCommitTranslation(trimmed);
-            if (!t) {
-              setBody(rollbackBody);
-              void saveBody(rollbackBody);
-              return;
+            if (fix) {
+              pendingCursorRef.current = fix.cursor;
+              setBody(fix.next);
+              void saveBody(fix.next);
             }
-            setTranslations((prev) => mergeTranslationState(prev, t));
-            clientSessionCacheRef.current.set(key, {
-              sourceText: t.sourceText,
-              translatedText: t.translatedText,
-            });
-            if (t.translatedText !== cached.translatedText) {
-              const fix = tryApplySlashTranslation(
-                bodyRef.current,
-                absStart,
-                norm,
-                t.translatedText,
-              );
-              if (fix) {
-                pendingCursorRef.current = fix.cursor;
-                setBody(fix.next);
-                void saveBody(fix.next);
-              }
-            }
-            requestAnimationFrame(() => textareaRef.current?.focus());
-            return;
           }
+          requestAnimationFrame(() => textareaRef.current?.focus());
+          return;
+        }
 
-          const inflight = prefetchInflightRef.current.get(key);
-          if (inflight) {
-            const pref = await inflight;
-            if (!pref) return;
-            const cur = bodyRef.current;
-            if (cur.slice(absStart, absStart + 2) !== "//") return;
-            const optimistic = tryApplySlashTranslation(
-              cur,
-              absStart,
-              norm,
-              pref.translatedText,
-            );
-            if (!optimistic) return;
-            pendingCursorRef.current = optimistic.cursor;
-            setBody(optimistic.next);
-            void saveBody(optimistic.next);
-
-            const t = await fetchCommitTranslation(trimmed);
-            if (!t) {
-              setBody(rollbackBody);
-              void saveBody(rollbackBody);
-              return;
-            }
-            setTranslations((prev) => mergeTranslationState(prev, t));
-            clientSessionCacheRef.current.set(key, {
-              sourceText: t.sourceText,
-              translatedText: t.translatedText,
-            });
-            if (t.translatedText !== pref.translatedText) {
-              const fix = tryApplySlashTranslation(
-                bodyRef.current,
-                absStart,
-                norm,
-                t.translatedText,
-              );
-              if (fix) {
-                pendingCursorRef.current = fix.cursor;
-                setBody(fix.next);
-                void saveBody(fix.next);
-              }
-            }
-            requestAnimationFrame(() => textareaRef.current?.focus());
-            return;
-          }
-
-          if (text.slice(absStart, absStart + 2) !== "//") return;
+        const inflight = prefetchInflightRef.current.get(key);
+        if (inflight) {
+          const pref = await inflight;
+          if (!pref) return;
+          const cur = bodyRef.current;
+          if (cur.slice(absStart, absStart + 2) !== "//") return;
+          const optimistic = tryApplySlashTranslation(
+            cur,
+            absStart,
+            norm,
+            pref.translatedText,
+          );
+          if (!optimistic) return;
+          pendingCursorRef.current = optimistic.cursor;
+          setBody(optimistic.next);
+          void saveBody(optimistic.next);
 
           const t = await fetchCommitTranslation(trimmed);
-          if (!t) return;
-          applyCommitted(t);
-        })();
-      }
+          if (!t) {
+            setBody(rollbackBody);
+            void saveBody(rollbackBody);
+            return;
+          }
+          setTranslations((prev) => mergeTranslationState(prev, t));
+          clientSessionCacheRef.current.set(key, {
+            sourceText: t.sourceText,
+            translatedText: t.translatedText,
+          });
+          if (t.translatedText !== pref.translatedText) {
+            const fix = tryApplySlashTranslation(
+              bodyRef.current,
+              absStart,
+              norm,
+              t.translatedText,
+            );
+            if (fix) {
+              pendingCursorRef.current = fix.cursor;
+              setBody(fix.next);
+              void saveBody(fix.next);
+            }
+          }
+          requestAnimationFrame(() => textareaRef.current?.focus());
+          return;
+        }
+
+        if (text.slice(absStart, absStart + 2) !== "//") return;
+
+        const t = await fetchCommitTranslation(trimmed);
+        if (!t) return;
+        applyCommitted(t);
+      })();
     },
-    [fetchCommitTranslation, saveBody, sourceLanguage, targetLanguage],
+    [fetchCommitTranslation, saveBody, sourceLanguage, targetLanguage, translateTrigger],
   );
 
   const handleBlur = useCallback(
