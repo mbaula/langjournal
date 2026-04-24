@@ -41,6 +41,15 @@ function formatDefaultTitle(): string {
   });
 }
 
+function getTodayLabel(): string {
+  return new Date().toLocaleDateString(undefined, {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export function AppSidebarClient({
   userEmail,
   recents,
@@ -52,6 +61,9 @@ export function AppSidebarClient({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [newEntryPending, setNewEntryPending] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const todayLabel = getTodayLabel();
+  const todayEntry = recents.find((e) => e.dayLabel === todayLabel);
 
   useEffect(() => {
     setMounted(true);
@@ -67,8 +79,16 @@ export function AppSidebarClient({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [userMenuOpen]);
 
-  const createEntry = useCallback(async () => {
+  const openTodayEntry = useCallback(async () => {
     if (newEntryPending) return;
+    
+    // If we already know there's an entry for today, just switch to it
+    if (todayEntry) {
+      switchEntry(todayEntry.id);
+      return;
+    }
+    
+    // Otherwise, create a new entry
     setNewEntryPending(true);
     try {
       const res = await fetch("/api/entries", {
@@ -83,7 +103,7 @@ export function AppSidebarClient({
     } finally {
       setNewEntryPending(false);
     }
-  }, [newEntryPending, switchEntry]);
+  }, [newEntryPending, switchEntry, todayEntry]);
 
   const toggleColorMode = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -150,7 +170,7 @@ export function AppSidebarClient({
           <button
             type="button"
             disabled={newEntryPending}
-            onClick={() => void createEntry()}
+            onClick={() => void openTodayEntry()}
             className={cn(
               "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors",
               "hover:bg-sidebar-accent",
@@ -158,7 +178,11 @@ export function AppSidebarClient({
             )}
           >
             <Plus className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
-            {newEntryPending ? "Opening…" : "New entry"}
+            {newEntryPending
+              ? "Opening…"
+              : todayEntry
+                ? "Today's entry"
+                : "New entry"}
           </button>
 
           <button
