@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
+
+import { useTheme } from "@/components/theme-provider";
 import {
   useCallback,
   useEffect,
@@ -19,22 +20,24 @@ import {
   Sun,
 } from "lucide-react";
 
+import { SidebarRecentEntryItem } from "@/components/app/sidebar-recent-entry-item";
+import type { RecentEntry } from "@/components/app/recent-entry";
 import { cn } from "@/lib/utils";
 
-export type RecentEntry = {
-  id: string;
-  title: string | null;
-  dayLabel: string;
-};
+export type { RecentEntry };
 
 type AppSidebarClientProps = {
   userEmail: string;
   recents: RecentEntry[];
+  onRenameTitle?: (entryId: string) => void;
+  onDelete?: (entryId: string) => void;
 };
 
 export function AppSidebarClient({
   userEmail,
   recents,
+  onRenameTitle,
+  onDelete,
 }: AppSidebarClientProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -89,8 +92,7 @@ export function AppSidebarClient({
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }, [resolvedTheme, setTheme]);
 
-  const journalActive =
-    pathname === "/app/journal" || pathname.startsWith("/app/entry");
+  const journalActive = pathname === "/app/journal";
 
   const displayUser = userEmail.trim() || "Account";
 
@@ -146,7 +148,7 @@ export function AppSidebarClient({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-2 py-2">
-        <div className="shrink-0 space-y-1">
+        <div className="shrink-0 space-y-2">
           <button
             type="button"
             disabled={newEntryPending}
@@ -210,6 +212,7 @@ export function AppSidebarClient({
 
           <Link
             href="/app/journal"
+            suppressHydrationWarning
             className={cn(
               "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors",
               journalActive
@@ -231,36 +234,17 @@ export function AppSidebarClient({
               No entries yet.
             </p>
           ) : (
-            <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto overscroll-contain pr-0.5">
+            <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-0.5">
               {recents.map((entry) => {
                 const href = `/app/entry/${entry.id}`;
-                const active = pathname === href;
-                const primary = entry.title?.trim() || entry.dayLabel;
-                const subtitle = entry.title?.trim() ? entry.dayLabel : null;
                 return (
-                  <li key={entry.id}>
-                    <Link
-                      href={href}
-                      title={
-                        subtitle
-                          ? `${entry.title} · ${entry.dayLabel}`
-                          : primary
-                      }
-                      className={cn(
-                        "block rounded-md px-2 py-1.5 text-[13px] transition-colors",
-                        active
-                          ? "bg-sidebar-accent font-medium"
-                          : "hover:bg-sidebar-accent/80",
-                      )}
-                    >
-                      <span className="block truncate">{primary}</span>
-                      {subtitle ? (
-                        <span className="block truncate text-[12px] text-muted-foreground">
-                          {subtitle}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </li>
+                  <SidebarRecentEntryItem
+                    key={entry.id}
+                    {...entry}
+                    active={pathname === href}
+                    onRenameTitle={onRenameTitle}
+                    onDelete={onDelete}
+                  />
                 );
               })}
             </ul>
