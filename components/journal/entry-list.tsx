@@ -1,12 +1,19 @@
-import Link from "next/link";
-
-import { cn } from "@/lib/utils";
+import {
+  EntryListItem,
+  type EntryListItemProps,
+} from "@/components/journal/entry-list-item";
 
 type EntryRow = {
   id: string;
   title: string | null;
   entryDate: Date;
   updatedAt: Date;
+};
+
+type EntryListProps = {
+  entries: EntryRow[];
+  onRenameTitle?: EntryListItemProps["onRenameTitle"];
+  onDelete?: EntryListItemProps["onDelete"];
 };
 
 function formatEntryDay(d: Date) {
@@ -18,7 +25,11 @@ function formatEntryDay(d: Date) {
   });
 }
 
-export function EntryList({ entries }: { entries: EntryRow[] }) {
+export function EntryList({
+  entries,
+  onRenameTitle,
+  onDelete,
+}: EntryListProps) {
   if (entries.length === 0) {
     return (
       <p className="text-[13px] text-muted-foreground">No entries yet.</p>
@@ -26,35 +37,18 @@ export function EntryList({ entries }: { entries: EntryRow[] }) {
   }
 
   return (
-    <ul className="flex w-full flex-col">
-      {entries.map((entry) => {
-        const title = entry.title?.trim();
-        const dateLabel = formatEntryDay(entry.entryDate);
-
-        return (
-          <li key={entry.id}>
-            <Link
-              href={`/app/entry/${entry.id}`}
-              className={cn(
-                "block min-w-0 truncate rounded-md px-2 py-2 text-[14px] transition-colors",
-                "text-foreground hover:bg-muted",
-              )}
-            >
-              {title ? (
-                <>
-                  <span className="font-medium">{title}</span>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    · {dateLabel}
-                  </span>
-                </>
-              ) : (
-                <span className="text-muted-foreground">{dateLabel}</span>
-              )}
-            </Link>
-          </li>
-        );
-      })}
+    <ul className="flex w-full flex-col gap-0.5">
+      {entries.map((entry) => (
+        <EntryListItem
+          key={entry.id}
+          entryId={entry.id}
+          href={`/app/entry/${entry.id}`}
+          title={entry.title}
+          dateLabel={formatEntryDay(entry.entryDate)}
+          onRenameTitle={onRenameTitle}
+          onDelete={onDelete}
+        />
+      ))}
     </ul>
   );
 }

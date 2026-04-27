@@ -1,25 +1,20 @@
 import { requireUser } from "@/lib/auth/session";
-import { listJournalEntries } from "@/lib/entries/service";
+import { listJournalRecentsForSidebar } from "@/lib/entries/service";
+import { bodySnippetForSidebar } from "@/lib/text/entry-sidebar-preview";
 
 import { AppSidebarClient } from "./app-sidebar-client";
 
-function formatEntryDay(d: Date) {
-  return d.toLocaleDateString(undefined, {
-    timeZone: "UTC",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export async function AppSidebar() {
   const user = await requireUser();
-  const entries = await listJournalEntries(user.id);
-  const recents = entries.map((e) => ({
-    id: e.id,
-    title: e.title?.trim() ? e.title.trim() : null,
-    dayLabel: formatEntryDay(e.entryDate),
-  }));
+  const entries = await listJournalRecentsForSidebar(user.id);
+  const recents = entries.map((e) => {
+    const title = e.title?.trim() ? e.title.trim() : null;
+    return {
+      id: e.id,
+      title,
+      bodyPreview: title ? "" : bodySnippetForSidebar(e.body),
+    };
+  });
 
   return (
     <AppSidebarClient userEmail={user.email} recents={recents} />

@@ -18,6 +18,19 @@ export async function listJournalEntries(userId: string) {
   });
 }
 
+/** Same order as the journal list; includes body for sidebar preview when title is empty. */
+export async function listJournalRecentsForSidebar(userId: string) {
+  return prisma.journalEntry.findMany({
+    where: { userId },
+    orderBy: { entryDate: "desc" },
+    select: {
+      id: true,
+      title: true,
+      body: true,
+    },
+  });
+}
+
 export async function getJournalEntryForUser(entryId: string, userId: string) {
   return prisma.journalEntry.findFirst({
     where: { id: entryId, userId },
