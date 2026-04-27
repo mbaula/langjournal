@@ -55,8 +55,11 @@ Native and learning languages are per user (`LanguageProfile` in Prisma). Change
 | `npm run dev` | Dev server |
 | `npm run build` | `prisma generate` then production build |
 | `npm run lint` | ESLint |
-| `npm test` | Run unit tests with coverage |
+| `npm test` | Run unit tests (coverage) then integration tests |
+| `npm run test:unit` | Run unit tests with coverage |
+| `npm run test:integration` | Run integration tests |
 | `npm run test:watch` | Run unit tests in watch mode |
+| `npm run test:integration:watch` | Run integration tests in watch mode |
 | `npm run db:push` | Apply schema to DB (no migration files) |
 | `npm run db:migrate` | Prisma migrate (when you use migrations) |
 | `npm run db:studio` | Prisma Studio |
