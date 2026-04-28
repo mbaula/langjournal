@@ -3,11 +3,11 @@ import {
   type EntryListItemProps,
 } from "@/components/journal/entry-list-item";
 
-type EntryRow = {
+export type EntryRow = {
   id: string;
   title: string | null;
-  entryDate: Date;
-  updatedAt: Date;
+  entryDate: Date | string;
+  updatedAt: Date | string;
 };
 
 type EntryListProps = {
@@ -16,8 +16,9 @@ type EntryListProps = {
   onDelete?: EntryListItemProps["onDelete"];
 };
 
-function formatEntryDay(d: Date) {
-  return d.toLocaleDateString(undefined, {
+function formatEntryDay(d: Date | string) {
+  const date = typeof d === "string" ? new Date(d) : d;
+  return date.toLocaleDateString(undefined, {
     timeZone: "UTC",
     year: "numeric",
     month: "short",
