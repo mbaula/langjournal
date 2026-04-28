@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AppUser = { id: string; email: string };
 
-export async function requireUser(): Promise<AppUser> {
+export async function requireUser(redirectTo = "/app/journal"): Promise<AppUser> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -13,7 +13,7 @@ export async function requireUser(): Promise<AppUser> {
   } = await supabase.auth.getUser();
 
   if (error || !user?.id) {
-    redirect("/login?redirectTo=/app/journal");
+    redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
   }
 
   const email = user.email ?? "";
