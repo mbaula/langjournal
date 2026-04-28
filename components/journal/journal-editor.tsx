@@ -576,7 +576,7 @@ export function JournalEditor({
     [schedulePrefetch],
   );
 
-  const lines = body.split("\n");
+  const lines = useMemo(() => body.split("\n"), [body]);
   const wordCount = useMemo(() => countWords(body), [body]);
 
   if (editing) {
@@ -637,7 +637,7 @@ export function JournalEditor({
                       <span key={si} className="group/tw relative inline">
                         <span
                           title={seg.translation.sourceText}
-                          className="cursor-help rounded-[2px] bg-amber-100 px-0.5 [box-decoration-break:clone] dark:bg-amber-950/55"
+                          className="cursor-help rounded-[2px] bg-amber-100 px-0.5 [box-decoration-break:clone] dark:bg-amber-400/22"
                         >
                           {seg.text}
                         </span>

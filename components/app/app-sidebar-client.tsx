@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   ChevronDown,
@@ -19,14 +14,11 @@ import {
 } from "lucide-react";
 
 import { useTheme } from "@/components/theme-provider";
-import { useEntry } from "@/lib/entries/entry-context";
+import { SidebarRecentEntryItem } from "@/components/app/sidebar-recent-entry-item";
+import type { RecentEntry } from "@/components/app/recent-entry";
 import { cn } from "@/lib/utils";
 
-export type RecentEntry = {
-  id: string;
-  title: string | null;
-  dayLabel: string;
-};
+export type { RecentEntry };
 
 type AppSidebarClientProps = {
   userEmail: string;
@@ -41,29 +33,29 @@ function formatDefaultTitle(): string {
   });
 }
 
-function getTodayLabel(): string {
-  return new Date().toLocaleDateString(undefined, {
-    timeZone: "UTC",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export function AppSidebarClient({
   userEmail,
-  recents,
+  recents: initialRecents,
 }: AppSidebarClientProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
-  const { switchEntry } = useEntry();
   const [mounted, setMounted] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [newEntryPending, setNewEntryPending] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const todayLabel = getTodayLabel();
-  const todayEntry = recents.find((e) => e.dayLabel === todayLabel);
+  const [recents, setRecents] = useState(initialRecents);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deletePending, setDeletePending] = useState(false);
+  const [renameEntryId, setRenameEntryId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renamePending, setRenamePending] = useState(false);
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setRecents(initialRecents);
+  }, [initialRecents]);
 
   useEffect(() => {
     setMounted(true);
@@ -79,16 +71,16 @@ export function AppSidebarClient({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [userMenuOpen]);
 
+  useEffect(() => {
+    if (renameEntryId) {
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+    }
+  }, [renameEntryId]);
+
   const openTodayEntry = useCallback(async () => {
     if (newEntryPending) return;
-    
-    // If we already know there's an entry for today, just switch to it
-    if (todayEntry) {
-      switchEntry(todayEntry.id);
-      return;
-    }
-    
-    // Otherwise, create a new entry
+
     setNewEntryPending(true);
     try {
       const res = await fetch("/api/entries", {
@@ -98,20 +90,86 @@ export function AppSidebarClient({
       });
       const data = (await res.json()) as { entry?: { id: string } };
       if (data.entry?.id) {
-        switchEntry(data.entry.id);
+        router.push(`/app/entry/${data.entry.id}`);
+        router.refresh();
       }
     } finally {
       setNewEntryPending(false);
     }
-  }, [newEntryPending, switchEntry, todayEntry]);
+  }, [newEntryPending, router]);
 
   const toggleColorMode = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }, [resolvedTheme, setTheme]);
 
-  const journalActive =
-    pathname === "/app/journal" || pathname.startsWith("/app/entry");
+  const handleRenameStart = useCallback((entryId: string) => {
+    const entry = initialRecents.find((e) => e.id === entryId);
+    setRenameEntryId(entryId);
+    setRenameValue(entry?.title ?? "");
+  }, [initialRecents]);
 
+  const handleRenameCancel = useCallback(() => {
+    setRenameEntryId(null);
+    setRenameValue("");
+  }, []);
+
+  const handleRenameSave = useCallback(async () => {
+    if (!renameEntryId || renamePending) return;
+
+    setRenamePending(true);
+    try {
+      const res = await fetch(`/api/entries/${renameEntryId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: renameValue.trim() }),
+      });
+      if (res.ok) {
+        setRecents((prev) =>
+          prev.map((e) =>
+            e.id === renameEntryId
+              ? { ...e, title: renameValue.trim() || null }
+              : e,
+          ),
+        );
+        router.refresh();
+      }
+    } finally {
+      setRenamePending(false);
+      setRenameEntryId(null);
+      setRenameValue("");
+    }
+  }, [renameEntryId, renameValue, renamePending, router]);
+
+  const handleDeleteStart = useCallback((entryId: string) => {
+    setDeleteConfirm(entryId);
+  }, []);
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteConfirm(null);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteConfirm || deletePending) return;
+
+    setDeletePending(true);
+    try {
+      const res = await fetch(`/api/entries/${deleteConfirm}`, {
+        method: "DELETE",
+      });
+      if (res.ok || res.status === 404) {
+        setRecents((prev) => prev.filter((e) => e.id !== deleteConfirm));
+        if (pathname === `/app/entry/${deleteConfirm}`) {
+          router.push("/app/journal");
+        }
+        router.refresh();
+      }
+    } finally {
+      setDeletePending(false);
+      setDeleteConfirm(null);
+    }
+  }, [deleteConfirm, deletePending, pathname, router]);
+
+  const journalActive = pathname === "/app/journal";
   const displayUser = userEmail.trim() || "Account";
 
   return (
@@ -166,7 +224,7 @@ export function AppSidebarClient({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-2 py-2">
-        <div className="shrink-0 space-y-1">
+        <div className="shrink-0 space-y-2">
           <button
             type="button"
             disabled={newEntryPending}
@@ -178,11 +236,7 @@ export function AppSidebarClient({
             )}
           >
             <Plus className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
-            {newEntryPending
-              ? "Opening…"
-              : todayEntry
-                ? "Today's entry"
-                : "New entry"}
+            {newEntryPending ? "Opening…" : "New entry"}
           </button>
 
           <button
@@ -226,6 +280,7 @@ export function AppSidebarClient({
 
           <Link
             href="/app/journal"
+            suppressHydrationWarning
             className={cn(
               "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors",
               journalActive
@@ -233,7 +288,10 @@ export function AppSidebarClient({
                 : "hover:bg-sidebar-accent/80",
             )}
           >
-            <BookOpen className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+            <BookOpen
+              className="size-4 shrink-0 opacity-70"
+              strokeWidth={1.75}
+            />
             Journal
           </Link>
         </div>
@@ -247,36 +305,75 @@ export function AppSidebarClient({
               No entries yet.
             </p>
           ) : (
-            <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto overscroll-contain pr-0.5">
+            <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-0.5">
               {recents.map((entry) => {
-                const active = pathname === `/app/entry/${entry.id}`;
-                const primary = entry.title?.trim() || entry.dayLabel;
-                const subtitle = entry.title?.trim() ? entry.dayLabel : null;
-                return (
-                  <li key={entry.id}>
-                    <button
-                      type="button"
-                      onClick={() => switchEntry(entry.id)}
-                      title={
-                        subtitle
-                          ? `${entry.title} · ${entry.dayLabel}`
-                          : primary
-                      }
-                      className={cn(
-                        "block w-full text-left rounded-md px-2 py-1.5 text-[13px] transition-colors",
-                        active
-                          ? "bg-sidebar-accent font-medium"
-                          : "hover:bg-sidebar-accent/80",
-                      )}
+                const isActive = pathname === `/app/entry/${entry.id}`;
+                const isDeleting = deleteConfirm === entry.id;
+                const isRenaming = renameEntryId === entry.id;
+
+                if (isDeleting) {
+                  return (
+                    <li
+                      key={entry.id}
+                      className="flex items-center justify-between gap-2 rounded-md bg-destructive/10 px-2 py-1.5"
                     >
-                      <span className="block truncate">{primary}</span>
-                      {subtitle ? (
-                        <span className="block truncate text-[12px] text-muted-foreground">
-                          {subtitle}
-                        </span>
-                      ) : null}
-                    </button>
-                  </li>
+                      <span className="truncate text-[13px] text-destructive">
+                        Delete?
+                      </span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          className="rounded px-2 py-0.5 text-[12px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+                          disabled={deletePending}
+                          onClick={handleDeleteCancel}
+                        >
+                          No
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded px-2 py-0.5 text-[12px] text-destructive transition-colors hover:bg-destructive/20"
+                          disabled={deletePending}
+                          onClick={() => void handleDeleteConfirm()}
+                        >
+                          {deletePending ? "…" : "Yes"}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                }
+
+                if (isRenaming) {
+                  return (
+                    <li key={entry.id} className="px-1">
+                      <input
+                        ref={renameInputRef}
+                        type="text"
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-[13px] text-foreground outline-none focus:border-ring"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            void handleRenameSave();
+                          } else if (e.key === "Escape") {
+                            handleRenameCancel();
+                          }
+                        }}
+                        onBlur={() => void handleRenameSave()}
+                        disabled={renamePending}
+                        placeholder="Entry title..."
+                      />
+                    </li>
+                  );
+                }
+
+                return (
+                  <SidebarRecentEntryItem
+                    key={entry.id}
+                    {...entry}
+                    active={isActive}
+                    onRenameTitle={handleRenameStart}
+                    onDelete={handleDeleteStart}
+                  />
                 );
               })}
             </ul>
