@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { BookLock, LogIn, WifiOff, type LucideIcon } from "lucide-react";
 
-import { DeleteEntryControl } from "@/components/journal/delete-entry-control";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import {
   JournalEditor,
@@ -183,10 +182,6 @@ export function EntryViewer({
               /
             </span>
             <span className="truncate text-muted-foreground">{dayLabel}</span>
-            <span className="text-muted-foreground/50" aria-hidden>
-              /
-            </span>
-            <DeleteEntryControl entryId={currentEntry.id} />
           </nav>
           <div className="shrink-0">
             <LanguageBar
