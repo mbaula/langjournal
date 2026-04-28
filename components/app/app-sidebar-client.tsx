@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
 import {
   useCallback,
   useEffect,
@@ -19,6 +18,7 @@ import {
   Sun,
 } from "lucide-react";
 
+import { useTheme } from "@/components/theme-provider";
 import { useEntry } from "@/lib/entries/entry-context";
 import { cn } from "@/lib/utils";
 

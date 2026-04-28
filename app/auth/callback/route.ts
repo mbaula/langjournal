@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { safeNextPath } from "@/lib/auth/redirect";
+import { getOnboardingState } from "@/lib/db/onboarding";
+import { ensureAppUser } from "@/lib/db/user";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export async function GET(request: Request) {
@@ -50,6 +52,17 @@ export async function GET(request: Request) {
         url.origin,
       ).href,
     );
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user?.id) {
+    await ensureAppUser(user.id, user.email ?? "");
+    const onboarding = await getOnboardingState(user.id);
+    if (!onboarding.isComplete) {
+      return NextResponse.redirect(new URL("/onboarding", url.origin).href);
+    }
   }
 
   return NextResponse.redirect(new URL(next, url.origin).href);

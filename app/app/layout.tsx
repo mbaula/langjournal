@@ -1,14 +1,23 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 import { AppLayoutClient } from "@/components/app/app-layout-client";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { AppSidebarSkeleton } from "@/components/app/app-sidebar-skeleton";
+import { requireUser } from "@/lib/auth/session";
+import { getOnboardingState } from "@/lib/db/onboarding";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await requireUser();
+  const onboarding = await getOnboardingState(user.id);
+  if (!onboarding.isComplete) {
+    redirect("/onboarding");
+  }
+
   return (
     <AppLayoutClient>
       <div className="flex min-h-full flex-1 bg-background transition-[background-color,color] duration-300 ease-out">
