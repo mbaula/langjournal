@@ -3,12 +3,19 @@ import { EntryList } from "@/components/journal/entry-list";
 import { LanguageBar } from "@/components/journal/language-bar";
 import { requireUser } from "@/lib/auth/session";
 import { getLanguagePair } from "@/lib/db/language";
-import { listJournalEntries } from "@/lib/entries/service";
+import { listJournalEntries, utcCalendarDate } from "@/lib/entries/service";
+
+function isSameUtcDay(a: Date, b: Date): boolean {
+  return utcCalendarDate(a).getTime() === utcCalendarDate(b).getTime();
+}
 
 export default async function JournalPage() {
   const user = await requireUser();
   const entries = await listJournalEntries(user.id);
   const { source, target } = await getLanguagePair(user.id);
+
+  const today = new Date();
+  const todayEntry = entries.find((e) => isSameUtcDay(e.entryDate, today));
 
   return (
     <div className="flex w-full flex-col gap-10 pt-2">
@@ -27,7 +34,7 @@ export default async function JournalPage() {
       </div>
       <div className="flex w-full flex-col gap-3">
         <EntryList entries={entries} />
-        <CreateEntryButton />
+        <CreateEntryButton todayEntryId={todayEntry?.id} />
       </div>
     </div>
   );

@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-
-import { useTheme } from "@/components/theme-provider";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   ChevronDown,
@@ -20,6 +13,7 @@ import {
   Sun,
 } from "lucide-react";
 
+import { useTheme } from "@/components/theme-provider";
 import { SidebarRecentEntryItem } from "@/components/app/sidebar-recent-entry-item";
 import type { RecentEntry } from "@/components/app/recent-entry";
 import { cn } from "@/lib/utils";
@@ -29,15 +23,19 @@ export type { RecentEntry };
 type AppSidebarClientProps = {
   userEmail: string;
   recents: RecentEntry[];
-  onRenameTitle?: (entryId: string) => void;
-  onDelete?: (entryId: string) => void;
 };
+
+function formatDefaultTitle(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
 
 export function AppSidebarClient({
   userEmail,
-  recents,
-  onRenameTitle,
-  onDelete,
+  recents: initialRecents,
 }: AppSidebarClientProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -45,8 +43,19 @@ export function AppSidebarClient({
   const [mounted, setMounted] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [newEntryPending, setNewEntryPending] = useState(false);
-  const [newEntryError, setNewEntryError] = useState<string | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const [recents, setRecents] = useState(initialRecents);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deletePending, setDeletePending] = useState(false);
+  const [renameEntryId, setRenameEntryId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renamePending, setRenamePending] = useState(false);
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setRecents(initialRecents);
+  }, [initialRecents]);
 
   useEffect(() => {
     setMounted(true);
@@ -62,38 +71,105 @@ export function AppSidebarClient({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [userMenuOpen]);
 
-  const createTodayEntry = useCallback(async () => {
+  useEffect(() => {
+    if (renameEntryId) {
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+    }
+  }, [renameEntryId]);
+
+  const openTodayEntry = useCallback(async () => {
+    if (newEntryPending) return;
+
     setNewEntryPending(true);
-    setNewEntryError(null);
     try {
       const res = await fetch("/api/entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: "{}",
+        body: JSON.stringify({ title: formatDefaultTitle() }),
       });
-      const data = (await res.json()) as {
-        error?: string;
-        entry?: { id: string };
-      };
-      if (!res.ok || !data.entry?.id) {
-        setNewEntryError(data.error ?? "Could not create entry");
-        return;
+      const data = (await res.json()) as { entry?: { id: string } };
+      if (data.entry?.id) {
+        router.push(`/app/entry/${data.entry.id}`);
+        router.refresh();
       }
-      router.push(`/app/entry/${data.entry.id}`);
-      router.refresh();
-    } catch {
-      setNewEntryError("Something went wrong");
     } finally {
       setNewEntryPending(false);
     }
-  }, [router]);
+  }, [newEntryPending, router]);
 
   const toggleColorMode = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }, [resolvedTheme, setTheme]);
 
-  const journalActive = pathname === "/app/journal";
+  const handleRenameStart = useCallback((entryId: string) => {
+    const entry = initialRecents.find((e) => e.id === entryId);
+    setRenameEntryId(entryId);
+    setRenameValue(entry?.title ?? "");
+  }, [initialRecents]);
 
+  const handleRenameCancel = useCallback(() => {
+    setRenameEntryId(null);
+    setRenameValue("");
+  }, []);
+
+  const handleRenameSave = useCallback(async () => {
+    if (!renameEntryId || renamePending) return;
+
+    setRenamePending(true);
+    try {
+      const res = await fetch(`/api/entries/${renameEntryId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: renameValue.trim() }),
+      });
+      if (res.ok) {
+        setRecents((prev) =>
+          prev.map((e) =>
+            e.id === renameEntryId
+              ? { ...e, title: renameValue.trim() || null }
+              : e,
+          ),
+        );
+        router.refresh();
+      }
+    } finally {
+      setRenamePending(false);
+      setRenameEntryId(null);
+      setRenameValue("");
+    }
+  }, [renameEntryId, renameValue, renamePending, router]);
+
+  const handleDeleteStart = useCallback((entryId: string) => {
+    setDeleteConfirm(entryId);
+  }, []);
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteConfirm(null);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteConfirm || deletePending) return;
+
+    setDeletePending(true);
+    try {
+      const res = await fetch(`/api/entries/${deleteConfirm}`, {
+        method: "DELETE",
+      });
+      if (res.ok || res.status === 404) {
+        setRecents((prev) => prev.filter((e) => e.id !== deleteConfirm));
+        if (pathname === `/app/entry/${deleteConfirm}`) {
+          router.push("/app/journal");
+        }
+        router.refresh();
+      }
+    } finally {
+      setDeletePending(false);
+      setDeleteConfirm(null);
+    }
+  }, [deleteConfirm, deletePending, pathname, router]);
+
+  const journalActive = pathname === "/app/journal";
   const displayUser = userEmail.trim() || "Account";
 
   return (
@@ -152,24 +228,16 @@ export function AppSidebarClient({
           <button
             type="button"
             disabled={newEntryPending}
-            onClick={() => void createTodayEntry()}
+            onClick={() => void openTodayEntry()}
             className={cn(
               "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors",
               "hover:bg-sidebar-accent",
-              newEntryPending && "pointer-events-none opacity-60",
+              newEntryPending && "opacity-60",
             )}
           >
             <Plus className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
             {newEntryPending ? "Opening…" : "New entry"}
           </button>
-          {newEntryError ? (
-            <p
-              className="px-2 text-[12px] text-destructive leading-snug"
-              role="alert"
-            >
-              {newEntryError}
-            </p>
-          ) : null}
 
           <button
             type="button"
@@ -220,7 +288,10 @@ export function AppSidebarClient({
                 : "hover:bg-sidebar-accent/80",
             )}
           >
-            <BookOpen className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+            <BookOpen
+              className="size-4 shrink-0 opacity-70"
+              strokeWidth={1.75}
+            />
             Journal
           </Link>
         </div>
@@ -234,16 +305,74 @@ export function AppSidebarClient({
               No entries yet.
             </p>
           ) : (
-            <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-0.5">
+            <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-0.5">
               {recents.map((entry) => {
-                const href = `/app/entry/${entry.id}`;
+                const isActive = pathname === `/app/entry/${entry.id}`;
+                const isDeleting = deleteConfirm === entry.id;
+                const isRenaming = renameEntryId === entry.id;
+
+                if (isDeleting) {
+                  return (
+                    <li
+                      key={entry.id}
+                      className="flex items-center justify-between gap-2 rounded-md bg-destructive/10 px-2 py-1.5"
+                    >
+                      <span className="truncate text-[13px] text-destructive">
+                        Delete?
+                      </span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          className="rounded px-2 py-0.5 text-[12px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+                          disabled={deletePending}
+                          onClick={handleDeleteCancel}
+                        >
+                          No
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded px-2 py-0.5 text-[12px] text-destructive transition-colors hover:bg-destructive/20"
+                          disabled={deletePending}
+                          onClick={() => void handleDeleteConfirm()}
+                        >
+                          {deletePending ? "…" : "Yes"}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                }
+
+                if (isRenaming) {
+                  return (
+                    <li key={entry.id} className="px-1">
+                      <input
+                        ref={renameInputRef}
+                        type="text"
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-[13px] text-foreground outline-none focus:border-ring"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            void handleRenameSave();
+                          } else if (e.key === "Escape") {
+                            handleRenameCancel();
+                          }
+                        }}
+                        onBlur={() => void handleRenameSave()}
+                        disabled={renamePending}
+                        placeholder="Entry title..."
+                      />
+                    </li>
+                  );
+                }
+
                 return (
                   <SidebarRecentEntryItem
                     key={entry.id}
                     {...entry}
-                    active={pathname === href}
-                    onRenameTitle={onRenameTitle}
-                    onDelete={onDelete}
+                    active={isActive}
+                    onRenameTitle={handleRenameStart}
+                    onDelete={handleDeleteStart}
                   />
                 );
               })}
