@@ -54,6 +54,8 @@ describe("listJournalEntries", () => {
       select: {
         id: true,
         title: true,
+        body: true,
+        translations: true,
         entryDate: true,
         createdAt: true,
         updatedAt: true,

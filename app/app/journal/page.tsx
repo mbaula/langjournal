@@ -32,9 +32,12 @@ export default async function JournalPage() {
           <LanguageBar source={source} target={target} />
         </div>
       </div>
-      <div className="flex w-full flex-col gap-3">
+      <div className="flex w-full flex-col gap-12">
+        <CreateEntryButton
+          todayEntryId={todayEntry?.id}
+          className="max-w-none"
+        />
         <EntryList entries={entries} />
-        <CreateEntryButton todayEntryId={todayEntry?.id} />
       </div>
     </div>
   );

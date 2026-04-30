@@ -9,21 +9,24 @@ import {
   useState,
 } from "react";
 
-import { journalTextareaClassName } from "@/components/journal/field-styles";
+import {
+  journalTextareaClassName,
+  journalTranslationHighlightClassName,
+} from "@/components/journal/field-styles";
+import { JournalEditingBackdropContent } from "@/components/journal/journal-editing-backdrop-content";
+import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
+import type { InlineTranslation } from "@/lib/entries/translate";
 import { countWords, wordCountLabel } from "@/lib/text/word-count";
 import {
   normalizeTranslationSource,
   translationMemoryCacheKey,
 } from "@/lib/text/translation-cache-key";
+import { cn } from "@/lib/utils";
+
+export type { InlineTranslation };
 
 const AUTOSAVE_MS = 900;
 const PREFETCH_DEBOUNCE_MS = 400;
-
-export type InlineTranslation = {
-  id: string;
-  sourceText: string;
-  translatedText: string;
-};
 
 export type TranslateTrigger = "enter" | "tab";
 
@@ -67,38 +70,23 @@ function parseCurrentSlashSegment(text: string, cursorPos: number) {
   return { lineStart, lineEnd, slashIdx, absStart, afterSlash, currentLine };
 }
 
-function segmentLine(
-  line: string,
-  translations: InlineTranslation[],
-): Array<{ text: string; translation?: InlineTranslation }> {
-  if (!translations.length || !line) return [{ text: line || "\u00A0" }];
-
-  const sorted = [...translations].sort(
-    (a, b) => b.translatedText.length - a.translatedText.length,
-  );
-
-  type Seg = { text: string; translation?: InlineTranslation };
-  let segments: Seg[] = [{ text: line }];
-
-  for (const t of sorted) {
-    const next: Seg[] = [];
-    for (const seg of segments) {
-      if (seg.translation) {
-        next.push(seg);
-        continue;
-      }
-      const parts = seg.text.split(t.translatedText);
-      for (let i = 0; i < parts.length; i++) {
-        if (parts[i]) next.push({ text: parts[i] });
-        if (i < parts.length - 1)
-          next.push({ text: t.translatedText, translation: t });
-      }
-    }
-    segments = next;
-  }
-
-  if (segments.length === 0) return [{ text: "\u00A0" }];
-  return segments;
+/** Visual hint while editing: from `//` through line end when the caret touches that segment. */
+function getSlashHighlightRange(
+  text: string,
+  selectionStart: number,
+  selectionEnd: number,
+): { start: number; end: number } | null {
+  const anchor = Math.min(selectionStart, selectionEnd);
+  const focus = Math.max(selectionStart, selectionEnd);
+  const lineStart = text.lastIndexOf("\n", anchor - 1) + 1;
+  const lineEndIdx = text.indexOf("\n", lineStart);
+  const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx;
+  const currentLine = text.slice(lineStart, lineEnd);
+  const slashIdx = findSlashIndex(currentLine);
+  if (slashIdx === -1) return null;
+  const absStart = lineStart + slashIdx;
+  if (focus < absStart) return null;
+  return { start: absStart, end: lineEnd };
 }
 
 /** Re-reads line bounds so paste + instant Enter still replaces the right span. */
@@ -166,6 +154,11 @@ export function JournalEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingCursorRef = useRef<number | null>(null);
+  const [textareaSelection, setTextareaSelection] = useState({
+    start: 0,
+    end: 0,
+  });
+  const [textareaScrollTop, setTextareaScrollTop] = useState(0);
 
   const clientSessionCacheRef = useRef(
     new Map<string, { sourceText: string; translatedText: string }>(),
@@ -198,12 +191,51 @@ export function JournalEditor({
   }, [entryId]);
 
   useLayoutEffect(() => {
-    if (pendingCursorRef.current !== null && textareaRef.current) {
-      textareaRef.current.selectionStart = pendingCursorRef.current;
-      textareaRef.current.selectionEnd = pendingCursorRef.current;
+    const ta = textareaRef.current;
+    if (!ta) return;
+    if (pendingCursorRef.current !== null) {
+      const p = pendingCursorRef.current;
       pendingCursorRef.current = null;
+      ta.selectionStart = p;
+      ta.selectionEnd = p;
     }
+    setTextareaSelection({
+      start: ta.selectionStart,
+      end: ta.selectionEnd,
+    });
   }, [body]);
+
+  useEffect(() => {
+    setTextareaScrollTop(0);
+  }, [entryId]);
+
+  const slashHighlight = useMemo(
+    () =>
+      getSlashHighlightRange(
+        body,
+        textareaSelection.start,
+        textareaSelection.end,
+      ),
+    [body, textareaSelection.start, textareaSelection.end],
+  );
+
+  const editingBackdrop = useMemo(
+    () => (
+      <JournalEditingBackdropContent
+        body={body}
+        translations={translations}
+        slashHighlight={slashHighlight}
+      />
+    ),
+    [body, translations, slashHighlight],
+  );
+
+  const syncCaretFromTextarea = useCallback((ta: HTMLTextAreaElement) => {
+    setTextareaSelection({
+      start: ta.selectionStart,
+      end: ta.selectionEnd,
+    });
+  }, []);
 
   const saveBody = useCallback(
     async (text: string) => {
@@ -585,21 +617,47 @@ export function JournalEditor({
         ref={containerRef}
         className="flex w-full max-w-none flex-col gap-3"
       >
-        <div className="rounded-md border border-transparent bg-transparent transition-colors focus-within:border-border">
-          <textarea
-            ref={textareaRef}
-            value={body}
-            onChange={(e) => onBodyChange(e.target.value)}
-            onSelect={schedulePrefetch}
-            onKeyDown={onKeyDown}
-            onBlur={handleBlur}
-            rows={Math.max(12, lines.length + 2)}
-            autoFocus
-            placeholder="Start writing…"
-            className={journalTextareaClassName(
-              "min-h-[30vh] resize-y placeholder:text-muted-foreground/70",
-            )}
-          />
+        <div className="w-full">
+          <div className="relative w-full">
+            <div
+              className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+              aria-hidden="true"
+            >
+              <pre
+                className="font-sans m-0 min-h-full whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased"
+                style={{
+                  transform: `translateY(-${textareaScrollTop}px)`,
+                }}
+              >
+                {editingBackdrop}
+              </pre>
+            </div>
+            <textarea
+              ref={textareaRef}
+              value={body}
+              onChange={(e) => {
+                syncCaretFromTextarea(e.currentTarget);
+                onBodyChange(e.target.value);
+              }}
+              onSelect={(e) => {
+                syncCaretFromTextarea(e.currentTarget);
+                schedulePrefetch();
+              }}
+              onKeyUp={(e) => syncCaretFromTextarea(e.currentTarget)}
+              onClick={(e) => syncCaretFromTextarea(e.currentTarget)}
+              onScroll={(e) =>
+                setTextareaScrollTop(e.currentTarget.scrollTop)
+              }
+              onKeyDown={onKeyDown}
+              onBlur={handleBlur}
+              rows={Math.max(12, lines.length + 2)}
+              autoFocus
+              placeholder="Start writing…"
+              className={journalTextareaClassName(
+                "relative z-10 min-h-[30vh] resize-y break-words placeholder:text-muted-foreground/70 text-transparent",
+              )}
+            />
+          </div>
           <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
             {wordCountLabel(wordCount)}
           </p>
@@ -615,10 +673,7 @@ export function JournalEditor({
 
   return (
     <div className="flex w-full max-w-none flex-col gap-3">
-      <div
-        className="cursor-text rounded-md border border-transparent bg-transparent"
-        onClick={() => setEditing(true)}
-      >
+      <div className="w-full cursor-text" onClick={() => setEditing(true)}>
         <div className="flex min-h-[30vh] flex-col gap-0 py-1">
           {lines.length === 0 || (lines.length === 1 && !lines[0]) ? (
             <p className="text-[15px] leading-[1.65] text-muted-foreground/70">
@@ -626,7 +681,7 @@ export function JournalEditor({
             </p>
           ) : (
             lines.map((line, idx) => {
-              const segs = segmentLine(line, translations);
+              const segs = segmentTranslatedLine(line, translations);
               return (
                 <p
                   key={idx}
@@ -637,7 +692,10 @@ export function JournalEditor({
                       <span key={si} className="group/tw relative inline">
                         <span
                           title={seg.translation.sourceText}
-                          className="cursor-help rounded-[2px] bg-amber-100 px-0.5 [box-decoration-break:clone] dark:bg-amber-400/22"
+                          className={cn(
+                            "cursor-help",
+                            journalTranslationHighlightClassName,
+                          )}
                         >
                           {seg.text}
                         </span>

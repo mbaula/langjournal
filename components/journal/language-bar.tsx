@@ -252,7 +252,7 @@ export function LanguageBar({
           className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-expanded={helpOpen}
           aria-haspopup="dialog"
-          aria-label="How translation works"
+          aria-label="How to translate"
         >
           <CircleHelp className="size-4" strokeWidth={1.75} />
         </button>
@@ -263,20 +263,15 @@ export function LanguageBar({
             role="dialog"
             aria-label="Translation help"
           >
-            <p className="font-medium text-foreground">How inline translation works</p>
+            <p className="font-medium text-foreground">How to translate</p>
             <p className="mt-2 text-muted-foreground">
-              You mark the <strong className="text-foreground">exact phrase</strong> to
-              translate with <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>.
-              Pressing{" "}
+              To start translating something, press{" "}
+              <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>{" "}
+              + what you wantto translate +{" "}
               <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
                 {triggerKeyLabel}
-              </kbd>{" "}
-              runs translation on the text <strong className="text-foreground">after</strong>{" "}
-              <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>{" "}
-              on the <strong className="text-foreground">current line only</strong> (up to
-              the line end). The{" "}
-              <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>{" "}
-              and that phrase are replaced by the translation.
+              </kbd>
+              .
             </p>
 
             <p className="mt-3 text-xs font-semibold tracking-wide text-foreground uppercase">
@@ -284,14 +279,14 @@ export function LanguageBar({
             </p>
             <div className="mt-2 space-y-2 rounded-md border border-border bg-muted/50 p-3 font-mono text-[12px] text-foreground leading-snug">
               <div>
-                <span className="text-muted-foreground">You type:</span>
+                <span className="text-muted-foreground">Before:</span>
                 <pre className="mt-1 whitespace-pre-wrap break-words">
                   I practiced saying //good morning
                 </pre>
               </div>
               <div>
                 <span className="text-muted-foreground">
-                  You press{" "}
+                  After{" "}
                   <kbd className="rounded border border-border bg-background px-1">
                     {triggerKeyLabel}
                   </kbd>
@@ -301,16 +296,14 @@ export function LanguageBar({
                   I practiced saying bonjour
                 </pre>
                 <p className="mt-1.5 font-sans text-[11px] text-muted-foreground normal-case">
-                  (Here <code className="rounded bg-background px-0.5">bonjour</code> stands
-                  in for whatever your app translates{" "}
-                  <code className="rounded bg-background px-0.5">good morning</code> into
-                  for your language pair.)
+                  (<code className="rounded bg-background px-0.5">bonjour</code> is just an
+                  example—the app shows the real translation for your languages.)
                 </p>
               </div>
             </div>
 
             <p className="mt-3 text-muted-foreground">
-              Need a normal new line without translating? Use{" "}
+              For a plain new line (no translation), use{" "}
               <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
                 Ctrl+Enter
               </kbd>{" "}
