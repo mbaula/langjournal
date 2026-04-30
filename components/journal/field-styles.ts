@@ -1,5 +1,9 @@
 import { cn } from "@/lib/utils";
 
+/** Blue pill behind `//` segments while typing and around committed translations. */
+export const journalTranslationHighlightClassName =
+  "rounded bg-blue-100 px-0.5 py-px text-foreground [box-decoration-break:clone] dark:bg-blue-500/25";
+
 /** Shared look for journal textareas (sans, theme border, no browser-default serif). */
 export function journalTextareaClassName(...extra: (string | undefined)[]) {
   return cn(
