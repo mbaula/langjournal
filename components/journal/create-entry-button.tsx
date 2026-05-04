@@ -19,11 +19,13 @@ function formatDefaultTitle(): string {
 type CreateEntryButtonProps = {
   todayEntryId?: string | null;
   className?: string;
+  floating?: boolean;
 };
 
 export function CreateEntryButton({
   todayEntryId,
   className,
+  floating = false,
 }: CreateEntryButtonProps) {
   const { switchEntry } = useEntry();
   const [pending, setPending] = useState(false);
@@ -57,16 +59,22 @@ export function CreateEntryButton({
   const hasTodayEntry = Boolean(todayEntryId);
 
   return (
-    <div className={cn("flex w-full max-w-sm flex-col gap-2", className)}>
+    <div
+      className={cn(
+        floating ? "fixed right-6 bottom-6 z-30" : "flex w-full max-w-sm flex-col gap-2",
+        className,
+      )}
+    >
       <Button
         type="button"
-        variant="outline"
+        variant={floating ? "default" : "outline"}
         size="sm"
         disabled={pending}
         onClick={() => void openTodayEntry()}
         className={cn(
-          "h-9 w-full justify-start gap-2 border-border bg-transparent font-normal text-[13px] text-foreground shadow-none",
-          "hover:bg-muted",
+          floating
+            ? "h-10 rounded-full px-4 text-[13px] shadow-lg"
+            : "h-9 w-full justify-start gap-2 border-border bg-transparent font-normal text-[13px] text-foreground shadow-none hover:bg-muted",
         )}
       >
         <Plus className="size-4 opacity-70" strokeWidth={1.75} />
