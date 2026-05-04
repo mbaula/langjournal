@@ -342,27 +342,29 @@ export function AppSidebarClient({
                   return (
                     <li
                       key={entry.id}
-                      className="flex items-center justify-between gap-2 rounded-md bg-destructive/10 px-2 py-1.5"
+                      className="rounded-md border border-border bg-popover px-2 py-1.5 shadow-sm"
                     >
-                      <span className="truncate text-[13px] text-destructive">
-                        Delete?
-                      </span>
-                      <div className="flex shrink-0 items-center gap-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-[12px] text-muted-foreground">
+                          Delete this entry?
+                        </span>
+                      </div>
+                      <div className="mt-1 flex justify-end gap-1">
                         <button
                           type="button"
-                          className="rounded px-2 py-0.5 text-[12px] text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+                          className="rounded px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           disabled={deletePending}
                           onClick={handleDeleteCancel}
                         >
-                          No
+                          Cancel
                         </button>
                         <button
                           type="button"
-                          className="rounded px-2 py-0.5 text-[12px] text-destructive transition-colors hover:bg-destructive/20"
+                          className="rounded px-2 py-1 text-[12px] text-destructive transition-colors hover:bg-destructive/10"
                           disabled={deletePending}
                           onClick={() => void handleDeleteConfirm()}
                         >
-                          {deletePending ? "…" : "Yes"}
+                          {deletePending ? "…" : "Delete"}
                         </button>
                       </div>
                     </li>
