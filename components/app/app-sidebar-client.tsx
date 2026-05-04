@@ -16,6 +16,7 @@ import {
 import { useTheme } from "@/components/theme-provider";
 import { SidebarRecentEntryItem } from "@/components/app/sidebar-recent-entry-item";
 import type { RecentEntry } from "@/components/app/recent-entry";
+import { useEntry } from "@/lib/entries/entry-context";
 import { cn } from "@/lib/utils";
 
 export type { RecentEntry };
@@ -40,6 +41,7 @@ export function AppSidebarClient({
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
+  const { switchEntry, prefetchEntry } = useEntry();
   const [mounted, setMounted] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [newEntryPending, setNewEntryPending] = useState(false);
@@ -168,6 +170,31 @@ export function AppSidebarClient({
       setDeleteConfirm(null);
     }
   }, [deleteConfirm, deletePending, pathname, router]);
+
+  const handleOpenEntry = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, entryId: string) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+      event.preventDefault();
+      void switchEntry(entryId);
+    },
+    [switchEntry],
+  );
+
+  const handlePrefetchEntry = useCallback(
+    (entryId: string) => {
+      void prefetchEntry(entryId);
+    },
+    [prefetchEntry],
+  );
 
   const journalActive = pathname === "/app/journal";
   const displayUser = userEmail.trim() || "Account";
@@ -371,6 +398,8 @@ export function AppSidebarClient({
                     key={entry.id}
                     {...entry}
                     active={isActive}
+                    onOpenEntry={handleOpenEntry}
+                    onPrefetchEntry={handlePrefetchEntry}
                     onRenameTitle={handleRenameStart}
                     onDelete={handleDeleteStart}
                   />

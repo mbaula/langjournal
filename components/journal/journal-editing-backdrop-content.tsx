@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { journalTranslationHighlightClassName } from "@/components/journal/field-styles";
+import { journalEditorTranslationHighlightClassName } from "@/components/journal/field-styles";
 import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
 import type { InlineTranslation } from "@/lib/entries/translate";
 
@@ -29,7 +29,10 @@ function splitPlainWithSlash(
   const j = hi - absBase;
   if (i > 0) out.push(<span key={keyCounter.n++}>{segText.slice(0, i)}</span>);
   out.push(
-    <mark key={keyCounter.n++} className={journalTranslationHighlightClassName}>
+    <mark
+      key={keyCounter.n++}
+      className={journalEditorTranslationHighlightClassName}
+    >
       {segText.slice(i, j)}
     </mark>,
   );
@@ -69,7 +72,7 @@ export function JournalEditingBackdropContent({
           pieces.push(
             <mark
               key={keyCounter.n++}
-              className={journalTranslationHighlightClassName}
+              className={journalEditorTranslationHighlightClassName}
               title={seg.translation.sourceText}
             >
               {segText}
