@@ -44,6 +44,7 @@ type EntryContextValue = {
   isLoading: boolean;
   loadError: EntryLoadError | null;
   switchEntry: (id: string) => void;
+  prefetchEntry: (id: string) => void;
   refreshEntry: () => void;
   updateEntryInCache: (id: string, updates: Partial<JournalEntry>) => void;
   removeEntryFromCache: (id: string) => void;
@@ -77,6 +78,11 @@ export function EntryProvider({
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<EntryLoadError | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const entriesRef = useRef(entries);
+
+  useEffect(() => {
+    entriesRef.current = entries;
+  }, [entries]);
 
   const currentEntry = currentEntryId ? entries.get(currentEntryId) ?? null : null;
 
@@ -101,8 +107,9 @@ export function EntryProvider({
         abortControllerRef.current.abort();
       }
 
-      const cached = entries.get(id);
+      const cached = entriesRef.current.get(id);
       if (cached) {
+        setIsLoading(false);
         setCurrentEntryId(id);
         setLoadError(null);
         router.replace(`/app/entry/${id}`, { scroll: false });
@@ -133,7 +140,23 @@ export function EntryProvider({
         setIsLoading(false);
       }
     },
-    [entries, fetchEntry, router]
+    [fetchEntry, router]
+  );
+
+  const prefetchEntry = useCallback(
+    async (id: string) => {
+      if (entriesRef.current.has(id)) return;
+      try {
+        const entry = await fetchEntry(id);
+        setEntries((prev) => {
+          if (prev.has(id)) return prev;
+          return new Map(prev).set(id, entry);
+        });
+      } catch {
+        // Best-effort prefetch only.
+      }
+    },
+    [fetchEntry]
   );
 
   const refreshEntry = useCallback(async () => {
@@ -197,6 +220,7 @@ export function EntryProvider({
       isLoading,
       loadError,
       switchEntry,
+      prefetchEntry,
       refreshEntry,
       updateEntryInCache,
       removeEntryFromCache,
@@ -206,6 +230,7 @@ export function EntryProvider({
       isLoading,
       loadError,
       switchEntry,
+      prefetchEntry,
       refreshEntry,
       updateEntryInCache,
       removeEntryFromCache,

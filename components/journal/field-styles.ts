@@ -4,6 +4,13 @@ import { cn } from "@/lib/utils";
 export const journalTranslationHighlightClassName =
   "rounded bg-blue-100 px-0.5 py-px text-foreground [box-decoration-break:clone] dark:bg-blue-500/25";
 
+/**
+ * Editor mirror highlight must not change text width; keep visual-only background.
+ * Any horizontal/vertical padding here desynchronizes caret vs. mirrored text.
+ */
+export const journalEditorTranslationHighlightClassName =
+  "rounded bg-blue-100 text-foreground [box-decoration-break:clone] dark:bg-blue-500/25";
+
 /** Shared look for journal textareas (sans, theme border, no browser-default serif). */
 export function journalTextareaClassName(...extra: (string | undefined)[]) {
   return cn(
