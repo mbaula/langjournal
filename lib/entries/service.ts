@@ -31,6 +31,7 @@ export async function listJournalRecentsForSidebar(userId: string) {
       id: true,
       title: true,
       body: true,
+      entryDate: true,
     },
   });
 }

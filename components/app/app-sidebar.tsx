@@ -12,6 +12,7 @@ export async function AppSidebar() {
     return {
       id: e.id,
       title,
+      entryDate: e.entryDate.toISOString(),
       bodyPreview: title ? "" : bodySnippetForSidebar(e.body),
     };
   });

@@ -34,6 +34,14 @@ function formatDefaultTitle(): string {
   });
 }
 
+function isSameUtcDay(a: Date, b: Date): boolean {
+  return (
+    a.getUTCFullYear() === b.getUTCFullYear() &&
+    a.getUTCMonth() === b.getUTCMonth() &&
+    a.getUTCDate() === b.getUTCDate()
+  );
+}
+
 export function AppSidebarClient({
   userEmail,
   recents: initialRecents,
@@ -41,7 +49,7 @@ export function AppSidebarClient({
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
-  const { switchEntry, prefetchEntry } = useEntry();
+  const { currentEntryId, switchEntry, prefetchEntry } = useEntry();
   const [mounted, setMounted] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [newEntryPending, setNewEntryPending] = useState(false);
@@ -83,6 +91,14 @@ export function AppSidebarClient({
   const openTodayEntry = useCallback(async () => {
     if (newEntryPending) return;
 
+    const todayEntry = recents.find((entry) =>
+      isSameUtcDay(new Date(entry.entryDate), new Date()),
+    );
+    if (todayEntry) {
+      void switchEntry(todayEntry.id);
+      return;
+    }
+
     setNewEntryPending(true);
     try {
       const res = await fetch("/api/entries", {
@@ -91,14 +107,29 @@ export function AppSidebarClient({
         body: JSON.stringify({ title: formatDefaultTitle() }),
       });
       const data = (await res.json()) as { entry?: { id: string } };
-      if (data.entry?.id) {
-        router.push(`/app/entry/${data.entry.id}`);
-        router.refresh();
+      const createdEntryId = data.entry?.id;
+      if (createdEntryId) {
+        setRecents((prev) => {
+          if (prev.some((entry) => entry.id === createdEntryId)) {
+            return prev;
+          }
+
+          return [
+            {
+              id: createdEntryId,
+              title: formatDefaultTitle(),
+              entryDate: new Date().toISOString(),
+              bodyPreview: "",
+            },
+            ...prev,
+          ];
+        });
+        void switchEntry(createdEntryId);
       }
     } finally {
       setNewEntryPending(false);
     }
-  }, [newEntryPending, router]);
+  }, [newEntryPending, recents, switchEntry]);
 
   const toggleColorMode = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -198,9 +229,14 @@ export function AppSidebarClient({
 
   const journalActive = pathname === "/app/journal";
   const displayUser = userEmail.trim() || "Account";
+  const hasTodayEntry = recents.some((entry) =>
+    isSameUtcDay(new Date(entry.entryDate), new Date()),
+  );
+  const pathnameEntryId = pathname.match(/^\/app\/entry\/([^/]+)$/)?.[1] ?? null;
+  const activeEntryId = currentEntryId ?? pathnameEntryId;
 
   return (
-    <aside className="flex w-[240px] shrink-0 flex-col border-sidebar-border border-r bg-sidebar text-sidebar-foreground transition-[background-color,border-color,color] duration-300 ease-out">
+    <aside className="sticky top-0 flex h-dvh w-[240px] shrink-0 self-start flex-col border-sidebar-border border-r bg-sidebar text-sidebar-foreground transition-[background-color,border-color,color] duration-300 ease-out">
       <div
         className="relative border-sidebar-border border-b px-2 py-2"
         ref={userMenuRef}
@@ -263,7 +299,11 @@ export function AppSidebarClient({
             )}
           >
             <Plus className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
-            {newEntryPending ? "Opening…" : "New entry"}
+            {newEntryPending
+              ? "Opening…"
+              : hasTodayEntry
+                ? "Open today's entry"
+                : "New entry"}
           </button>
 
           <button
@@ -334,7 +374,7 @@ export function AppSidebarClient({
           ) : (
             <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-0.5">
               {recents.map((entry) => {
-                const isActive = pathname === `/app/entry/${entry.id}`;
+                const isActive = activeEntryId === entry.id;
                 const isDeleting = deleteConfirm === entry.id;
                 const isRenaming = renameEntryId === entry.id;
 
