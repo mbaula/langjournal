@@ -157,3 +157,101 @@ export async function deleteJournalEntryForUser(
   revalidateTag("journal-entry", { expire: 0 });
   return { ok: true };
 }
+
+export type JournalStats = {
+  total: number;
+  today: number;
+  thisWeek: number;
+  thisMonth: number;
+  thisYear: number;
+};
+
+function getUtcIsoWeekStart(d: Date): Date {
+  const date = utcCalendarDate(d);
+  const day = date.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + diff));
+}
+
+function getUtcMonthStart(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+}
+
+function getUtcYearStart(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+}
+
+export async function getJournalStats(userId: string): Promise<JournalStats> {
+  const now = new Date();
+  const todayStart = utcCalendarDate(now);
+  const weekStart = getUtcIsoWeekStart(now);
+  const monthStart = getUtcMonthStart(now);
+  const yearStart = getUtcYearStart(now);
+
+  const [total, today, thisWeek, thisMonth, thisYear] = await Promise.all([
+    prisma.journalEntry.count({ where: { userId } }),
+    prisma.journalEntry.count({
+      where: { userId, entryDate: { gte: todayStart } },
+    }),
+    prisma.journalEntry.count({
+      where: { userId, entryDate: { gte: weekStart } },
+    }),
+    prisma.journalEntry.count({
+      where: { userId, entryDate: { gte: monthStart } },
+    }),
+    prisma.journalEntry.count({
+      where: { userId, entryDate: { gte: yearStart } },
+    }),
+  ]);
+
+  return { total, today, thisWeek, thisMonth, thisYear };
+}
+
+export type ContributionDay = {
+  date: string;
+  count: number;
+};
+
+export async function getContributionData(
+  userId: string,
+  days: number = 365,
+): Promise<ContributionDay[]> {
+  const now = new Date();
+  const todayUtc = utcCalendarDate(now);
+  const startDate = new Date(
+    Date.UTC(
+      todayUtc.getUTCFullYear(),
+      todayUtc.getUTCMonth(),
+      todayUtc.getUTCDate() - days + 1,
+    ),
+  );
+
+  const entries = await prisma.journalEntry.findMany({
+    where: {
+      userId,
+      entryDate: { gte: startDate },
+    },
+    select: { entryDate: true },
+  });
+
+  const countByDate = new Map<string, number>();
+  for (const entry of entries) {
+    const key = entry.entryDate.toISOString().slice(0, 10);
+    countByDate.set(key, (countByDate.get(key) ?? 0) + 1);
+  }
+
+  const result: ContributionDay[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(
+      Date.UTC(
+        startDate.getUTCFullYear(),
+        startDate.getUTCMonth(),
+        startDate.getUTCDate() + i,
+      ),
+    );
+    const key = d.toISOString().slice(0, 10);
+    result.push({ date: key, count: countByDate.get(key) ?? 0 });
+  }
+
+  return result;
+}
