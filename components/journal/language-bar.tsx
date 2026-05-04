@@ -267,7 +267,7 @@ export function LanguageBar({
             <p className="mt-2 text-muted-foreground">
               To start translating something, press{" "}
               <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>{" "}
-              + what you wantto translate +{" "}
+              + what you want to translate +{" "}
               <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
                 {triggerKeyLabel}
               </kbd>
