@@ -25,8 +25,10 @@ vi.mock("@/lib/db/prisma", () => ({
 
 import {
   deleteJournalEntryForUser,
+  getJournalEntryForUser,
   getOrCreateJournalEntryForDate,
   listJournalEntries,
+  listJournalRecentsForSidebar,
   updateJournalEntryBody,
   updateJournalEntryTitle,
   utcCalendarDate,
@@ -54,12 +56,64 @@ describe("listJournalEntries", () => {
       select: {
         id: true,
         title: true,
+        body: true,
+        translations: true,
         entryDate: true,
         createdAt: true,
         updatedAt: true,
       },
     });
     expect(result).toEqual([{ id: "e1" }]);
+  });
+});
+
+describe("listJournalRecentsForSidebar", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns light rows for sidebar preview", async () => {
+    prismaMock.journalEntry.findMany.mockResolvedValueOnce([
+      { id: "e1", title: "Hi", body: null },
+    ]);
+    const result = await listJournalRecentsForSidebar("u1");
+
+    expect(prismaMock.journalEntry.findMany).toHaveBeenCalledWith({
+      where: { userId: "u1" },
+      orderBy: { entryDate: "desc" },
+      select: { id: true, title: true, body: true },
+    });
+    expect(result).toEqual([{ id: "e1", title: "Hi", body: null }]);
+  });
+});
+
+describe("getJournalEntryForUser", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("loads entry scoped to the user", async () => {
+    prismaMock.journalEntry.findFirst.mockResolvedValueOnce({
+      id: "e1",
+      title: "T",
+      body: "B",
+    });
+
+    const result = await getJournalEntryForUser("e1", "u1");
+
+    expect(prismaMock.journalEntry.findFirst).toHaveBeenCalledWith({
+      where: { id: "e1", userId: "u1" },
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        translations: true,
+        entryDate: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    expect(result).toEqual({ id: "e1", title: "T", body: "B" });
   });
 });
 
