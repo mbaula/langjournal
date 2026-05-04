@@ -1,19 +1,22 @@
 import {
-  EntryListItem,
-  type EntryListItemProps,
-} from "@/components/journal/entry-list-item";
+  JournalEntryCard,
+  type JournalEntryCardProps,
+} from "@/components/journal/journal-entry-card";
 
 export type EntryRow = {
   id: string;
   title: string | null;
   entryDate: Date | string;
+  createdAt: Date | string;
   updatedAt: Date | string;
+  body: string | null;
+  translations: unknown;
 };
 
 type EntryListProps = {
   entries: EntryRow[];
-  onRenameTitle?: EntryListItemProps["onRenameTitle"];
-  onDelete?: EntryListItemProps["onDelete"];
+  onRenameTitle?: JournalEntryCardProps["onRenameTitle"];
+  onDelete?: JournalEntryCardProps["onDelete"];
 };
 
 function formatEntryDay(d: Date | string) {
@@ -38,14 +41,16 @@ export function EntryList({
   }
 
   return (
-    <ul className="flex w-full flex-col gap-0.5">
+    <ul className="flex w-full flex-col gap-14">
       {entries.map((entry) => (
-        <EntryListItem
+        <JournalEntryCard
           key={entry.id}
           entryId={entry.id}
           href={`/app/entry/${entry.id}`}
           title={entry.title}
           dateLabel={formatEntryDay(entry.entryDate)}
+          body={entry.body}
+          translations={entry.translations}
           onRenameTitle={onRenameTitle}
           onDelete={onDelete}
         />

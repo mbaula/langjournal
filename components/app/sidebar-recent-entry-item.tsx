@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 
 export type SidebarRecentEntryItemProps = RecentEntry & {
   active: boolean;
+  onOpenEntry?: (event: React.MouseEvent<HTMLAnchorElement>, entryId: string) => void;
+  onPrefetchEntry?: (entryId: string) => void;
   onRenameTitle?: (entryId: string) => void;
   onDelete?: (entryId: string) => void;
 };
@@ -17,6 +19,8 @@ export function SidebarRecentEntryItem({
   title: entryTitle,
   bodyPreview,
   active,
+  onOpenEntry,
+  onPrefetchEntry,
   onRenameTitle,
   onDelete,
 }: SidebarRecentEntryItemProps) {
@@ -37,6 +41,9 @@ export function SidebarRecentEntryItem({
         href={href}
         title={primary.length > 0 ? primary : undefined}
         suppressHydrationWarning
+        onClick={(event) => onOpenEntry?.(event, id)}
+        onMouseEnter={() => onPrefetchEntry?.(id)}
+        onFocus={() => onPrefetchEntry?.(id)}
         className={cn(
           "peer min-w-0 flex-1 truncate rounded-md px-2 py-1.5 text-[13px] transition-colors",
           active && "font-medium",

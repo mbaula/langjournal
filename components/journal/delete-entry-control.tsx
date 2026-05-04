@@ -58,11 +58,16 @@ export function DeleteEntryControl({
 
   if (confirming) {
     return (
-      <span className={cn("inline-flex items-center gap-2 text-[13px]", className)}>
-        <span className="text-muted-foreground">Delete?</span>
+      <span
+        className={cn(
+          "inline-flex items-center gap-2 rounded-md border border-border bg-popover px-2 py-1 text-[12px] shadow-sm",
+          className,
+        )}
+      >
+        <span className="text-muted-foreground">Delete this entry?</span>
         <button
           type="button"
-          className="cursor-pointer rounded px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="cursor-pointer rounded px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           disabled={pending}
           onClick={() => setConfirming(false)}
         >
@@ -70,11 +75,11 @@ export function DeleteEntryControl({
         </button>
         <button
           type="button"
-          className="cursor-pointer rounded px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="cursor-pointer rounded px-2 py-1 text-destructive transition-colors hover:bg-destructive/10"
           disabled={pending}
           onClick={() => void performDelete()}
         >
-          {pending ? "…" : "Yes"}
+          {pending ? "…" : "Delete"}
         </button>
       </span>
     );

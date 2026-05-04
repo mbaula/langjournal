@@ -18,9 +18,13 @@ function formatDefaultTitle(): string {
 
 type CreateEntryButtonProps = {
   todayEntryId?: string | null;
+  className?: string;
 };
 
-export function CreateEntryButton({ todayEntryId }: CreateEntryButtonProps) {
+export function CreateEntryButton({
+  todayEntryId,
+  className,
+}: CreateEntryButtonProps) {
   const { switchEntry } = useEntry();
   const [pending, setPending] = useState(false);
 
@@ -53,7 +57,7 @@ export function CreateEntryButton({ todayEntryId }: CreateEntryButtonProps) {
   const hasTodayEntry = Boolean(todayEntryId);
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-2">
+    <div className={cn("flex w-full max-w-sm flex-col gap-2", className)}>
       <Button
         type="button"
         variant="outline"

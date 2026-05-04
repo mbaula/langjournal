@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { BookLock, LogIn, WifiOff, type LucideIcon } from "lucide-react";
+import { useCallback, useState } from "react";
 
+import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
+import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import {
   JournalEditor,
@@ -66,7 +69,34 @@ export function EntryViewer({
   targetLanguage,
   translateTrigger,
 }: EntryViewerProps) {
-  const { currentEntry, isLoading, loadError } = useEntry();
+  const { currentEntry, isLoading, loadError, removeEntryFromCache } = useEntry();
+  const [deleteConfirming, setDeleteConfirming] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
+
+  const handleRename = useCallback((entryId: string) => {
+    const el = document.getElementById(`entry-title-${entryId}`);
+    if (el instanceof HTMLInputElement) {
+      el.focus();
+      el.select();
+    }
+  }, []);
+
+  const handleDelete = useCallback(
+    async (entryId: string) => {
+      setDeletePending(true);
+      try {
+        const result = await deleteJournalEntryRequest(entryId);
+        if (result.ok) {
+          removeEntryFromCache(entryId);
+          window.location.assign("/app/journal");
+        }
+      } finally {
+        setDeletePending(false);
+        setDeleteConfirming(false);
+      }
+    },
+    [removeEntryFromCache],
+  );
 
   if (loadError) {
     const { title, description, Icon } = entryLoadErrorCopy(loadError.kind);
@@ -183,18 +213,49 @@ export function EntryViewer({
             </span>
             <span className="truncate text-muted-foreground">{dayLabel}</span>
           </nav>
-          <div className="shrink-0">
+          <div className="relative shrink-0 flex items-center gap-2">
             <LanguageBar
               source={sourceLanguage}
               target={targetLanguage}
               translateTrigger={translateTrigger}
             />
+            <EntryActionsMenu
+              entryId={currentEntry.id}
+              onRenameTitle={handleRename}
+              onDelete={() => setDeleteConfirming(true)}
+              className="opacity-100 pointer-events-auto pr-0"
+              triggerClassName="text-muted-foreground"
+            />
+            {deleteConfirming ? (
+              <div className="absolute right-0 top-full z-40 mt-2 rounded-md border border-border bg-popover px-2 py-1 text-[12px] shadow-sm">
+                <p className="text-muted-foreground">Delete this entry?</p>
+                <div className="mt-1 flex items-center justify-end gap-1">
+                  <button
+                    type="button"
+                    className="rounded px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    disabled={deletePending}
+                    onClick={() => setDeleteConfirming(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded px-2 py-1 text-destructive transition-colors hover:bg-destructive/10"
+                    disabled={deletePending}
+                    onClick={() => void handleDelete(currentEntry.id)}
+                  >
+                    {deletePending ? "…" : "Delete"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
         <EntryTitleField
           key={currentEntry.id}
           entryId={currentEntry.id}
           initialTitle={currentEntry.title}
+          inputId={`entry-title-${currentEntry.id}`}
         />
       </header>
 

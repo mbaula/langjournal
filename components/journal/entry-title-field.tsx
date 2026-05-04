@@ -10,9 +10,14 @@ const AUTOSAVE_MS = 800;
 type EntryTitleFieldProps = {
   entryId: string;
   initialTitle: string | null;
+  inputId?: string;
 };
 
-export function EntryTitleField({ entryId, initialTitle }: EntryTitleFieldProps) {
+export function EntryTitleField({
+  entryId,
+  initialTitle,
+  inputId,
+}: EntryTitleFieldProps) {
   const router = useRouter();
   const [value, setValue] = useState(initialTitle?.trim() ?? "");
   const valueRef = useRef(value);
@@ -54,6 +59,7 @@ export function EntryTitleField({ entryId, initialTitle }: EntryTitleFieldProps)
 
   return (
     <input
+      id={inputId}
       type="text"
       value={value}
       onChange={(e) => setValue(e.target.value)}
