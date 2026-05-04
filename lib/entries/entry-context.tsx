@@ -40,6 +40,7 @@ export type JournalEntry = {
 };
 
 type EntryContextValue = {
+  currentEntryId: string | null;
   currentEntry: JournalEntry | null;
   isLoading: boolean;
   loadError: EntryLoadError | null;
@@ -216,6 +217,7 @@ export function EntryProvider({
 
   const value = useMemo<EntryContextValue>(
     () => ({
+      currentEntryId,
       currentEntry,
       isLoading,
       loadError,
@@ -226,6 +228,7 @@ export function EntryProvider({
       removeEntryFromCache,
     }),
     [
+      currentEntryId,
       currentEntry,
       isLoading,
       loadError,
