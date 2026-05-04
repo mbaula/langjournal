@@ -1,9 +1,16 @@
+import { ContributionChart } from "@/components/journal/contribution-chart";
 import { CreateEntryButton } from "@/components/journal/create-entry-button";
 import { EntryList } from "@/components/journal/entry-list";
 import { LanguageBar } from "@/components/journal/language-bar";
+import { StreakTracker } from "@/components/journal/streak-tracker";
 import { requireUser } from "@/lib/auth/session";
 import { getLanguagePair } from "@/lib/db/language";
-import { listJournalEntries, utcCalendarDate } from "@/lib/entries/service";
+import {
+  getContributionData,
+  getJournalStats,
+  listJournalEntries,
+  utcCalendarDate,
+} from "@/lib/entries/service";
 
 function isSameUtcDay(a: Date, b: Date): boolean {
   return utcCalendarDate(a).getTime() === utcCalendarDate(b).getTime();
@@ -11,8 +18,12 @@ function isSameUtcDay(a: Date, b: Date): boolean {
 
 export default async function JournalPage() {
   const user = await requireUser();
-  const entries = await listJournalEntries(user.id);
-  const { source, target } = await getLanguagePair(user.id);
+  const [entries, { source, target }, stats, contributions] = await Promise.all([
+    listJournalEntries(user.id),
+    getLanguagePair(user.id),
+    getJournalStats(user.id),
+    getContributionData(user.id),
+  ]);
 
   const today = new Date();
   const todayEntry = entries.find((e) => isSameUtcDay(e.entryDate, today));
@@ -32,13 +43,14 @@ export default async function JournalPage() {
           <LanguageBar source={source} target={target} />
         </div>
       </div>
+      <div className="flex flex-col gap-6">
+        <StreakTracker stats={stats} />
+        <ContributionChart data={contributions} />
+      </div>
       <div className="flex w-full flex-col gap-12">
-        <CreateEntryButton
-          todayEntryId={todayEntry?.id}
-          className="max-w-none"
-        />
         <EntryList entries={entries} />
       </div>
+      <CreateEntryButton todayEntryId={todayEntry?.id} floating />
     </div>
   );
 }

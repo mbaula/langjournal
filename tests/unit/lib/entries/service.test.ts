@@ -74,16 +74,18 @@ describe("listJournalRecentsForSidebar", () => {
 
   it("returns light rows for sidebar preview", async () => {
     prismaMock.journalEntry.findMany.mockResolvedValueOnce([
-      { id: "e1", title: "Hi", body: null },
+      { id: "e1", title: "Hi", body: null, entryDate: new Date("2026-05-04T00:00:00.000Z") },
     ]);
     const result = await listJournalRecentsForSidebar("u1");
 
     expect(prismaMock.journalEntry.findMany).toHaveBeenCalledWith({
       where: { userId: "u1" },
       orderBy: { entryDate: "desc" },
-      select: { id: true, title: true, body: true },
+      select: { id: true, title: true, body: true, entryDate: true },
     });
-    expect(result).toEqual([{ id: "e1", title: "Hi", body: null }]);
+    expect(result).toEqual([
+      { id: "e1", title: "Hi", body: null, entryDate: new Date("2026-05-04T00:00:00.000Z") },
+    ]);
   });
 });
 
