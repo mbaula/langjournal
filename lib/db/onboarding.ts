@@ -1,4 +1,7 @@
+import { LevelConfidence } from "@prisma/client";
+
 import { prisma } from "@/lib/db/prisma";
+import { mapDeclaredLevelToCefr } from "@/lib/level-calibration";
 import type {
   OnboardingAgeRange,
   OnboardingLanguageLevel,
@@ -71,11 +74,15 @@ export async function completeOnboarding(
     });
 
     if (input.languages.length > 0) {
+      const now = new Date();
       await tx.userLanguage.createMany({
         data: input.languages.map((lang) => ({
           userId,
           languageCode: lang.languageCode,
           level: lang.level,
+          estimatedCefrLevel: mapDeclaredLevelToCefr(lang.level),
+          levelConfidence: LevelConfidence.LOW,
+          estimatedLevelUpdatedAt: now,
         })),
       });
     }

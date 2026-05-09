@@ -22,12 +22,31 @@ model User {
   learningLanguages UserLanguage[]
 }
 
+enum CefrLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum LevelConfidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 /// A language the user is learning, with their proficiency level.
 model UserLanguage {
   id            String @id @default(uuid()) @db.Uuid
   userId        String @db.Uuid
   languageCode  String
   level         String
+  /// Hidden estimate for prompts / future calibration; not shown in UI.
+  estimatedCefrLevel CefrLevel @default(A1)
+  levelConfidence    LevelConfidence @default(LOW)
+  estimatedLevelUpdatedAt DateTime?
   createdAt     DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
