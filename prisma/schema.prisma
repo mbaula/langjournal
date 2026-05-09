@@ -37,6 +37,22 @@ enum LevelConfidence {
   HIGH
 }
 
+enum PromptMode {
+  ACADEMIC
+  FUN
+}
+
+enum PromptStatus {
+  ACTIVE
+  DISABLED
+  NEEDS_REVIEW
+}
+
+enum PromptSource {
+  CURATED
+  LLM_GENERATED
+}
+
 /// A language the user is learning, with their proficiency level.
 model UserLanguage {
   id            String @id @default(uuid()) @db.Uuid
@@ -53,6 +69,40 @@ model UserLanguage {
 
   @@unique([userId, languageCode])
   @@index([userId])
+}
+
+model Prompt {
+  id            String @id @default(cuid())
+  languageCode  String @default("any")
+  mode          PromptMode
+  minCefr       CefrLevel
+  maxCefr       CefrLevel
+  topicTags     String[] @default([])
+  safetyTags    String[] @default([])
+  requiredWords String[] @default([])
+  promptText    String
+  status        PromptStatus @default(ACTIVE)
+  source        PromptSource @default(CURATED)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  usages        PromptUsage[]
+
+  @@index([languageCode, mode])
+  @@index([status])
+}
+
+model PromptUsage {
+  id        String @id @default(cuid())
+  userId    String @db.Uuid
+  promptId  String
+  entryId   String? @db.Uuid
+  usedAt    DateTime @default(now())
+
+  prompt Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@index([userId, usedAt])
+  @@index([promptId, usedAt])
 }
 
 model LanguageProfile {
