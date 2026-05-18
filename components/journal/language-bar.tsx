@@ -4,10 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, CircleHelp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
+import { cn } from "@/lib/utils";
 
 import type { TranslateTrigger } from "@/components/journal/journal-editor";
+
+const PANEL_ANIM_MS = 220;
+const SAVE_SUCCESS_MS = 450;
 
 type Lang = { code: string; name: string };
 
@@ -17,8 +20,55 @@ type LanguageBarProps = {
   translateTrigger?: TranslateTrigger;
 };
 
+const popoverPanelClass =
+  "absolute right-0 top-[calc(100%+0.5rem)] z-50 rounded-lg border border-border bg-popover text-popover-foreground shadow-lg";
+
 const selectClass =
-  "mt-1 w-full rounded-lg border border-border/80 bg-background px-2 py-1.5 text-xs text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
+  "mt-2 w-full rounded-md border border-border/80 bg-background px-2.5 py-1.5 text-[13px] text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
+
+function LanguagePicker({
+  id,
+  subtitle,
+  value,
+  options,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  subtitle: string;
+  value: string;
+  options: Lang[];
+  disabled: boolean;
+  onChange: (code: string) => void;
+}) {
+  return (
+    <section
+      className="min-w-0 flex-1 rounded-md border border-border bg-muted/50 px-3 py-3"
+      aria-labelledby={`${id}-subtitle`}
+    >
+      <p
+        id={`${id}-subtitle`}
+        className="text-xs font-medium text-muted-foreground"
+      >
+        {subtitle}
+      </p>
+      <select
+        id={id}
+        className={selectClass}
+        disabled={disabled}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-labelledby={`${id}-subtitle`}
+      >
+        {options.map((l) => (
+          <option key={`${id}-${l.code}`} value={l.code}>
+            {l.name} ({l.code})
+          </option>
+        ))}
+      </select>
+    </section>
+  );
+}
 
 export function LanguageBar({
   source: initialSource,
@@ -49,7 +99,11 @@ export function LanguageBar({
   const [languages, setLanguages] = useState<Lang[] | null>(null);
   const [loadingList, setLoadingList] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savedPulse, setSavedPulse] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [panelMounted, setPanelMounted] = useState(false);
+  const [panelEntered, setPanelEntered] = useState(false);
+  const [panelClosing, setPanelClosing] = useState(false);
 
   const draftSourceRef = useRef(draftSource);
   const draftTargetRef = useRef(draftTarget);
@@ -57,6 +111,10 @@ export function LanguageBar({
   draftTargetRef.current = draftTarget;
 
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelWasOpenRef = useRef(false);
+  const panelCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!open && !helpOpen) return;
@@ -68,6 +126,41 @@ export function LanguageBar({
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open, helpOpen]);
+
+  useEffect(() => {
+    if (open) {
+      if (panelCloseTimeoutRef.current) {
+        clearTimeout(panelCloseTimeoutRef.current);
+        panelCloseTimeoutRef.current = null;
+      }
+
+      panelWasOpenRef.current = true;
+      setPanelClosing(false);
+      if (!panelMounted) setPanelMounted(true);
+
+      const frame = requestAnimationFrame(() => setPanelEntered(true));
+      return () => cancelAnimationFrame(frame);
+    }
+
+    if (!panelWasOpenRef.current) return undefined;
+
+    panelWasOpenRef.current = false;
+    setPanelEntered(false);
+    setPanelClosing(true);
+
+    panelCloseTimeoutRef.current = setTimeout(() => {
+      panelCloseTimeoutRef.current = null;
+      setPanelMounted(false);
+      setPanelClosing(false);
+    }, PANEL_ANIM_MS);
+
+    return () => {
+      if (panelCloseTimeoutRef.current) {
+        clearTimeout(panelCloseTimeoutRef.current);
+        panelCloseTimeoutRef.current = null;
+      }
+    };
+  }, [open, panelMounted]);
 
   const loadLanguages = useCallback(() => {
     setLoadingList(true);
@@ -134,6 +227,9 @@ export function LanguageBar({
       }
       if (data.nativeLanguage) setSource(data.nativeLanguage);
       if (data.targetLanguage) setTarget(data.targetLanguage);
+      setSavedPulse(true);
+      await new Promise((resolve) => window.setTimeout(resolve, SAVE_SUCCESS_MS));
+      setSavedPulse(false);
       setOpen(false);
     } catch {
       setError("Save failed");
@@ -141,6 +237,9 @@ export function LanguageBar({
       setSaving(false);
     }
   }, [draftSource, draftTarget]);
+
+  const pickerDisabled = loadingList || saving;
+  const hasChanges = draftSource !== source || draftTarget !== target;
 
   return (
     <div
@@ -164,78 +263,113 @@ export function LanguageBar({
               {source.toUpperCase()} → {target.toUpperCase()}
             </span>
             <ChevronDown
-              className={`size-3.5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+              className={cn(
+                "size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out",
+                open && "rotate-180",
+              )}
             />
           </button>
         </div>
 
-        {open ? (
+        {panelMounted ? (
           <div
-            className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(100vw-2rem,18rem)] rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg"
+            className={cn(
+              popoverPanelClass,
+              "w-[min(100vw-2rem,28rem)] origin-top-right p-4 text-[13px] leading-relaxed transition-[opacity,transform] duration-200 ease-out will-change-[opacity,transform]",
+              panelEntered && !panelClosing
+                ? "translate-y-0 scale-100 opacity-100"
+                : "-translate-y-1 scale-[0.98] opacity-0",
+              panelClosing && "pointer-events-none",
+            )}
             role="dialog"
-            aria-label="Language pair"
+            aria-labelledby="language-pair-title"
+            aria-describedby="language-pair-instructions"
           >
-            <div className="flex flex-col gap-3">
-              <div>
-                <Label htmlFor="bar-native" className="text-xs">
-                  Native
-                </Label>
-                <select
-                  id="bar-native"
-                  className={selectClass}
-                  disabled={loadingList}
-                  value={draftSource}
-                  onChange={(e) => setDraftSource(e.target.value)}
+            <header className="border-b border-border/60 pb-4">
+              <p
+                id="language-pair-title"
+                className="text-base font-medium text-foreground"
+              >
+                Select your languages
+              </p>
+              <p
+                id="language-pair-instructions"
+                className="mt-2 text-muted-foreground"
+              >
+                Pick the language you write in and the one you&apos;re learning.
+                Save when you&apos;re done.
+              </p>
+            </header>
+
+            <div className="flex gap-2.5 pt-4">
+              <LanguagePicker
+                id="bar-native"
+                subtitle="I'm writing in…"
+                value={draftSource}
+                options={options}
+                disabled={pickerDisabled}
+                onChange={setDraftSource}
+              />
+              <LanguagePicker
+                id="bar-target"
+                subtitle="I'm learning…"
+                value={draftTarget}
+                options={options}
+                disabled={pickerDisabled}
+                onChange={setDraftTarget}
+              />
+            </div>
+
+            {error ? (
+              <p className="mt-3 text-xs text-destructive" role="alert">
+                {error}
+              </p>
+            ) : null}
+
+            <div
+              className={cn(
+                "grid transition-[grid-template-rows,opacity,margin-top] duration-200 ease-out",
+                hasChanges ? "mt-4 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
+              )}
+              aria-hidden={!hasChanges}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div
+                  className={cn(
+                    "flex justify-end gap-2 border-t border-border/60 pt-3 transition-[transform,opacity] duration-200 ease-out",
+                    hasChanges
+                      ? "translate-y-0 opacity-100"
+                      : "translate-y-1 opacity-0",
+                  )}
                 >
-                  {options.map((l) => (
-                    <option key={l.code} value={l.code}>
-                      {l.name} ({l.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="bar-target" className="text-xs">
-                  Learning
-                </Label>
-                <select
-                  id="bar-target"
-                  className={selectClass}
-                  disabled={loadingList}
-                  value={draftTarget}
-                  onChange={(e) => setDraftTarget(e.target.value)}
-                >
-                  {options.map((l) => (
-                    <option key={`t-${l.code}`} value={l.code}>
-                      {l.name} ({l.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {error ? (
-                <p className="text-xs text-destructive" role="alert">
-                  {error}
-                </p>
-              ) : null}
-              <div className="flex justify-end gap-2">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-8"
-                  onClick={() => setOpen(false)}
+                  className="h-8 transition-opacity duration-150"
+                  disabled={saving || savedPulse}
+                  onClick={() => {
+                    setDraftSource(source);
+                    setDraftTarget(target);
+                    setError(null);
+                    setOpen(false);
+                  }}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="button"
                   size="sm"
-                  className="h-8"
-                  disabled={saving || loadingList}
+                  className={cn(
+                    "h-8 min-w-[4.5rem] transition-all duration-200 ease-out",
+                    savedPulse && "scale-[0.98] opacity-90",
+                  )}
+                  disabled={pickerDisabled || savedPulse}
                   onClick={() => void save()}
                 >
-                  {saving ? "Saving…" : "Save"}
+                  {saving ? "Saving…" : savedPulse ? "Saved!" : "Save"}
                 </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -259,7 +393,7 @@ export function LanguageBar({
 
         {helpOpen ? (
           <div
-            className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(100vw-2rem,22.5rem)] rounded-lg border border-border bg-popover p-4 text-[13px] text-popover-foreground leading-relaxed shadow-lg"
+            className={`${popoverPanelClass} w-[min(100vw-2rem,22.5rem)] p-4 text-[13px] leading-relaxed`}
             role="dialog"
             aria-label="Translation help"
           >
