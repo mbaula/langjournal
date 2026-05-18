@@ -1,3 +1,5 @@
+import { SidebarBrandFooter } from "@/components/app/sidebar-brand-footer";
+
 export function AppSidebarSkeleton() {
   return (
     <aside className="flex h-full min-h-0 w-[240px] shrink-0 flex-col bg-sidebar text-sidebar-foreground">
@@ -32,6 +34,8 @@ export function AppSidebarSkeleton() {
           </div>
         </div>
       </div>
+
+      <SidebarBrandFooter />
     </aside>
   );
 }

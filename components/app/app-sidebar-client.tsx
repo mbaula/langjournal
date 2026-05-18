@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, Home, LogOut, Plus, Settings, User } from "lucide-react";
 
 import { CustomizeMenu } from "@/components/app/customize-menu";
+import { SidebarBrandFooter } from "@/components/app/sidebar-brand-footer";
 import { sidebarNavItemClass } from "@/components/app/sidebar-nav-styles";
 import { SidebarRecentEntryItem } from "@/components/app/sidebar-recent-entry-item";
 import type { RecentEntry } from "@/components/app/recent-entry";
@@ -411,6 +412,8 @@ export function AppSidebarClient({
           )}
         </div>
       </div>
+
+      <SidebarBrandFooter />
     </aside>
   );
 }

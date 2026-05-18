@@ -10,12 +10,12 @@ type JournalProgressStatsProps = {
 };
 
 const statCardClass =
-  "rounded-xl border border-border/60 border-primary/10 bg-card/50 px-3 py-2.5 shadow-sm backdrop-blur-sm";
+  "rounded-xl border border-sidebar-primary bg-card/50 px-3 py-2.5 backdrop-blur-sm";
 
 const labelClass =
   "min-w-0 truncate text-[10px] leading-tight font-medium text-muted-foreground";
 
-const iconClass = "size-3 shrink-0 text-primary/55";
+const iconClass = "size-3 shrink-0 text-sidebar-primary opacity-70";
 
 type StatCardProps = {
   label: string;
@@ -77,8 +77,8 @@ export function JournalProgressStats({
   className,
 }: JournalProgressStatsProps) {
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <div className="grid grid-cols-2 gap-2">
+    <div className={cn("flex flex-col gap-3", className)}>
+      <div className="grid grid-cols-2 gap-3">
         <StatCard
           label="Total entries"
           value={stats.total}
@@ -91,7 +91,7 @@ export function JournalProgressStats({
         />
       </div>
       <LearningLanguagesStat languages={stats.learningLanguages} />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-3">
         <StatCard
           label="This week"
           value={stats.thisWeek}

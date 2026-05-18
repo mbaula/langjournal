@@ -415,6 +415,10 @@ html.dark[data-accent="teal"] {
   .bg-sidebar {
     background-color: var(--sidebar);
   }
+  /* Tailwind does not emit border-sidebar-primary; use for widget outlines on main panel */
+  .border-sidebar-primary {
+    border-color: var(--sidebar-primary);
+  }
 }
 
 @layer base {

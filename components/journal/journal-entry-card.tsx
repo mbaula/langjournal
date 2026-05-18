@@ -129,14 +129,19 @@ export function JournalEntryCard({
   const isEmptyBody =
     lines.length === 0 || (lines.length === 1 && !lines[0].trim());
 
-  const Content = (
+  const entryHeader = (
     <>
-      <h2 className="text-[1.75rem] font-bold tracking-[-0.02em] text-foreground">
+      <h2 className="text-base font-semibold tracking-tight text-foreground">
         {displayTitle}
       </h2>
       {subtitle ? (
         <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>
       ) : null}
+    </>
+  );
+
+  const entryBody = (
+    <>
       <hr className="my-4 border-border" />
       <div className="flex flex-col gap-0">
         {isEmptyBody ? (
@@ -176,12 +181,7 @@ export function JournalEntryCard({
     <li className="list-none">
       <div className="group/row flex gap-2 sm:gap-3">
         {renaming ? (
-          <div
-            className={cn(
-              "min-w-0 flex-1 rounded-lg p-4 outline-none ring-offset-background transition-colors",
-              "bg-muted/30",
-            )}
-          >
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <input
                 ref={renameInputRef}
@@ -218,25 +218,23 @@ export function JournalEntryCard({
                 </button>
               </div>
             </div>
-            <div className="mt-4">{Content}</div>
+            <div className="mt-4">{entryBody}</div>
           </div>
         ) : (
           <Link
             href={href}
-            className={cn(
-              "min-w-0 flex-1 rounded-lg p-4 outline-none ring-offset-background transition-colors",
-              "hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring",
-            )}
+            className="min-w-0 flex-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={
               subtitle
                 ? `Open entry to edit: ${displayTitle}, ${subtitle}`
                 : `Open entry to edit: ${displayTitle}`
             }
           >
-            {Content}
+            {entryHeader}
+            {entryBody}
           </Link>
         )}
-        <div className="shrink-0 pt-2">
+        <div className="shrink-0 pt-0.5">
           <EntryActionsMenu
             entryId={entryId}
             onRenameTitle={onRenameTitle ?? (() => startRename())}

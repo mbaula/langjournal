@@ -23,7 +23,7 @@ function ActivityWidget({
   return (
     <section
       className={cn(
-        "rounded-xl border border-border/60 border-primary/10 bg-card/50 p-4 shadow-sm backdrop-blur-sm",
+        "rounded-xl border border-sidebar-primary bg-card/50 p-4 backdrop-blur-sm",
         className,
       )}
     >
@@ -41,14 +41,13 @@ export function JournalProgressRail({
   className,
 }: JournalProgressRailProps) {
   return (
-    <aside
-      className={cn("flex flex-col gap-4", className)}
-      aria-label="Journal progress"
-    >
-      <JournalProgressStats stats={stats} />
-      <ActivityWidget title="Activity" className="min-w-0">
-        <ContributionChart data={contributions} variant="rail" />
-      </ActivityWidget>
+    <aside className={cn(className)} aria-label="Journal progress">
+      <div className="flex flex-col gap-3">
+        <JournalProgressStats stats={stats} />
+        <ActivityWidget title="Activity" className="min-w-0">
+          <ContributionChart data={contributions} variant="rail" />
+        </ActivityWidget>
+      </div>
     </aside>
   );
 }

@@ -28,29 +28,29 @@ export default async function JournalPage() {
   const todayEntry = entries.find((e) => isSameUtcDay(e.entryDate, today));
 
   return (
-    <div className="flex w-full flex-col gap-10 pt-2">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 space-y-1">
+    <div className="flex w-full flex-col gap-8 pt-2 lg:gap-10">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-x-10 lg:gap-y-8">
+        <header className="min-w-0 space-y-1">
           <h1 className="text-[1.875rem] font-bold tracking-[-0.02em] text-foreground">
             Journal
           </h1>
           <p className="text-[13px] text-muted-foreground">
             One note per calendar day (UTC).
           </p>
-        </div>
-        <div className="shrink-0">
+        </header>
+
+        <div className="flex justify-start lg:justify-end">
           <LanguageBar source={source} target={target} />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-10">
-        <div className="order-2 flex min-w-0 flex-col gap-12 lg:order-1">
+        <div className="order-3 min-w-0 lg:order-none">
           <EntryList entries={entries} />
         </div>
+
         <JournalProgressRail
           stats={stats}
           contributions={contributions}
-          className="order-1 lg:sticky lg:top-6 lg:order-2 lg:self-start"
+          className="order-2 lg:sticky lg:top-6 lg:order-none lg:self-start"
         />
       </div>
 

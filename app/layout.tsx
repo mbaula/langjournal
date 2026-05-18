@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
+import { Fraunces, Geist_Mono, Inter } from "next/font/google";
 import Script from "next/script";
 
 import { AccentProvider } from "@/components/accent-provider";
@@ -17,10 +17,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const folioDisplay = Fraunces({
+  variable: "--font-folio",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "Language Journal",
-    template: "%s · Language Journal",
+    default: "Folio",
+    template: "%s · Folio",
   },
   description:
     "Journal in your language, translate with /translate, keep a single timeline.",
@@ -35,7 +41,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} ${folioDisplay.variable} h-full antialiased`}
     >
       <body className="relative flex min-h-full flex-col">
         {/* Theme + accent before hydration: .dark on <html>, data-accent from localStorage (ACCENT_IDS). */}
