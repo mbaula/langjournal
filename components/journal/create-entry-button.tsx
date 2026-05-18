@@ -67,17 +67,17 @@ export function CreateEntryButton({
     >
       <Button
         type="button"
-        variant={floating ? "default" : "outline"}
+        variant="default"
         size="sm"
         disabled={pending}
         onClick={() => void openTodayEntry()}
         className={cn(
           floating
             ? "h-10 rounded-full px-4 text-[13px] shadow-lg"
-            : "h-9 w-full justify-start gap-2 border-border bg-transparent font-normal text-[13px] text-foreground shadow-none hover:bg-muted",
+            : "h-9 w-full justify-center gap-2 text-[13px] shadow-sm",
         )}
       >
-        <Plus className="size-4 opacity-70" strokeWidth={1.75} />
+        <Plus className="size-4 shrink-0" strokeWidth={1.75} />
         {pending
           ? "Opening…"
           : hasTodayEntry

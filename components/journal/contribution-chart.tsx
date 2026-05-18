@@ -19,7 +19,7 @@ const FALLBACK_SCROLL_CELL_SIZE = 8;
 
 const LEVELS = [
   "bg-muted/80 dark:bg-muted/40",
-  "bg-emerald-500 dark:bg-emerald-400",
+  "bg-contribution-fill",
 ];
 
 function getLevel(count: number): number {
