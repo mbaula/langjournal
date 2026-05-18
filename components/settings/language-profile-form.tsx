@@ -107,17 +107,8 @@ export function LanguageProfileForm({
     "mt-1.5 w-full max-w-md rounded-lg border border-border/80 bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold">Languages</h1>
-        <p className="text-sm text-muted-foreground">
-          Text after{" "}
-          <code className="rounded bg-muted px-1 text-xs">//</code> is your
-          native language; it is translated into the language you are learning.
-          The dropdown list is loaded from Google when translation is
-          configured; otherwise a built-in subset is used.
-        </p>
-      </div>
+    <section className="flex flex-col gap-4">
+      <h2 className="text-lg font-semibold text-foreground">Translation</h2>
 
       <div className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
@@ -157,7 +148,7 @@ export function LanguageProfileForm({
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Button type="button" onClick={() => void save()} disabled={saving}>
-            {saving ? "Saving…" : "Save"}
+            {saving ? "Saving…" : "Save translation"}
           </Button>
           {saved && (
             <span className="text-sm text-muted-foreground">Saved.</span>
@@ -170,6 +161,6 @@ export function LanguageProfileForm({
           </p>
         )}
       </div>
-    </div>
+    </section>
   );
 }

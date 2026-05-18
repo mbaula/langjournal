@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, Home, LogOut, Plus, Settings } from "lucide-react";
+import { ChevronDown, Home, LogOut, Plus, Settings, User } from "lucide-react";
 
 import { CustomizeMenu } from "@/components/app/customize-menu";
 import { sidebarNavItemClass } from "@/components/app/sidebar-nav-styles";
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 export type { RecentEntry };
 
 type AppSidebarClientProps = {
-  userEmail: string;
+  userLabel: string;
   recents: RecentEntry[];
 };
 
@@ -35,8 +35,19 @@ function isSameUtcDay(a: Date, b: Date): boolean {
   );
 }
 
+function profilePlaceholderInitials(label: string): string | null {
+  const trimmed = label.trim();
+  if (!trimmed || trimmed === "Account") return null;
+  if (trimmed.includes("@")) return trimmed[0]?.toUpperCase() ?? null;
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
+
 export function AppSidebarClient({
-  userEmail,
+  userLabel,
   recents: initialRecents,
 }: AppSidebarClientProps) {
   const pathname = usePathname();
@@ -211,7 +222,8 @@ export function AppSidebarClient({
   );
 
   const journalActive = pathname === "/app/journal";
-  const displayUser = userEmail.trim() || "Account";
+  const displayUser = userLabel.trim() || "Account";
+  const profileInitials = profilePlaceholderInitials(displayUser);
   const hasTodayEntry = recents.some((entry) =>
     isSameUtcDay(new Date(entry.entryDate), new Date()),
   );
@@ -227,10 +239,20 @@ export function AppSidebarClient({
         <button
           type="button"
           onClick={() => setUserMenuOpen((o) => !o)}
-          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left transition-colors hover:bg-sidebar-accent"
+          className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-sidebar-accent"
           aria-expanded={userMenuOpen}
           aria-haspopup="menu"
         >
+          <div
+            className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-sidebar-border/80 bg-sidebar-accent text-[11px] font-medium text-sidebar-foreground/85"
+            aria-hidden
+          >
+            {profileInitials ? (
+              <span>{profileInitials}</span>
+            ) : (
+              <User className="size-4 opacity-70" strokeWidth={1.75} />
+            )}
+          </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-medium">{displayUser}</p>
           </div>

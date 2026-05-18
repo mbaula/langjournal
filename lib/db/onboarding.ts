@@ -1,3 +1,4 @@
+import { invalidateLanguagePairCache } from "@/lib/db/language";
 import { prisma } from "@/lib/db/prisma";
 import type {
   OnboardingAgeRange,
@@ -46,33 +47,18 @@ export async function getOnboardingState(userId: string): Promise<OnboardingStat
   };
 }
 
-export async function completeOnboarding(
+async function syncUserLanguages(
   userId: string,
-  input: {
-    displayName: string | null;
-    ageRange: OnboardingAgeRange | null;
-    languages: UserLanguageEntry[];
-  },
+  languages: UserLanguageEntry[],
 ) {
-  const primaryLanguage = input.languages[0]?.languageCode ?? "fr";
+  const primaryLanguage = languages[0]?.languageCode ?? "fr";
 
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({
-      where: { id: userId },
-      data: {
-        displayName: input.displayName,
-        ageRange: input.ageRange,
-        onboardingCompletedAt: new Date(),
-      },
-    });
+    await tx.userLanguage.deleteMany({ where: { userId } });
 
-    await tx.userLanguage.deleteMany({
-      where: { userId },
-    });
-
-    if (input.languages.length > 0) {
+    if (languages.length > 0) {
       await tx.userLanguage.createMany({
-        data: input.languages.map((lang) => ({
+        data: languages.map((lang) => ({
           userId,
           languageCode: lang.languageCode,
           level: lang.level,
@@ -82,9 +68,48 @@ export async function completeOnboarding(
 
     await tx.languageProfile.update({
       where: { userId },
-      data: {
-        targetLanguage: primaryLanguage,
-      },
+      data: { targetLanguage: primaryLanguage },
     });
   });
+
+  invalidateLanguagePairCache();
+}
+
+export async function completeOnboarding(
+  userId: string,
+  input: {
+    displayName: string | null;
+    ageRange: OnboardingAgeRange | null;
+    languages: UserLanguageEntry[];
+  },
+) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      displayName: input.displayName,
+      ageRange: input.ageRange,
+      onboardingCompletedAt: new Date(),
+    },
+  });
+
+  await syncUserLanguages(userId, input.languages);
+}
+
+export async function updateOnboardingProfile(
+  userId: string,
+  input: {
+    displayName: string | null;
+    ageRange: OnboardingAgeRange | null;
+    languages: UserLanguageEntry[];
+  },
+) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      displayName: input.displayName,
+      ageRange: input.ageRange,
+    },
+  });
+
+  await syncUserLanguages(userId, input.languages);
 }

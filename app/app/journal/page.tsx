@@ -1,8 +1,7 @@
-import { ContributionChart } from "@/components/journal/contribution-chart";
 import { CreateEntryButton } from "@/components/journal/create-entry-button";
 import { EntryList } from "@/components/journal/entry-list";
+import { JournalProgressRail } from "@/components/journal/journal-progress-rail";
 import { LanguageBar } from "@/components/journal/language-bar";
-import { StreakTracker } from "@/components/journal/streak-tracker";
 import { requireUser } from "@/lib/auth/session";
 import { getLanguagePair } from "@/lib/db/language";
 import {
@@ -43,13 +42,18 @@ export default async function JournalPage() {
           <LanguageBar source={source} target={target} />
         </div>
       </div>
-      <div className="flex flex-col gap-6">
-        <StreakTracker stats={stats} />
-        <ContributionChart data={contributions} />
+
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-10">
+        <div className="order-2 flex min-w-0 flex-col gap-12 lg:order-1">
+          <EntryList entries={entries} />
+        </div>
+        <JournalProgressRail
+          stats={stats}
+          contributions={contributions}
+          className="order-1 lg:sticky lg:top-6 lg:order-2 lg:self-start"
+        />
       </div>
-      <div className="flex w-full flex-col gap-12">
-        <EntryList entries={entries} />
-      </div>
+
       <CreateEntryButton todayEntryId={todayEntry?.id} floating />
     </div>
   );

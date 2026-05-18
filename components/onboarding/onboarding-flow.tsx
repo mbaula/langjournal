@@ -7,28 +7,15 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { OnboardingState, UserLanguageEntry } from "@/lib/db/onboarding";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
+import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
 import {
+  AGE_RANGE_LABELS,
+  LANGUAGE_LEVEL_LABELS,
   ONBOARDING_AGE_RANGES,
   ONBOARDING_LANGUAGE_LEVELS,
-  type OnboardingLanguageLevel,
-} from "@/lib/onboarding/constants";
+} from "@/lib/onboarding/labels";
 
 type Lang = { code: string; name: string };
-
-const AGE_LABELS: Record<(typeof ONBOARDING_AGE_RANGES)[number], string> = {
-  under_18: "Under 18",
-  "18_24": "18-24",
-  "25_34": "25-34",
-  "35_64": "35-64",
-  "65_plus": "65+",
-  prefer_not_to_say: "Prefer not to say",
-};
-
-const LEVEL_LABELS: Record<OnboardingLanguageLevel, string> = {
-  beginner: "Beginner",
-  intermediate: "Intermediate",
-  proficient: "Proficient",
-};
 
 const LEVEL_COPY: Record<
   OnboardingLanguageLevel,
@@ -249,7 +236,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                 <option value="">Select age range...</option>
                 {ONBOARDING_AGE_RANGES.map((value) => (
                   <option key={value} value={value}>
-                    {AGE_LABELS[value]}
+                    {AGE_RANGE_LABELS[value]}
                   </option>
                 ))}
               </select>
@@ -320,7 +307,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                       >
                         {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
                           <option key={level} value={level}>
-                            {LEVEL_LABELS[level]}
+                            {LANGUAGE_LEVEL_LABELS[level]}
                           </option>
                         ))}
                       </select>

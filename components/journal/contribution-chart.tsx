@@ -8,15 +8,26 @@ import { cn } from "@/lib/utils";
 type ContributionChartProps = {
   data: ContributionDay[];
   className?: string;
+  /** `rail` — tighter cells for the right widget column */
+  variant?: "default" | "rail";
 };
+
+const LAYOUT = {
+  default: {
+    maxCellSize: 11,
+    minCellSizeWithoutScroll: 6,
+    fallbackScrollCellSize: 8,
+  },
+  rail: {
+    maxCellSize: 9,
+    minCellSizeWithoutScroll: 4,
+    fallbackScrollCellSize: 6,
+  },
+} as const;
 
 const DAY_LABEL_WIDTH = 28;
 const DAY_LABEL_GAP = 4;
 const CELL_GAP = 3;
-const MAX_CELL_SIZE = 11;
-const MIN_CELL_SIZE_WITHOUT_SCROLL = 6;
-const FALLBACK_SCROLL_CELL_SIZE = 8;
-
 const LEVELS = [
   "bg-muted/80 dark:bg-muted/40",
   "bg-contribution-fill",
@@ -107,10 +118,15 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export function ContributionChart({ data, className }: ContributionChartProps) {
+export function ContributionChart({
+  data,
+  className,
+  variant = "default",
+}: ContributionChartProps) {
+  const layout = LAYOUT[variant];
   const weeks = useMemo(() => buildWeeks(data), [data]);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [cellSize, setCellSize] = useState(MAX_CELL_SIZE);
+  const [cellSize, setCellSize] = useState<number>(layout.maxCellSize);
   const [enableScroll, setEnableScroll] = useState(false);
 
   const totalEntries = useMemo(
@@ -130,13 +146,13 @@ export function ContributionChart({ data, className }: ContributionChartProps) {
         (availableGridWidth - CELL_GAP * (weekCount - 1)) / weekCount,
       );
 
-      if (candidate >= MIN_CELL_SIZE_WITHOUT_SCROLL) {
-        setCellSize(Math.min(MAX_CELL_SIZE, candidate));
+      if (candidate >= layout.minCellSizeWithoutScroll) {
+        setCellSize(Math.min(layout.maxCellSize, candidate));
         setEnableScroll(false);
         return;
       }
 
-      setCellSize(FALLBACK_SCROLL_CELL_SIZE);
+      setCellSize(layout.fallbackScrollCellSize);
       setEnableScroll(true);
     };
 
@@ -144,7 +160,7 @@ export function ContributionChart({ data, className }: ContributionChartProps) {
     const observer = new ResizeObserver(computeLayout);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [weeks.length]);
+  }, [weeks.length, variant]);
 
   useEffect(() => {
     if (!enableScroll || !viewportRef.current) return;

@@ -158,13 +158,22 @@ export async function deleteJournalEntryForUser(
   return { ok: true };
 }
 
+export type LearningLanguageStat = {
+  languageCode: string;
+  level: string;
+};
+
 export type JournalStats = {
   total: number;
-  today: number;
+  translationCount: number;
   thisWeek: number;
   thisMonth: number;
-  thisYear: number;
+  learningLanguages: LearningLanguageStat[];
 };
+
+function countStoredTranslations(translations: unknown): number {
+  return Array.isArray(translations) ? translations.length : 0;
+}
 
 function getUtcIsoWeekStart(d: Date): Date {
   const date = utcCalendarDate(d);
@@ -177,34 +186,43 @@ function getUtcMonthStart(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 }
 
-function getUtcYearStart(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-}
-
 export async function getJournalStats(userId: string): Promise<JournalStats> {
   const now = new Date();
-  const todayStart = utcCalendarDate(now);
   const weekStart = getUtcIsoWeekStart(now);
   const monthStart = getUtcMonthStart(now);
-  const yearStart = getUtcYearStart(now);
 
-  const [total, today, thisWeek, thisMonth, thisYear] = await Promise.all([
-    prisma.journalEntry.count({ where: { userId } }),
-    prisma.journalEntry.count({
-      where: { userId, entryDate: { gte: todayStart } },
-    }),
-    prisma.journalEntry.count({
-      where: { userId, entryDate: { gte: weekStart } },
-    }),
-    prisma.journalEntry.count({
-      where: { userId, entryDate: { gte: monthStart } },
-    }),
-    prisma.journalEntry.count({
-      where: { userId, entryDate: { gte: yearStart } },
-    }),
-  ]);
+  const [total, thisWeek, thisMonth, entries, learningLanguages] =
+    await Promise.all([
+      prisma.journalEntry.count({ where: { userId } }),
+      prisma.journalEntry.count({
+        where: { userId, entryDate: { gte: weekStart } },
+      }),
+      prisma.journalEntry.count({
+        where: { userId, entryDate: { gte: monthStart } },
+      }),
+      prisma.journalEntry.findMany({
+        where: { userId },
+        select: { translations: true },
+      }),
+      prisma.userLanguage.findMany({
+        where: { userId },
+        orderBy: { createdAt: "asc" },
+        select: { languageCode: true, level: true },
+      }),
+    ]);
 
-  return { total, today, thisWeek, thisMonth, thisYear };
+  const translationCount = entries.reduce(
+    (sum, entry) => sum + countStoredTranslations(entry.translations),
+    0,
+  );
+
+  return {
+    total,
+    translationCount,
+    thisWeek,
+    thisMonth,
+    learningLanguages,
+  };
 }
 
 export type ContributionDay = {

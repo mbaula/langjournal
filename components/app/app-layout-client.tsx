@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { EntryProvider, type JournalEntry } from "@/lib/entries/entry-context";
@@ -20,6 +21,8 @@ export function AppLayoutClient({
   initialEntryId,
 }: AppLayoutClientProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const pathname = usePathname();
+  const isJournalHome = pathname === "/app/journal";
 
   return (
     <EntryProvider initialEntry={initialEntry} initialEntryId={initialEntryId}>
@@ -52,7 +55,12 @@ export function AppLayoutClient({
           </button>
           <main className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] transition-[background-color,border-color,box-shadow] duration-300 ease-out dark:border-border/60 dark:shadow-[0_2px_16px_-6px_rgba(0,0,0,0.45)]">
             <div className="flex-1 overflow-auto">
-              <div className="mx-auto max-w-[900px] px-8 py-10 md:px-20 md:py-14">
+              <div
+                className={cn(
+                  "mx-auto w-full px-8 py-10 md:px-12 md:py-14 lg:px-16",
+                  isJournalHome ? "max-w-[1200px]" : "max-w-[900px]",
+                )}
+              >
                 {children}
               </div>
             </div>
