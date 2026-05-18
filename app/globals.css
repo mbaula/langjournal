@@ -247,31 +247,31 @@ html.dark[data-accent="yellow"] {
   --contribution-fill: #e8b840;
 }
 
-/* Pink — muted #E5D0D8 */
+/* Pink — soft baby pink (picker swatch unchanged in accent.ts) */
 html[data-accent="pink"] {
-  --app-shell: #e5d0d8;
+  --app-shell: #ead4de;
   --sidebar: var(--app-shell);
-  --sidebar-accent: #d4bec8;
-  --sidebar-border: #c6b0bb;
-  --sidebar-ring: #9a7f8a;
-  --sidebar-primary: #7a5f6a;
+  --sidebar-accent: #dfc6d2;
+  --sidebar-border: #d2b0be;
+  --sidebar-ring: #c08094;
+  --sidebar-primary: #ad5a70;
   --sidebar-primary-foreground: #fffdf8;
-  --primary: #7a5f6a;
+  --primary: #ad5a70;
   --primary-foreground: #fffdf8;
-  --contribution-fill: #c4a0ae;
+  --contribution-fill: #cc94a6;
 }
 
 html.dark[data-accent="pink"] {
-  --app-shell: #2f282b;
+  --app-shell: #362a2e;
   --sidebar: var(--app-shell);
-  --sidebar-accent: #3a3336;
-  --sidebar-border: #463e42;
-  --sidebar-ring: #9a7f8a;
-  --sidebar-primary: #d4b4c0;
-  --sidebar-primary-foreground: #241c20;
-  --primary: #d4b4c0;
-  --primary-foreground: #241c20;
-  --contribution-fill: #c4a0ae;
+  --sidebar-accent: #423438;
+  --sidebar-border: #504044;
+  --sidebar-ring: #c08094;
+  --sidebar-primary: #dcb0c0;
+  --sidebar-primary-foreground: #24181c;
+  --primary: #dcb0c0;
+  --primary-foreground: #24181c;
+  --contribution-fill: #b88898;
 }
 
 html[data-accent="sky"] {

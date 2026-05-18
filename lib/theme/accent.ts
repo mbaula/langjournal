@@ -23,7 +23,7 @@ export type AccentId =
 
 export type AccentOption = {
   id: AccentId;
-  /** Picker chip only—saturated so hues are distinguishable; UI tints are in globals.css */
+  /** Picker chip only—fixed preview hues; tune shell/chrome in globals.css, not swatches */
   swatch: string;
 };
 
