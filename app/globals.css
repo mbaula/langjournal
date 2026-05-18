@@ -74,7 +74,7 @@
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
 
-  /* --- App chrome (neutral / data-accent="neutral") --- */
+  /* --- App chrome (default / data-accent="gray" uses :root below) --- */
   /* oklch(L C H): lightness 0–1, chroma, hue degrees. Tweak C/H together per palette. */
   /* --app-shell: outer frame (layout bg-app-shell). --sidebar must match to avoid a lighter "box". */
   --app-shell: oklch(0.955 0 0);
@@ -155,7 +155,7 @@
  * Source of truth for accent colors. IDs must match lib/theme/accent.ts (AccentId).
  *
  * Selectors: html[data-accent="<id>"] (light), html.dark[data-accent="<id>"] (dark).
- * Neutral uses :root / .dark above only (no data-accent block).
+ * Gray uses :root / .dark above only (no data-accent block).
  *
  * Per palette, override these roles (8 values + sidebar alias):
  *   --app-shell          Frame + sidebar background (bg-app-shell, bg-sidebar)
@@ -167,33 +167,34 @@
  *
  * Main journal content stays --background (white / dark card), not tinted here.
  */
-html[data-accent="sage"] {
-  --app-shell: oklch(0.94 0.04 155);
+/* Green — muted #C8D5CC */
+html[data-accent="green"] {
+  --app-shell: #c8d5cc;
   --sidebar: var(--app-shell);
-  --sidebar-accent: oklch(0.86 0.05 155);
-  --sidebar-border: oklch(0.9 0.018 155);
-  --sidebar-ring: oklch(0.62 0.05 155);
-  --sidebar-primary: oklch(0.48 0.11 155);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --primary: oklch(0.5 0.11 155);
-  --primary-foreground: oklch(0.99 0 0);
-  --contribution-fill: oklch(0.66 0.12 155);
+  --sidebar-accent: #b8c9be;
+  --sidebar-border: #aabfb1;
+  --sidebar-ring: #7f9686;
+  --sidebar-primary: #5f7567;
+  --sidebar-primary-foreground: #fffdf8;
+  --primary: #5f7567;
+  --primary-foreground: #fffdf8;
+  --contribution-fill: #8fa899;
 }
 
-html.dark[data-accent="sage"] {
-  --app-shell: oklch(0.22 0.05 155);
+html.dark[data-accent="green"] {
+  --app-shell: #2a302c;
   --sidebar: var(--app-shell);
-  --sidebar-accent: oklch(0.27 0.055 155);
-  --sidebar-border: oklch(0.34 0.028 155 / 50%);
-  --sidebar-ring: oklch(0.52 0.06 155);
-  --sidebar-primary: oklch(0.72 0.11 155);
-  --sidebar-primary-foreground: oklch(0.16 0.02 155);
-  --primary: oklch(0.72 0.11 155);
-  --primary-foreground: oklch(0.16 0.02 155);
-  --contribution-fill: oklch(0.72 0.11 155);
+  --sidebar-accent: #353d38;
+  --sidebar-border: #404a44;
+  --sidebar-ring: #7f9686;
+  --sidebar-primary: #a8bdb0;
+  --sidebar-primary-foreground: #1e2420;
+  --primary: #a8bdb0;
+  --primary-foreground: #1e2420;
+  --contribution-fill: #8fa899;
 }
 
-html[data-accent="slate"] {
+html[data-accent="blue"] {
   --app-shell: oklch(0.94 0.038 250);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.86 0.048 250);
@@ -206,7 +207,7 @@ html[data-accent="slate"] {
   --contribution-fill: oklch(0.64 0.1 250);
 }
 
-html.dark[data-accent="slate"] {
+html.dark[data-accent="blue"] {
   --app-shell: oklch(0.22 0.048 250);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.27 0.052 250);
@@ -219,8 +220,8 @@ html.dark[data-accent="slate"] {
   --contribution-fill: oklch(0.7 0.1 250);
 }
 
-/* id "sand" = Yellow in UI. Hex palette (warm butter); avoids oklch hue drift toward green. */
-html[data-accent="sand"] {
+/* Yellow — butter #FBE29D */
+html[data-accent="yellow"] {
   --app-shell: #fbe29d;
   --sidebar: var(--app-shell);
   --sidebar-accent: #f3d67e;
@@ -233,7 +234,7 @@ html[data-accent="sand"] {
   --contribution-fill: #e8b840;
 }
 
-html.dark[data-accent="sand"] {
+html.dark[data-accent="yellow"] {
   --app-shell: #2e2a1c;
   --sidebar: var(--app-shell);
   --sidebar-accent: #3d3824;
@@ -246,33 +247,34 @@ html.dark[data-accent="sand"] {
   --contribution-fill: #e8b840;
 }
 
-html[data-accent="rose"] {
-  --app-shell: oklch(0.94 0.04 15);
+/* Pink — muted #E5D0D8 */
+html[data-accent="pink"] {
+  --app-shell: #e5d0d8;
   --sidebar: var(--app-shell);
-  --sidebar-accent: oklch(0.86 0.05 15);
-  --sidebar-border: oklch(0.9 0.018 15);
-  --sidebar-ring: oklch(0.62 0.06 15);
-  --sidebar-primary: oklch(0.48 0.11 15);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --primary: oklch(0.5 0.11 15);
-  --primary-foreground: oklch(0.99 0 0);
-  --contribution-fill: oklch(0.66 0.12 15);
+  --sidebar-accent: #d4bec8;
+  --sidebar-border: #c6b0bb;
+  --sidebar-ring: #9a7f8a;
+  --sidebar-primary: #7a5f6a;
+  --sidebar-primary-foreground: #fffdf8;
+  --primary: #7a5f6a;
+  --primary-foreground: #fffdf8;
+  --contribution-fill: #c4a0ae;
 }
 
-html.dark[data-accent="rose"] {
-  --app-shell: oklch(0.22 0.05 15);
+html.dark[data-accent="pink"] {
+  --app-shell: #2f282b;
   --sidebar: var(--app-shell);
-  --sidebar-accent: oklch(0.27 0.055 15);
-  --sidebar-border: oklch(0.34 0.03 15 / 50%);
-  --sidebar-ring: oklch(0.52 0.07 15);
-  --sidebar-primary: oklch(0.72 0.11 15);
-  --sidebar-primary-foreground: oklch(0.16 0.02 15);
-  --primary: oklch(0.72 0.11 15);
-  --primary-foreground: oklch(0.16 0.02 15);
-  --contribution-fill: oklch(0.72 0.11 15);
+  --sidebar-accent: #3a3336;
+  --sidebar-border: #463e42;
+  --sidebar-ring: #9a7f8a;
+  --sidebar-primary: #d4b4c0;
+  --sidebar-primary-foreground: #241c20;
+  --primary: #d4b4c0;
+  --primary-foreground: #241c20;
+  --contribution-fill: #c4a0ae;
 }
 
-html[data-accent="mist"] {
+html[data-accent="sky"] {
   --app-shell: oklch(0.94 0.038 210);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.86 0.048 210);
@@ -285,7 +287,7 @@ html[data-accent="mist"] {
   --contribution-fill: oklch(0.64 0.1 210);
 }
 
-html.dark[data-accent="mist"] {
+html.dark[data-accent="sky"] {
   --app-shell: oklch(0.22 0.048 210);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.27 0.052 210);
@@ -351,30 +353,58 @@ html.dark[data-accent="red"] {
   --contribution-fill: oklch(0.72 0.17 27);
 }
 
-html[data-accent="brown"] {
-  --app-shell: oklch(0.9 0.06 55);
+/* Muted orange #E8C9A8 (replaces brown) */
+html[data-accent="orange"] {
+  --app-shell: #e8c9a8;
   --sidebar: var(--app-shell);
-  --sidebar-accent: oklch(0.84 0.07 55);
-  --sidebar-border: oklch(0.88 0.05 55);
-  --sidebar-ring: oklch(0.6 0.07 55);
-  --sidebar-primary: oklch(0.48 0.11 55);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --primary: oklch(0.5 0.11 55);
-  --primary-foreground: oklch(0.99 0 0);
-  --contribution-fill: oklch(0.64 0.1 55);
+  --sidebar-accent: #d9b892;
+  --sidebar-border: #c9a882;
+  --sidebar-ring: #a88458;
+  --sidebar-primary: #9a6f42;
+  --sidebar-primary-foreground: #fffdf5;
+  --primary: #9a6f42;
+  --primary-foreground: #fffdf5;
+  --contribution-fill: #c9a06a;
 }
 
-html.dark[data-accent="brown"] {
-  --app-shell: oklch(0.24 0.055 55);
+html.dark[data-accent="orange"] {
+  --app-shell: #2e2a24;
   --sidebar: var(--app-shell);
-  --sidebar-accent: oklch(0.29 0.065 55);
-  --sidebar-border: oklch(0.34 0.04 55 / 50%);
-  --sidebar-ring: oklch(0.52 0.08 55);
-  --sidebar-primary: oklch(0.72 0.11 55);
-  --sidebar-primary-foreground: oklch(0.16 0.03 55);
-  --primary: oklch(0.72 0.11 55);
-  --primary-foreground: oklch(0.16 0.03 55);
-  --contribution-fill: oklch(0.72 0.11 55);
+  --sidebar-accent: #3a352c;
+  --sidebar-border: #484234;
+  --sidebar-ring: #a88458;
+  --sidebar-primary: #e0b888;
+  --sidebar-primary-foreground: #2a2218;
+  --primary: #e0b888;
+  --primary-foreground: #2a2218;
+  --contribution-fill: #c9a06a;
+}
+
+/* Muted teal #B8D4D4 */
+html[data-accent="teal"] {
+  --app-shell: #b8d4d4;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #a4c4c4;
+  --sidebar-border: #94b4b4;
+  --sidebar-ring: #6a9090;
+  --sidebar-primary: #4f7373;
+  --sidebar-primary-foreground: #fffdf8;
+  --primary: #4f7373;
+  --primary-foreground: #fffdf8;
+  --contribution-fill: #7fa8a8;
+}
+
+html.dark[data-accent="teal"] {
+  --app-shell: #262f2f;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #303c3c;
+  --sidebar-border: #3c4a4a;
+  --sidebar-ring: #6a9090;
+  --sidebar-primary: #a8c8c8;
+  --sidebar-primary-foreground: #1c2424;
+  --primary: #a8c8c8;
+  --primary-foreground: #1c2424;
+  --contribution-fill: #7fa8a8;
 }
 
 /* Explicit utilities so backgrounds always resolve --app-shell / --sidebar at runtime. */

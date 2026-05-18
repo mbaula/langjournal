@@ -61,7 +61,7 @@ export function useAccent(): AccentContextValue {
   const ctx = useContext(AccentContext);
   if (!ctx) {
     return {
-      accent: "neutral",
+      accent: "gray",
       setAccent: () => {},
     };
   }

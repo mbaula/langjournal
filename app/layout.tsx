@@ -3,7 +3,7 @@ import { Geist_Mono, Inter } from "next/font/google";
 import Script from "next/script";
 
 import { AccentProvider } from "@/components/accent-provider";
-import { ACCENT_IDS } from "@/lib/theme/accent";
+import { ACCENT_IDS, LEGACY_ACCENT_IDS } from "@/lib/theme/accent";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -40,7 +40,7 @@ export default function RootLayout({
       <body className="relative flex min-h-full flex-col">
         {/* Theme + accent before hydration: .dark on <html>, data-accent from localStorage (ACCENT_IDS). */}
         <Script id="theme-boot" strategy="beforeInteractive">
-          {`(function(){try{var t=localStorage.getItem("theme");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;var dark=t==="dark"||((t===null||t==="system"||t==="")&&d);document.documentElement.classList.toggle("dark",dark);var a=localStorage.getItem("accent");var accents=${JSON.stringify(ACCENT_IDS)};document.documentElement.dataset.accent=accents.indexOf(a)>=0?a:"neutral";}catch(e){}})();`}
+          {`(function(){try{var t=localStorage.getItem("theme");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;var dark=t==="dark"||((t===null||t==="system"||t==="")&&d);document.documentElement.classList.toggle("dark",dark);var a=localStorage.getItem("accent");var leg=${JSON.stringify(LEGACY_ACCENT_IDS)};if(a&&leg[a])a=leg[a];var accents=${JSON.stringify(ACCENT_IDS)};document.documentElement.dataset.accent=accents.indexOf(a)>=0?a:"gray";}catch(e){}})();`}
         </Script>
         <div className="app-grain" aria-hidden />
         <ThemeProvider>

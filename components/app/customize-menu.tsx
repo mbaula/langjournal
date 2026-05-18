@@ -7,7 +7,11 @@ import { Moon, Palette, Sun } from "lucide-react";
 
 import { useAccent } from "@/components/accent-provider";
 import { useTheme } from "@/components/theme-provider";
-import { ACCENT_OPTIONS, type AccentId } from "@/lib/theme/accent";
+import {
+  ACCENT_OPTIONS,
+  accentLabel,
+  type AccentId,
+} from "@/lib/theme/accent";
 import { cn } from "@/lib/utils";
 
 export function CustomizeMenu() {
@@ -61,10 +65,18 @@ export function CustomizeMenu() {
           className="absolute top-full right-0 left-0 z-50 mt-1 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg"
           role="menu"
         >
-          <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+          <div
+            className="flex items-center gap-2 px-2 py-1.5 text-[13px]"
+            id="customize-accent-label"
+          >
+            <Palette className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
             Color
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Accent color">
+          </div>
+          <div
+            className="grid grid-cols-5 gap-2 px-2 pb-1"
+            role="group"
+            aria-labelledby="customize-accent-label"
+          >
             {ACCENT_OPTIONS.map((option) => {
               const selected = accent === option.id;
               return (
@@ -73,10 +85,11 @@ export function CustomizeMenu() {
                   type="button"
                   role="menuitemradio"
                   aria-checked={selected}
-                  title={option.label}
+                  title={accentLabel(option.id)}
+                  aria-label={accentLabel(option.id)}
                   onClick={() => selectAccent(option.id)}
                   className={cn(
-                    "flex size-8 items-center justify-center rounded-md border transition-[transform,box-shadow,border-color] duration-150",
+                    "flex size-8 items-center justify-center justify-self-center rounded-md border transition-[transform,box-shadow,border-color] duration-150",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                     selected
                       ? "scale-105 border-foreground/30 shadow-sm"
@@ -85,9 +98,10 @@ export function CustomizeMenu() {
                 >
                   <span
                     className="size-5 rounded-full ring-1 ring-black/10 dark:ring-white/15"
-                    style={{ background: option.swatch }}
+                    style={{ backgroundColor: option.swatch }}
+                    aria-hidden
                   />
-                  <span className="sr-only">{option.label}</span>
+                  <span className="sr-only">{accentLabel(option.id)}</span>
                 </button>
               );
             })}
