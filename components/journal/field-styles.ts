@@ -11,6 +11,10 @@ export const journalTranslationHighlightClassName =
 export const journalEditorTranslationHighlightClassName =
   "rounded bg-blue-100 text-foreground [box-decoration-break:clone] dark:bg-blue-500/25";
 
+/** Journal home list: entry preview lines (matches date subtitle / page encouraging text). */
+export const journalEntryPreviewTextClassName =
+  "text-[13px] leading-normal text-foreground antialiased";
+
 /** Shared look for journal textareas (sans, theme border, no browser-default serif). */
 export function journalTextareaClassName(...extra: (string | undefined)[]) {
   return cn(

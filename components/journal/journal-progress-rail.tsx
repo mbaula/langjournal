@@ -12,24 +12,19 @@ type JournalProgressRailProps = {
 };
 
 function ActivityWidget({
-  title,
   children,
   className,
 }: {
-  title: string;
   children: ReactNode;
   className?: string;
 }) {
   return (
     <section
       className={cn(
-        "rounded-xl border border-sidebar-primary bg-card/50 p-4 backdrop-blur-sm",
+        "rounded-xl border border-border bg-card/50 p-4 backdrop-blur-sm",
         className,
       )}
     >
-      <h2 className="mb-2 text-[10px] font-medium text-muted-foreground">
-        {title}
-      </h2>
       {children}
     </section>
   );
@@ -44,8 +39,12 @@ export function JournalProgressRail({
     <aside className={cn(className)} aria-label="Journal progress">
       <div className="flex flex-col gap-3">
         <JournalProgressStats stats={stats} />
-        <ActivityWidget title="Activity" className="min-w-0">
-          <ContributionChart data={contributions} variant="rail" />
+        <ActivityWidget className="min-w-0">
+          <ContributionChart
+            data={contributions}
+            variant="rail"
+            title="Activity"
+          />
         </ActivityWidget>
       </div>
     </aside>

@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
-import { journalTranslationHighlightClassName } from "@/components/journal/field-styles";
+import {
+  journalEntryPreviewTextClassName,
+  journalTranslationHighlightClassName,
+} from "@/components/journal/field-styles";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
 import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
 import { useEntry } from "@/lib/entries/entry-context";
@@ -135,17 +138,22 @@ export function JournalEntryCard({
         {displayTitle}
       </h2>
       {subtitle ? (
-        <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">{subtitle}</p>
       ) : null}
     </>
   );
 
   const entryBody = (
     <>
-      <hr className="my-4 border-border" />
+      <hr className="my-3 border-border" />
       <div className="flex flex-col gap-0">
         {isEmptyBody ? (
-          <p className="text-[15px] leading-[1.65] text-muted-foreground/80">
+          <p
+            className={cn(
+              journalEntryPreviewTextClassName,
+              "text-muted-foreground",
+            )}
+          >
             No text yet — open this entry to write.
           </p>
         ) : (
@@ -154,7 +162,10 @@ export function JournalEntryCard({
             return (
               <p
                 key={idx}
-                className="min-h-[1.65em] whitespace-pre-wrap text-[15px] leading-[1.65] text-foreground"
+                className={cn(
+                  journalEntryPreviewTextClassName,
+                  "min-h-[1.25em] whitespace-pre-wrap",
+                )}
               >
                 {segs.map((seg, si) =>
                   seg.translation ? (
@@ -218,7 +229,7 @@ export function JournalEntryCard({
                 </button>
               </div>
             </div>
-            <div className="mt-4">{entryBody}</div>
+            <div className="mt-3">{entryBody}</div>
           </div>
         ) : (
           <Link

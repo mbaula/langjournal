@@ -10,7 +10,7 @@ type JournalProgressStatsProps = {
 };
 
 const statCardClass =
-  "rounded-xl border border-sidebar-primary bg-card/50 px-3 py-2.5 backdrop-blur-sm";
+  "rounded-xl border border-border bg-card/50 px-3 py-2.5 backdrop-blur-sm";
 
 const labelClass =
   "min-w-0 truncate text-[10px] leading-tight font-medium text-muted-foreground";

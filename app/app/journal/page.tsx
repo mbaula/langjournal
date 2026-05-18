@@ -3,7 +3,12 @@ import { EntryList } from "@/components/journal/entry-list";
 import { JournalProgressRail } from "@/components/journal/journal-progress-rail";
 import { LanguageBar } from "@/components/journal/language-bar";
 import { requireUser } from "@/lib/auth/session";
+import { getOnboardingState } from "@/lib/db/onboarding";
 import { getLanguagePair } from "@/lib/db/language";
+import {
+  journalGreetingName,
+  pickEncouragingSubtitle,
+} from "@/lib/journal/greeting";
 import {
   getContributionData,
   getJournalStats,
@@ -17,12 +22,17 @@ function isSameUtcDay(a: Date, b: Date): boolean {
 
 export default async function JournalPage() {
   const user = await requireUser();
-  const [entries, { source, target }, stats, contributions] = await Promise.all([
-    listJournalEntries(user.id),
-    getLanguagePair(user.id),
-    getJournalStats(user.id),
-    getContributionData(user.id),
-  ]);
+  const [entries, { source, target }, stats, contributions, onboarding] =
+    await Promise.all([
+      listJournalEntries(user.id),
+      getLanguagePair(user.id),
+      getJournalStats(user.id),
+      getContributionData(user.id),
+      getOnboardingState(user.id),
+    ]);
+
+  const greetingName = journalGreetingName(onboarding.displayName, user.email);
+  const encouragingSubtitle = pickEncouragingSubtitle();
 
   const today = new Date();
   const todayEntry = entries.find((e) => isSameUtcDay(e.entryDate, today));
@@ -32,10 +42,10 @@ export default async function JournalPage() {
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-x-10 lg:gap-y-8">
         <header className="min-w-0 space-y-1">
           <h1 className="text-[1.875rem] font-bold tracking-[-0.02em] text-foreground">
-            Journal
+            Hi, {greetingName} 👋
           </h1>
           <p className="text-[13px] text-muted-foreground">
-            One note per calendar day (UTC).
+            {encouragingSubtitle}
           </p>
         </header>
 

@@ -18,12 +18,12 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-10 pt-2">
+    <div className="flex w-full flex-col gap-8 pt-2 lg:gap-10">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-[1.875rem] font-bold tracking-[-0.02em] text-foreground">
           Settings
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           Update your profile and journal language preferences.
         </p>
       </header>
