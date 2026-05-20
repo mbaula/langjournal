@@ -2,6 +2,11 @@
   "name": "langjournal",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=20",
+    "npm": "10.9.2"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -12,6 +17,10 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.mts",
     "test:integration:watch": "vitest --config vitest.integration.config.mts",
+    "lockfile:sync": "node scripts/lockfile-sync.mjs",
+    "lockfile:check": "node scripts/lockfile-check.mjs",
+    "lockfile:sync:linux": "node scripts/lockfile-sync-linux.mjs",
+    "prepush": "npm run lockfile:check",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
