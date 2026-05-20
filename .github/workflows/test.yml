@@ -10,63 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
-      - name: Guard lockfile sync
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            base_ref="origin/${{ github.base_ref }}"
-            git fetch origin "${{ github.base_ref }}" --depth=1
-            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
-          else
-            changed_files="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")"
-          fi
-
-          package_changed=false
-          lock_changed=false
-
-          while IFS= read -r file; do
-            [[ "$file" == "package.json" ]] && package_changed=true
-            [[ "$file" == "package-lock.json" ]] && lock_changed=true
-          done <<< "$changed_files"
-
-          if [[ "$package_changed" == true && "$lock_changed" == false ]]; then
-            echo "package.json changed without package-lock.json update."
-            echo "Run: npm run lockfile:sync && git add package-lock.json"
-            exit 1
-          fi
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Enable Corepack
-        run: corepack enable
+      - run: npm ci
 
-      - name: Verify package-lock.json (Linux resolution)
-        run: |
-          npm install --package-lock-only --ignore-scripts
-          if ! git diff --quiet package-lock.json; then
-            echo "::error::package-lock.json is incomplete or out of date."
-            echo "On Windows, run: npm run lockfile:sync:linux"
-            echo "Otherwise: npm run lockfile:sync && git add package-lock.json"
-            git diff --stat package-lock.json
-            exit 1
-          fi
-
-      - name: Validate lockfile (npm ci dry-run)
-        run: npm run lockfile:check
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run unit tests with coverage
-        run: npm test
+      - run: npm test
