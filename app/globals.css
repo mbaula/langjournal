@@ -155,6 +155,7 @@
  * Source of truth for accent colors. IDs must match lib/theme/accent.ts (AccentId).
  *
  * Selectors: html[data-accent="<id>"] (light), html.dark[data-accent="<id>"] (dark).
+ * Legacy ids (sand, sage, …) are aliased on each block — must match LEGACY_ACCENT_IDS in accent.ts.
  * Gray uses :root / .dark above only (no data-accent block).
  *
  * Per palette, override these roles (8 values + sidebar alias):
@@ -168,7 +169,8 @@
  * Main journal content stays --background (white / dark card), not tinted here.
  */
 /* Green — muted #C8D5CC */
-html[data-accent="green"] {
+html[data-accent="green"],
+html[data-accent="sage"] {
   --app-shell: #c8d5cc;
   --sidebar: var(--app-shell);
   --sidebar-accent: #b8c9be;
@@ -181,7 +183,8 @@ html[data-accent="green"] {
   --contribution-fill: #8fa899;
 }
 
-html.dark[data-accent="green"] {
+html.dark[data-accent="green"],
+html.dark[data-accent="sage"] {
   --app-shell: #2a302c;
   --sidebar: var(--app-shell);
   --sidebar-accent: #353d38;
@@ -194,7 +197,8 @@ html.dark[data-accent="green"] {
   --contribution-fill: #8fa899;
 }
 
-html[data-accent="blue"] {
+html[data-accent="blue"],
+html[data-accent="slate"] {
   --app-shell: oklch(0.94 0.038 250);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.86 0.048 250);
@@ -207,7 +211,8 @@ html[data-accent="blue"] {
   --contribution-fill: oklch(0.64 0.1 250);
 }
 
-html.dark[data-accent="blue"] {
+html.dark[data-accent="blue"],
+html.dark[data-accent="slate"] {
   --app-shell: oklch(0.22 0.048 250);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.27 0.052 250);
@@ -221,7 +226,8 @@ html.dark[data-accent="blue"] {
 }
 
 /* Yellow — butter #FBE29D */
-html[data-accent="yellow"] {
+html[data-accent="yellow"],
+html[data-accent="sand"] {
   --app-shell: #fbe29d;
   --sidebar: var(--app-shell);
   --sidebar-accent: #f3d67e;
@@ -234,7 +240,8 @@ html[data-accent="yellow"] {
   --contribution-fill: #e8b840;
 }
 
-html.dark[data-accent="yellow"] {
+html.dark[data-accent="yellow"],
+html.dark[data-accent="sand"] {
   --app-shell: #2e2a1c;
   --sidebar: var(--app-shell);
   --sidebar-accent: #3d3824;
@@ -248,7 +255,8 @@ html.dark[data-accent="yellow"] {
 }
 
 /* Pink — soft baby pink (picker swatch unchanged in accent.ts) */
-html[data-accent="pink"] {
+html[data-accent="pink"],
+html[data-accent="rose"] {
   --app-shell: #ead4de;
   --sidebar: var(--app-shell);
   --sidebar-accent: #dfc6d2;
@@ -261,7 +269,8 @@ html[data-accent="pink"] {
   --contribution-fill: #cc94a6;
 }
 
-html.dark[data-accent="pink"] {
+html.dark[data-accent="pink"],
+html.dark[data-accent="rose"] {
   --app-shell: #362a2e;
   --sidebar: var(--app-shell);
   --sidebar-accent: #423438;
@@ -274,7 +283,8 @@ html.dark[data-accent="pink"] {
   --contribution-fill: #b88898;
 }
 
-html[data-accent="sky"] {
+html[data-accent="sky"],
+html[data-accent="mist"] {
   --app-shell: oklch(0.94 0.038 210);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.86 0.048 210);
@@ -287,7 +297,8 @@ html[data-accent="sky"] {
   --contribution-fill: oklch(0.64 0.1 210);
 }
 
-html.dark[data-accent="sky"] {
+html.dark[data-accent="sky"],
+html.dark[data-accent="mist"] {
   --app-shell: oklch(0.22 0.048 210);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.27 0.052 210);
@@ -354,7 +365,8 @@ html.dark[data-accent="red"] {
 }
 
 /* Muted orange #E8C9A8 (replaces brown) */
-html[data-accent="orange"] {
+html[data-accent="orange"],
+html[data-accent="brown"] {
   --app-shell: #e8c9a8;
   --sidebar: var(--app-shell);
   --sidebar-accent: #d9b892;
@@ -367,7 +379,8 @@ html[data-accent="orange"] {
   --contribution-fill: #c9a06a;
 }
 
-html.dark[data-accent="orange"] {
+html.dark[data-accent="orange"],
+html.dark[data-accent="brown"] {
   --app-shell: #2e2a24;
   --sidebar: var(--app-shell);
   --sidebar-accent: #3a352c;

@@ -44,6 +44,7 @@ export function AccentProvider({
   }, [accent]);
 
   const setAccent = useCallback((next: AccentId) => {
+    applyAccent(next);
     setAccentState(next);
   }, []);
 
