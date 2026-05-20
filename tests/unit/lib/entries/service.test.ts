@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { revalidateTagMock, prismaMock } = vi.hoisted(() => ({
   revalidateTagMock: vi.fn(),
@@ -10,6 +10,10 @@ const { revalidateTagMock, prismaMock } = vi.hoisted(() => ({
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      count: vi.fn(),
+    },
+    userLanguage: {
+      findMany: vi.fn(),
     },
   },
 }));
@@ -25,7 +29,9 @@ vi.mock("@/lib/db/prisma", () => ({
 
 import {
   deleteJournalEntryForUser,
+  getContributionData,
   getJournalEntryForUser,
+  getJournalStats,
   getOrCreateJournalEntryForDate,
   listJournalEntries,
   listJournalRecentsForSidebar,
@@ -226,6 +232,78 @@ describe("updateJournalEntryBody", () => {
       data: { body: "a\nb" },
     });
     expect(result).toEqual({ ok: true });
+  });
+});
+
+describe("getJournalStats", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("aggregates counts, translations, and learning languages", async () => {
+    prismaMock.journalEntry.count
+      .mockResolvedValueOnce(10)
+      .mockResolvedValueOnce(3)
+      .mockResolvedValueOnce(7);
+    prismaMock.journalEntry.findMany.mockResolvedValueOnce([
+      { translations: [{ id: "t1" }, { id: "t2" }] },
+      { translations: null },
+      { translations: "not-an-array" },
+    ]);
+    prismaMock.userLanguage.findMany.mockResolvedValueOnce([
+      { languageCode: "ja", level: "intermediate" },
+    ]);
+
+    const result = await getJournalStats("u1");
+
+    expect(prismaMock.journalEntry.count).toHaveBeenCalledTimes(3);
+    expect(prismaMock.userLanguage.findMany).toHaveBeenCalledWith({
+      where: { userId: "u1" },
+      orderBy: { createdAt: "asc" },
+      select: { languageCode: true, level: true },
+    });
+    expect(result).toEqual({
+      total: 10,
+      translationCount: 2,
+      thisWeek: 3,
+      thisMonth: 7,
+      learningLanguages: [{ languageCode: "ja", level: "intermediate" }],
+    });
+  });
+});
+
+describe("getContributionData", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-20T12:00:00.000Z"));
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("returns a day for each date in range with aggregated counts", async () => {
+    prismaMock.journalEntry.findMany.mockResolvedValueOnce([
+      { entryDate: new Date("2026-05-18T00:00:00.000Z") },
+      { entryDate: new Date("2026-05-18T15:00:00.000Z") },
+      { entryDate: new Date("2026-05-20T00:00:00.000Z") },
+    ]);
+
+    const result = await getContributionData("u1", 3);
+
+    expect(result).toEqual([
+      { date: "2026-05-18", count: 2 },
+      { date: "2026-05-19", count: 0 },
+      { date: "2026-05-20", count: 1 },
+    ]);
+    expect(prismaMock.journalEntry.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: "u1",
+        entryDate: { gte: new Date("2026-05-18T00:00:00.000Z") },
+      },
+      select: { entryDate: true },
+    });
   });
 });
 

@@ -6,7 +6,15 @@ import {
   getUtcMonthPageRange,
   maxMonthPageIndex,
   sliceContributionDaysForRange,
+  utcMonthAdd,
 } from "@/lib/journal/contribution-range";
+
+describe("utcMonthAdd", () => {
+  it("adds months across year boundaries", () => {
+    expect(utcMonthAdd(2026, 0, -1)).toEqual({ year: 2025, month: 11 });
+    expect(utcMonthAdd(2025, 11, 1)).toEqual({ year: 2026, month: 0 });
+  });
+});
 
 describe("getUtcMonthPageRange", () => {
   it("returns six inclusive calendar months for page 0", () => {
