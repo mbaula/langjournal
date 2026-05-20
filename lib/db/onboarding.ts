@@ -1,5 +1,8 @@
 import { invalidateLanguagePairCache } from "@/lib/db/language";
+import { LevelConfidence } from "@prisma/client";
+
 import { prisma } from "@/lib/db/prisma";
+import { mapDeclaredLevelToCefr } from "@/lib/level-calibration";
 import type {
   OnboardingAgeRange,
   OnboardingLanguageLevel,
@@ -62,6 +65,9 @@ async function syncUserLanguages(
           userId,
           languageCode: lang.languageCode,
           level: lang.level,
+          estimatedCefrLevel: mapDeclaredLevelToCefr(lang.level),
+          levelConfidence: LevelConfidence.LOW,
+          estimatedLevelUpdatedAt: now,
         })),
       });
     }
