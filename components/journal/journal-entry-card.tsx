@@ -211,7 +211,7 @@ export function JournalEntryCard({
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   disabled={renamePending}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={cancelRename}
@@ -220,7 +220,7 @@ export function JournalEntryCard({
                 </button>
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-[12px] text-foreground transition-colors hover:bg-muted"
+                  className="rounded-md px-3 py-2 text-[12px] text-foreground transition-colors hover:bg-muted"
                   disabled={renamePending}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => void saveRename()}
@@ -260,7 +260,7 @@ export function JournalEntryCard({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   disabled={deletePending}
                   onClick={() => setDeleteConfirming(false)}
                 >
@@ -268,7 +268,7 @@ export function JournalEntryCard({
                 </button>
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-[12px] text-destructive transition-colors hover:bg-destructive/10"
+                  className="rounded-md px-3 py-2 text-[12px] text-destructive transition-colors hover:bg-destructive/10"
                   disabled={deletePending}
                   onClick={() => void performDelete()}
                 >

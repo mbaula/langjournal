@@ -66,7 +66,7 @@ export function EntryTitleField({
       placeholder="Entry title"
       aria-label="Entry title"
       className={cn(
-        "font-sans w-full min-w-0 border-0 bg-transparent py-1 text-[2.5rem] font-bold leading-[1.15] tracking-[-0.02em] text-foreground outline-none transition-colors",
+        "font-sans w-full min-w-0 border-0 bg-transparent py-1 text-2xl font-bold leading-[1.15] tracking-[-0.02em] text-foreground outline-none transition-colors sm:text-3xl lg:text-[2.5rem]",
         "placeholder:text-muted-foreground/50",
         "focus-visible:ring-0",
       )}

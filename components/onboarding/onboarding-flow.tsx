@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { OnboardingExitHeader } from "@/components/onboarding/onboarding-exit-header";
 import type { OnboardingState, UserLanguageEntry } from "@/lib/db/onboarding";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
@@ -161,7 +162,8 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
   }
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center px-6">
+    <div className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center px-6 pb-16 pt-20">
+      <OnboardingExitHeader />
       {/* Completion */}
       {completed ? (
         <div className="flex flex-col items-center text-center">

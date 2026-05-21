@@ -310,7 +310,7 @@ export function AppSidebarClient({
             disabled={newEntryPending}
             onClick={() => void openTodayEntry()}
             className={cn(
-              "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors",
+              "flex w-full items-center gap-2 rounded-md px-2 py-2.5 text-[13px] transition-colors sm:py-1.5",
               "text-sidebar-foreground hover:bg-sidebar-accent/80",
               newEntryPending && "opacity-60",
             )}

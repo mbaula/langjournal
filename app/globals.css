@@ -428,6 +428,16 @@ html.dark[data-accent="teal"] {
   .bg-sidebar {
     background-color: var(--sidebar);
   }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .bottom-safe {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  .touch-target {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
 }
 
 @layer base {
@@ -442,6 +452,7 @@ html.dark[data-accent="teal"] {
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: clip;
     transition:
       background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
       color 0.45s cubic-bezier(0.4, 0, 0.2, 1);

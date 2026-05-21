@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist_Mono, Inter } from "next/font/google";
 import Script from "next/script";
 
@@ -23,13 +23,19 @@ const folioDisplay = Fraunces({
   weight: ["500", "600"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: {
     default: "Folio",
     template: "%s · Folio",
   },
   description:
-    "Journal in your language, translate with /translate, keep a single timeline.",
+    "Practice any language for free. Write daily, translate inline, and build a journal habit with Folio.",
 };
 
 export default function RootLayout({

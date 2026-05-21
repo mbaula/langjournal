@@ -102,7 +102,7 @@ export function EntryViewer({
     const { title, description, Icon } = entryLoadErrorCopy(loadError.kind);
 
     return (
-      <div className="flex w-full flex-col gap-8 pb-24 pt-1">
+      <div className="flex w-full flex-col gap-8 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-1">
         <header className="flex flex-col gap-6">
           <nav
             className="flex min-w-0 flex-wrap items-center gap-1 text-[13px] text-muted-foreground"
@@ -157,9 +157,9 @@ export function EntryViewer({
 
   if (isLoading && !currentEntry) {
     return (
-      <div className="flex w-full flex-col gap-8 pb-24 pt-1">
+      <div className="flex w-full flex-col gap-8 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-1">
         <header className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between">
             <nav
               className="flex min-w-0 flex-wrap items-center gap-1 text-[13px] text-muted-foreground"
               aria-label="Breadcrumb"
@@ -175,7 +175,7 @@ export function EntryViewer({
               </span>
               <span className="h-4 w-24 animate-pulse rounded bg-muted" />
             </nav>
-            <div className="h-6 w-28 animate-pulse rounded bg-muted" />
+            <div className="h-9 w-full max-w-[12rem] animate-pulse rounded bg-muted md:w-28" />
           </div>
           <div className="h-12 w-2/3 animate-pulse rounded bg-muted" />
         </header>
@@ -195,9 +195,9 @@ export function EntryViewer({
   const dayLabel = formatEntryDay(currentEntry.entryDate);
 
   return (
-    <div className="flex w-full flex-col gap-8 pb-24 pt-1">
+    <div className="flex w-full flex-col gap-8 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-1">
       <header className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between">
           <nav
             className="flex min-w-0 flex-wrap items-center gap-1 text-[13px] text-muted-foreground"
             aria-label="Breadcrumb"
@@ -213,7 +213,7 @@ export function EntryViewer({
             </span>
             <span className="truncate text-muted-foreground">{dayLabel}</span>
           </nav>
-          <div className="relative shrink-0 flex items-center gap-2">
+          <div className="flex w-full shrink-0 items-center justify-between gap-2 md:w-auto md:justify-end">
             <LanguageBar
               source={sourceLanguage}
               target={targetLanguage}

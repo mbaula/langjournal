@@ -254,7 +254,7 @@ export function LanguageBar({
               setOpen((o) => !o);
               setHelpOpen(false);
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 font-medium text-foreground transition-colors hover:bg-muted"
+            className="flex min-h-11 items-center gap-1.5 px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted sm:px-2.5 sm:py-1.5"
             aria-expanded={open}
             aria-haspopup="dialog"
             aria-label="Change translation languages"
@@ -301,7 +301,7 @@ export function LanguageBar({
               </p>
             </header>
 
-            <div className="flex gap-2.5 pt-4">
+            <div className="flex flex-col gap-2.5 pt-4 sm:flex-row">
               <LanguagePicker
                 id="bar-native"
                 subtitle="I'm writing in…"
