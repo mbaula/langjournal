@@ -18,6 +18,9 @@ vi.mock("@/lib/db/prisma", () => ({
       delete: vi.fn(async () => ({ id: "e1" })),
       count: vi.fn(async () => 0),
     },
+    userLanguage: {
+      findMany: vi.fn(async () => []),
+    },
   },
 }));
 
