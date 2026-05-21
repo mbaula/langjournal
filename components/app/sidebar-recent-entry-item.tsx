@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import type { RecentEntry } from "@/components/app/recent-entry";
+import { sidebarNavRowSelectedClass } from "@/components/app/sidebar-nav-styles";
 import { cn } from "@/lib/utils";
 
 export type SidebarRecentEntryItemProps = RecentEntry & {
@@ -33,8 +34,7 @@ export function SidebarRecentEntryItem({
       suppressHydrationWarning
       className={cn(
         "group/row flex min-w-0 items-stretch rounded-md",
-        active &&
-          "bg-background border border-border shadow-sm dark:bg-sidebar-accent/60 dark:border-sidebar-border/70 dark:shadow-none",
+        active && sidebarNavRowSelectedClass,
       )}
     >
       <Link
@@ -57,15 +57,13 @@ export function SidebarRecentEntryItem({
         onRenameTitle={onRenameTitle}
         onDelete={onDelete}
         triggerClassName={cn(
-          "text-sidebar-foreground/70 hover:text-sidebar-foreground",
-          // When hovering the entry (link) area, make kebab match it.
-          "peer-hover:bg-sidebar-accent/80",
-          // When hovering kebab only, only kebab gets a background.
-          "hover:bg-sidebar-accent/80",
-          // If selected, keep kebab consistent with the selected "card".
-          active && "hover:bg-muted peer-hover:bg-muted",
+          active
+            ? "text-sidebar-primary-foreground/75 hover:bg-sidebar-primary-foreground/10 hover:text-sidebar-primary-foreground peer-hover:bg-sidebar-primary-foreground/10"
+            : "text-sidebar-foreground/70 hover:text-sidebar-foreground peer-hover:bg-sidebar-accent/80 hover:bg-sidebar-accent/80",
         )}
-        openTriggerClassName={active ? "bg-muted" : "bg-sidebar-accent/80"}
+        openTriggerClassName={
+          active ? "bg-sidebar-primary-foreground/15" : "bg-sidebar-accent/80"
+        }
       />
     </li>
   );

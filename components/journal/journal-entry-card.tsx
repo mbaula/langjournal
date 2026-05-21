@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
-import { journalTranslationHighlightClassName } from "@/components/journal/field-styles";
+import {
+  journalEntryPreviewTextClassName,
+  journalTranslationHighlightClassName,
+} from "@/components/journal/field-styles";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
 import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
 import { useEntry } from "@/lib/entries/entry-context";
@@ -129,18 +132,28 @@ export function JournalEntryCard({
   const isEmptyBody =
     lines.length === 0 || (lines.length === 1 && !lines[0].trim());
 
-  const Content = (
+  const entryHeader = (
     <>
-      <h2 className="text-[1.75rem] font-bold tracking-[-0.02em] text-foreground">
+      <h2 className="text-base font-semibold tracking-tight text-foreground">
         {displayTitle}
       </h2>
       {subtitle ? (
-        <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">{subtitle}</p>
       ) : null}
-      <hr className="my-4 border-border" />
+    </>
+  );
+
+  const entryBody = (
+    <>
+      <hr className="my-3 border-border" />
       <div className="flex flex-col gap-0">
         {isEmptyBody ? (
-          <p className="text-[15px] leading-[1.65] text-muted-foreground/80">
+          <p
+            className={cn(
+              journalEntryPreviewTextClassName,
+              "text-muted-foreground",
+            )}
+          >
             No text yet — open this entry to write.
           </p>
         ) : (
@@ -149,7 +162,10 @@ export function JournalEntryCard({
             return (
               <p
                 key={idx}
-                className="min-h-[1.65em] whitespace-pre-wrap text-[15px] leading-[1.65] text-foreground"
+                className={cn(
+                  journalEntryPreviewTextClassName,
+                  "min-h-[1.25em] whitespace-pre-wrap",
+                )}
               >
                 {segs.map((seg, si) =>
                   seg.translation ? (
@@ -176,12 +192,7 @@ export function JournalEntryCard({
     <li className="list-none">
       <div className="group/row flex gap-2 sm:gap-3">
         {renaming ? (
-          <div
-            className={cn(
-              "min-w-0 flex-1 rounded-lg p-4 outline-none ring-offset-background transition-colors",
-              "bg-muted/30",
-            )}
-          >
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <input
                 ref={renameInputRef}
@@ -218,25 +229,23 @@ export function JournalEntryCard({
                 </button>
               </div>
             </div>
-            <div className="mt-4">{Content}</div>
+            <div className="mt-3">{entryBody}</div>
           </div>
         ) : (
           <Link
             href={href}
-            className={cn(
-              "min-w-0 flex-1 rounded-lg p-4 outline-none ring-offset-background transition-colors",
-              "hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring",
-            )}
+            className="min-w-0 flex-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={
               subtitle
                 ? `Open entry to edit: ${displayTitle}, ${subtitle}`
                 : `Open entry to edit: ${displayTitle}`
             }
           >
-            {Content}
+            {entryHeader}
+            {entryBody}
           </Link>
         )}
-        <div className="shrink-0 pt-2">
+        <div className="shrink-0 pt-0.5">
           <EntryActionsMenu
             entryId={entryId}
             onRenameTitle={onRenameTitle ?? (() => startRename())}

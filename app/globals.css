@@ -18,11 +18,13 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-app-shell: var(--app-shell);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-contribution-fill: var(--contribution-fill);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -55,8 +57,6 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -73,49 +73,63 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
+
+  /* --- App chrome (default / data-accent="gray" uses :root below) --- */
+  /* oklch(L C H): lightness 0–1, chroma, hue degrees. Tweak C/H together per palette. */
+  /* --app-shell: outer frame (layout bg-app-shell). --sidebar must match to avoid a lighter "box". */
+  --app-shell: oklch(0.955 0 0);
+  --sidebar: var(--app-shell);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
+  /* --primary: filled buttons in journal (Save, New entry). Often mirrors --sidebar-primary. */
+  --primary: oklch(0.36 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  /* --sidebar-primary: selected nav pill (Home, active recent). */
+  --sidebar-primary: oklch(0.42 0 0);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  /* --sidebar-accent: hover surface for inactive nav / Customize open. */
+  --sidebar-accent: oklch(0.91 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* --contribution-fill: journal calendar filled cells (bg-contribution-fill). */
+  --contribution-fill: oklch(0.55 0 0);
 }
 
-/* Darker dark mode — deep charcoal, not pure black */
+/* Dark mode — neutral charcoal (achromatic, no blue/warm hue) */
 .dark {
-  --background: oklch(0.2 0.012 265);
-  --foreground: oklch(0.93 0.01 265);
-  --card: oklch(0.24 0.014 265);
-  --card-foreground: oklch(0.93 0.01 265);
-  --popover: oklch(0.25 0.014 265);
-  --popover-foreground: oklch(0.93 0.01 265);
-  --primary: oklch(0.93 0.01 265);
-  --primary-foreground: oklch(0.22 0.02 265);
-  --secondary: oklch(0.3 0.016 265);
-  --secondary-foreground: oklch(0.93 0.01 265);
-  --muted: oklch(0.28 0.016 265);
-  --muted-foreground: oklch(0.68 0.02 265);
-  --accent: oklch(0.32 0.018 265);
-  --accent-foreground: oklch(0.93 0.01 265);
+  --background: oklch(0.2 0 0);
+  --foreground: oklch(0.93 0 0);
+  --card: oklch(0.24 0 0);
+  --card-foreground: oklch(0.93 0 0);
+  --popover: oklch(0.25 0 0);
+  --popover-foreground: oklch(0.93 0 0);
+  --secondary: oklch(0.3 0 0);
+  --secondary-foreground: oklch(0.93 0 0);
+  --muted: oklch(0.28 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.32 0 0);
+  --accent-foreground: oklch(0.93 0 0);
   --destructive: oklch(0.62 0.2 22);
-  --border: oklch(0.38 0.02 265 / 45%);
-  --input: oklch(0.34 0.018 265 / 55%);
-  --ring: oklch(0.52 0.04 265);
+  --border: oklch(0.38 0 0 / 45%);
+  --input: oklch(0.34 0 0 / 55%);
+  --ring: oklch(0.52 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.17 0.014 265);
-  --sidebar-foreground: oklch(0.91 0.01 265);
-  --sidebar-primary: oklch(0.52 0.12 264);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.26 0.018 265);
-  --sidebar-accent-foreground: oklch(0.93 0.01 265);
-  --sidebar-border: oklch(0.34 0.02 265 / 50%);
-  --sidebar-ring: oklch(0.52 0.04 265);
+  --app-shell: oklch(0.22 0 0);
+  --sidebar: var(--app-shell);
+  --sidebar-foreground: oklch(0.91 0 0);
+  --primary: oklch(0.78 0 0);
+  --primary-foreground: oklch(0.12 0 0);
+  --sidebar-primary: oklch(0.78 0 0);
+  --sidebar-primary-foreground: oklch(0.12 0 0);
+  --sidebar-accent: oklch(0.26 0 0);
+  --sidebar-accent-foreground: oklch(0.93 0 0);
+  --sidebar-border: oklch(0.34 0 0 / 50%);
+  --sidebar-ring: oklch(0.52 0 0);
+  --contribution-fill: oklch(0.58 0 0);
 }
 
 /* Film grain — fixed overlay, soft-light so it reads over solid UIs; below z-50 popovers */
@@ -135,13 +149,296 @@
   opacity: 0.065;
 }
 
+/*
+ * Accent palettes (Customize menu)
+ * --------------------------------
+ * Source of truth for accent colors. IDs must match lib/theme/accent.ts (AccentId).
+ *
+ * Selectors: html[data-accent="<id>"] (light), html.dark[data-accent="<id>"] (dark).
+ * Legacy ids (sand, sage, …) are aliased on each block — must match LEGACY_ACCENT_IDS in accent.ts.
+ * Gray uses :root / .dark above only (no data-accent block).
+ *
+ * Per palette, override these roles (8 values + sidebar alias):
+ *   --app-shell          Frame + sidebar background (bg-app-shell, bg-sidebar)
+ *   --sidebar-accent     Nav hover / Customize highlight
+ *   --sidebar-primary    Selected nav + --primary buttons (keep in sync)
+ *   --sidebar-primary-foreground, --primary-foreground
+ *   --contribution-fill  Contribution chart
+ *   --sidebar-border, --sidebar-ring  Optional chrome
+ *
+ * Main journal content stays --background (white / dark card), not tinted here.
+ */
+/* Green — muted #C8D5CC */
+html[data-accent="green"],
+html[data-accent="sage"] {
+  --app-shell: #c8d5cc;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #b8c9be;
+  --sidebar-border: #aabfb1;
+  --sidebar-ring: #7f9686;
+  --sidebar-primary: #5f7567;
+  --sidebar-primary-foreground: #fffdf8;
+  --primary: #5f7567;
+  --primary-foreground: #fffdf8;
+  --contribution-fill: #8fa899;
+}
+
+html.dark[data-accent="green"],
+html.dark[data-accent="sage"] {
+  --app-shell: #2a302c;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #353d38;
+  --sidebar-border: #404a44;
+  --sidebar-ring: #7f9686;
+  --sidebar-primary: #a8bdb0;
+  --sidebar-primary-foreground: #1e2420;
+  --primary: #a8bdb0;
+  --primary-foreground: #1e2420;
+  --contribution-fill: #8fa899;
+}
+
+html[data-accent="blue"],
+html[data-accent="slate"] {
+  --app-shell: oklch(0.94 0.038 250);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.86 0.048 250);
+  --sidebar-border: oklch(0.9 0.016 250);
+  --sidebar-ring: oklch(0.6 0.05 250);
+  --sidebar-primary: oklch(0.46 0.09 250);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.48 0.09 250);
+  --primary-foreground: oklch(0.99 0 0);
+  --contribution-fill: oklch(0.64 0.1 250);
+}
+
+html.dark[data-accent="blue"],
+html.dark[data-accent="slate"] {
+  --app-shell: oklch(0.22 0.048 250);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.27 0.052 250);
+  --sidebar-border: oklch(0.34 0.028 250 / 50%);
+  --sidebar-ring: oklch(0.52 0.06 250);
+  --sidebar-primary: oklch(0.7 0.1 250);
+  --sidebar-primary-foreground: oklch(0.16 0.02 250);
+  --primary: oklch(0.7 0.1 250);
+  --primary-foreground: oklch(0.16 0.02 250);
+  --contribution-fill: oklch(0.7 0.1 250);
+}
+
+/* Yellow — butter #FBE29D */
+html[data-accent="yellow"],
+html[data-accent="sand"] {
+  --app-shell: #fbe29d;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #f3d67e;
+  --sidebar-border: #e8c56a;
+  --sidebar-ring: #d4a63a;
+  --sidebar-primary: #c2881e;
+  --sidebar-primary-foreground: #fffdf5;
+  --primary: #c2881e;
+  --primary-foreground: #fffdf5;
+  --contribution-fill: #e8b840;
+}
+
+html.dark[data-accent="yellow"],
+html.dark[data-accent="sand"] {
+  --app-shell: #2e2a1c;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #3d3824;
+  --sidebar-border: #4a442c;
+  --sidebar-ring: #a88430;
+  --sidebar-primary: #f2c75c;
+  --sidebar-primary-foreground: #2a2210;
+  --primary: #f2c75c;
+  --primary-foreground: #2a2210;
+  --contribution-fill: #e8b840;
+}
+
+/* Pink — soft baby pink (picker swatch unchanged in accent.ts) */
+html[data-accent="pink"],
+html[data-accent="rose"] {
+  --app-shell: #ead4de;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #dfc6d2;
+  --sidebar-border: #d2b0be;
+  --sidebar-ring: #c08094;
+  --sidebar-primary: #ad5a70;
+  --sidebar-primary-foreground: #fffdf8;
+  --primary: #ad5a70;
+  --primary-foreground: #fffdf8;
+  --contribution-fill: #cc94a6;
+}
+
+html.dark[data-accent="pink"],
+html.dark[data-accent="rose"] {
+  --app-shell: #362a2e;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #423438;
+  --sidebar-border: #504044;
+  --sidebar-ring: #c08094;
+  --sidebar-primary: #dcb0c0;
+  --sidebar-primary-foreground: #24181c;
+  --primary: #dcb0c0;
+  --primary-foreground: #24181c;
+  --contribution-fill: #b88898;
+}
+
+html[data-accent="sky"],
+html[data-accent="mist"] {
+  --app-shell: oklch(0.94 0.038 210);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.86 0.048 210);
+  --sidebar-border: oklch(0.9 0.016 210);
+  --sidebar-ring: oklch(0.6 0.05 210);
+  --sidebar-primary: oklch(0.46 0.09 210);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.48 0.09 210);
+  --primary-foreground: oklch(0.99 0 0);
+  --contribution-fill: oklch(0.64 0.1 210);
+}
+
+html.dark[data-accent="sky"],
+html.dark[data-accent="mist"] {
+  --app-shell: oklch(0.22 0.048 210);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.27 0.052 210);
+  --sidebar-border: oklch(0.34 0.028 210 / 50%);
+  --sidebar-ring: oklch(0.52 0.06 210);
+  --sidebar-primary: oklch(0.7 0.1 210);
+  --sidebar-primary-foreground: oklch(0.16 0.02 210);
+  --primary: oklch(0.7 0.1 210);
+  --primary-foreground: oklch(0.16 0.02 210);
+  --contribution-fill: oklch(0.7 0.1 210);
+}
+
+/* Muted lavender anchor #AB92BF */
+html[data-accent="purple"] {
+  --app-shell: #ab92bf;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #9d84b0;
+  --sidebar-border: #8f7aa2;
+  --sidebar-ring: #7a688c;
+  --sidebar-primary: #5e4a6e;
+  --sidebar-primary-foreground: #fffdf8;
+  --primary: #5e4a6e;
+  --primary-foreground: #fffdf8;
+  --contribution-fill: #9580ab;
+}
+
+html.dark[data-accent="purple"] {
+  --app-shell: #2c2834;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #3a3544;
+  --sidebar-border: #484354;
+  --sidebar-ring: #8a7898;
+  --sidebar-primary: #c4b0d4;
+  --sidebar-primary-foreground: #221c28;
+  --primary: #c4b0d4;
+  --primary-foreground: #221c28;
+  --contribution-fill: #ab92bf;
+}
+
+html[data-accent="red"] {
+  --app-shell: oklch(0.9 0.08 27);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.84 0.095 27);
+  --sidebar-border: oklch(0.88 0.06 27);
+  --sidebar-ring: oklch(0.58 0.11 27);
+  --sidebar-primary: oklch(0.52 0.18 27);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.54 0.18 27);
+  --primary-foreground: oklch(0.99 0 0);
+  --contribution-fill: oklch(0.66 0.17 27);
+}
+
+html.dark[data-accent="red"] {
+  --app-shell: oklch(0.24 0.065 27);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.29 0.075 27);
+  --sidebar-border: oklch(0.34 0.05 27 / 50%);
+  --sidebar-ring: oklch(0.55 0.12 27);
+  --sidebar-primary: oklch(0.72 0.17 27);
+  --sidebar-primary-foreground: oklch(0.16 0.03 27);
+  --primary: oklch(0.72 0.17 27);
+  --primary-foreground: oklch(0.16 0.03 27);
+  --contribution-fill: oklch(0.72 0.17 27);
+}
+
+/* Muted orange #E8C9A8 (replaces brown) */
+html[data-accent="orange"],
+html[data-accent="brown"] {
+  --app-shell: #e8c9a8;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #d9b892;
+  --sidebar-border: #c9a882;
+  --sidebar-ring: #a88458;
+  --sidebar-primary: #9a6f42;
+  --sidebar-primary-foreground: #fffdf5;
+  --primary: #9a6f42;
+  --primary-foreground: #fffdf5;
+  --contribution-fill: #c9a06a;
+}
+
+html.dark[data-accent="orange"],
+html.dark[data-accent="brown"] {
+  --app-shell: #2e2a24;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #3a352c;
+  --sidebar-border: #484234;
+  --sidebar-ring: #a88458;
+  --sidebar-primary: #e0b888;
+  --sidebar-primary-foreground: #2a2218;
+  --primary: #e0b888;
+  --primary-foreground: #2a2218;
+  --contribution-fill: #c9a06a;
+}
+
+/* Muted teal #B8D4D4 */
+html[data-accent="teal"] {
+  --app-shell: #b8d4d4;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #a4c4c4;
+  --sidebar-border: #94b4b4;
+  --sidebar-ring: #6a9090;
+  --sidebar-primary: #4f7373;
+  --sidebar-primary-foreground: #fffdf8;
+  --primary: #4f7373;
+  --primary-foreground: #fffdf8;
+  --contribution-fill: #7fa8a8;
+}
+
+html.dark[data-accent="teal"] {
+  --app-shell: #262f2f;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #303c3c;
+  --sidebar-border: #3c4a4a;
+  --sidebar-ring: #6a9090;
+  --sidebar-primary: #a8c8c8;
+  --sidebar-primary-foreground: #1c2424;
+  --primary: #a8c8c8;
+  --primary-foreground: #1c2424;
+  --contribution-fill: #7fa8a8;
+}
+
+/* Explicit utilities so backgrounds always resolve --app-shell / --sidebar at runtime. */
+@layer utilities {
+  .bg-app-shell {
+    background-color: var(--app-shell);
+  }
+  .bg-sidebar {
+    background-color: var(--sidebar);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   html {
     @apply font-sans;
-    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   }
   body {
     @apply bg-background text-foreground;

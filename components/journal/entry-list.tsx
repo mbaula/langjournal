@@ -41,7 +41,7 @@ export function EntryList({
   }
 
   return (
-    <ul className="flex w-full flex-col gap-14">
+    <ul className="flex w-full flex-col gap-10">
       {entries.map((entry) => (
         <JournalEntryCard
           key={entry.id}

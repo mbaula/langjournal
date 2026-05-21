@@ -1,25 +1,45 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ContributionDay } from "@/lib/entries/service";
+import {
+  CONTRIBUTION_MONTHS_PER_PAGE,
+  formatUtcMonthRangeLabel,
+  getUtcMonthPageRange,
+  maxMonthPageIndex,
+  sliceContributionDaysForRange,
+} from "@/lib/journal/contribution-range";
 import { cn } from "@/lib/utils";
 
 type ContributionChartProps = {
   data: ContributionDay[];
   className?: string;
+  /** Section title; when set, shows prev/next month navigation in the header. */
+  title?: string;
+  /** `rail` — tighter cells for the right widget column */
+  variant?: "default" | "rail";
+  monthsPerPage?: number;
 };
+
+const LAYOUT = {
+  default: {
+    maxCellSize: 11,
+    minCellSize: 6,
+  },
+  rail: {
+    maxCellSize: 9,
+    minCellSize: 4,
+  },
+} as const;
 
 const DAY_LABEL_WIDTH = 28;
 const DAY_LABEL_GAP = 4;
 const CELL_GAP = 3;
-const MAX_CELL_SIZE = 11;
-const MIN_CELL_SIZE_WITHOUT_SCROLL = 6;
-const FALLBACK_SCROLL_CELL_SIZE = 8;
-
 const LEVELS = [
   "bg-muted/80 dark:bg-muted/40",
-  "bg-emerald-500 dark:bg-emerald-400",
+  "bg-contribution-fill",
 ];
 
 function getLevel(count: number): number {
@@ -107,16 +127,53 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export function ContributionChart({ data, className }: ContributionChartProps) {
-  const weeks = useMemo(() => buildWeeks(data), [data]);
+export function ContributionChart({
+  data,
+  className,
+  title,
+  variant = "default",
+  monthsPerPage = CONTRIBUTION_MONTHS_PER_PAGE,
+}: ContributionChartProps) {
+  const layout = LAYOUT[variant];
+  const [pageIndex, setPageIndex] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [cellSize, setCellSize] = useState(MAX_CELL_SIZE);
-  const [enableScroll, setEnableScroll] = useState(false);
+  const [cellSize, setCellSize] = useState<number>(layout.maxCellSize);
+
+  const maxPage = useMemo(
+    () => maxMonthPageIndex(data, monthsPerPage),
+    [data, monthsPerPage],
+  );
+
+  const canGoOlder = pageIndex < maxPage;
+  const canGoNewer = pageIndex > 0;
+
+  const { start: rangeStart, end: rangeEnd } = useMemo(
+    () => getUtcMonthPageRange(pageIndex, monthsPerPage),
+    [pageIndex, monthsPerPage],
+  );
+
+  const pageData = useMemo(
+    () => sliceContributionDaysForRange(data, rangeStart, rangeEnd),
+    [data, rangeStart, rangeEnd],
+  );
+
+  const weeks = useMemo(() => buildWeeks(pageData), [pageData]);
 
   const totalEntries = useMemo(
-    () => data.reduce((sum, d) => sum + d.count, 0),
-    [data],
+    () => pageData.reduce((sum, d) => sum + d.count, 0),
+    [pageData],
   );
+
+  const rangeLabel = useMemo(
+    () => formatUtcMonthRangeLabel(rangeStart, rangeEnd),
+    [rangeStart, rangeEnd],
+  );
+
+  useEffect(() => {
+    if (pageIndex > maxPage) {
+      setPageIndex(maxPage);
+    }
+  }, [maxPage, pageIndex]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -130,35 +187,53 @@ export function ContributionChart({ data, className }: ContributionChartProps) {
         (availableGridWidth - CELL_GAP * (weekCount - 1)) / weekCount,
       );
 
-      if (candidate >= MIN_CELL_SIZE_WITHOUT_SCROLL) {
-        setCellSize(Math.min(MAX_CELL_SIZE, candidate));
-        setEnableScroll(false);
-        return;
-      }
-
-      setCellSize(FALLBACK_SCROLL_CELL_SIZE);
-      setEnableScroll(true);
+      setCellSize(
+        Math.max(layout.minCellSize, Math.min(layout.maxCellSize, candidate)),
+      );
     };
 
     computeLayout();
     const observer = new ResizeObserver(computeLayout);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [weeks.length]);
+  }, [weeks.length, variant, layout.minCellSize, layout.maxCellSize]);
 
-  useEffect(() => {
-    if (!enableScroll || !viewportRef.current) return;
-    viewportRef.current.scrollLeft = viewportRef.current.scrollWidth;
-  }, [enableScroll, weeks.length]);
+  const navButtonClass =
+    "inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-35";
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
+      {title ? (
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-[10px] font-medium text-muted-foreground">
+            {title}
+          </h2>
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              className={navButtonClass}
+              aria-label="Previous six months"
+              disabled={!canGoOlder}
+              onClick={() => setPageIndex((p) => Math.min(maxPage, p + 1))}
+            >
+              <ChevronLeft className="size-3.5" strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              className={navButtonClass}
+              aria-label="Next six months"
+              disabled={!canGoNewer}
+              onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+            >
+              <ChevronRight className="size-3.5" strokeWidth={2} />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div
         ref={viewportRef}
-        className={cn(
-          "pb-2",
-          enableScroll ? "overflow-x-auto" : "overflow-x-hidden",
-        )}
+        className="overflow-x-hidden pb-2"
       >
         <div className="inline-flex flex-col gap-1">
           <div
@@ -218,7 +293,7 @@ export function ContributionChart({ data, className }: ContributionChartProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
         <span>
-          {totalEntries} {totalEntries === 1 ? "entry" : "entries"} in the last year
+          {totalEntries} {totalEntries === 1 ? "entry" : "entries"} · {rangeLabel}
         </span>
       </div>
     </div>
