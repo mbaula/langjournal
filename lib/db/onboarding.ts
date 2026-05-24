@@ -1,5 +1,5 @@
 import { invalidateLanguagePairCache } from "@/lib/db/language";
-import { LevelConfidence } from "@prisma/client";
+import { LevelConfidence, type Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import { mapDeclaredLevelToCefr } from "@/lib/level-calibration";
@@ -50,32 +50,41 @@ export async function getOnboardingState(userId: string): Promise<OnboardingStat
   };
 }
 
+async function syncUserLanguagesInTransaction(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  languages: UserLanguageEntry[],
+) {
+  const now = new Date();
+  const primaryLanguage = languages[0]?.languageCode ?? "fr";
+
+  await tx.userLanguage.deleteMany({ where: { userId } });
+
+  if (languages.length > 0) {
+    await tx.userLanguage.createMany({
+      data: languages.map((lang) => ({
+        userId,
+        languageCode: lang.languageCode,
+        level: lang.level,
+        estimatedCefrLevel: mapDeclaredLevelToCefr(lang.level),
+        levelConfidence: LevelConfidence.LOW,
+        estimatedLevelUpdatedAt: now,
+      })),
+    });
+  }
+
+  await tx.languageProfile.update({
+    where: { userId },
+    data: { targetLanguage: primaryLanguage },
+  });
+}
+
 async function syncUserLanguages(
   userId: string,
   languages: UserLanguageEntry[],
 ) {
-  const primaryLanguage = languages[0]?.languageCode ?? "fr";
-
   await prisma.$transaction(async (tx) => {
-    await tx.userLanguage.deleteMany({ where: { userId } });
-
-    if (languages.length > 0) {
-      await tx.userLanguage.createMany({
-        data: languages.map((lang) => ({
-          userId,
-          languageCode: lang.languageCode,
-          level: lang.level,
-          estimatedCefrLevel: mapDeclaredLevelToCefr(lang.level),
-          levelConfidence: LevelConfidence.LOW,
-          estimatedLevelUpdatedAt: now,
-        })),
-      });
-    }
-
-    await tx.languageProfile.update({
-      where: { userId },
-      data: { targetLanguage: primaryLanguage },
-    });
+    await syncUserLanguagesInTransaction(tx, userId, languages);
   });
 
   invalidateLanguagePairCache();
@@ -89,16 +98,20 @@ export async function completeOnboarding(
     languages: UserLanguageEntry[];
   },
 ) {
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      displayName: input.displayName,
-      ageRange: input.ageRange,
-      onboardingCompletedAt: new Date(),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        displayName: input.displayName,
+        ageRange: input.ageRange,
+        onboardingCompletedAt: new Date(),
+      },
+    });
+
+    await syncUserLanguagesInTransaction(tx, userId, input.languages);
   });
 
-  await syncUserLanguages(userId, input.languages);
+  invalidateLanguagePairCache();
 }
 
 export async function updateOnboardingProfile(
