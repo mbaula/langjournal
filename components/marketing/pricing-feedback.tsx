@@ -16,7 +16,7 @@ function getPriceReaction(
     if (value === 0) return "think about the children";
     if (value <= 2) return "i see shin ramen in my future";
     if (value <= 5) return "I appreciate you <3";
-    if (value <= 11) return "I APPRECIATE you <3";
+    if (value < 20) return "I APPRECIATE you <3";
     return "pls marry me.";
   }
 
