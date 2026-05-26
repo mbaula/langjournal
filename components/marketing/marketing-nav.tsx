@@ -9,8 +9,8 @@ const navLinkClass =
 
 export function MarketingNav() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/75 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
+    <header className="landing-enter sticky top-0 z-50 border-b border-border/60 bg-background/75 backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="rounded-md transition-opacity hover:opacity-90"
@@ -20,14 +20,17 @@ export function MarketingNav() {
         </Link>
 
         <nav
-          className="flex items-center gap-1 sm:gap-2"
+          className="flex items-center gap-0.5 sm:gap-1"
           aria-label="Marketing navigation"
         >
-          <Link href="/" className={navLinkClass}>
-            Home
+          <Link href="#solution" className={cn(navLinkClass, "hidden sm:inline-flex")}>
+            Features
           </Link>
-          <Link href="/login" className={navLinkClass}>
-            Sign in
+          <Link href="#pricing" className={cn(navLinkClass, "hidden sm:inline-flex")}>
+            Pricing
+          </Link>
+          <Link href="/login" className={cn(navLinkClass, "hidden md:inline-flex")}>
+            Beta access
           </Link>
           <Link
             href="/login"
@@ -36,7 +39,7 @@ export function MarketingNav() {
               "h-9 rounded-full px-4 text-[13px] sm:ml-1",
             )}
           >
-            Sign up
+            Get started free
           </Link>
         </nav>
       </div>
