@@ -29,9 +29,6 @@ export function MarketingNav() {
           <Link href="#pricing" className={cn(navLinkClass, "hidden sm:inline-flex")}>
             Pricing
           </Link>
-          <Link href="/login" className={cn(navLinkClass, "hidden md:inline-flex")}>
-            Beta access
-          </Link>
           <Link
             href="/login"
             className={cn(
