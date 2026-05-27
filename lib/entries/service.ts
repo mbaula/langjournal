@@ -1,6 +1,9 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/db/prisma";
+import type { InlineTranslation } from "@/lib/entries/translate";
 
 export function utcCalendarDate(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -131,6 +134,31 @@ export async function updateJournalEntryBody(
   await prisma.journalEntry.update({
     where: { id: entryId },
     data: { body },
+  });
+
+  revalidateTag("journal-entry", { expire: 0 });
+  return { ok: true as const };
+}
+
+export async function updateJournalEntryTranslations(
+  entryId: string,
+  userId: string,
+  translations: InlineTranslation[],
+) {
+  const entry = await prisma.journalEntry.findFirst({
+    where: { id: entryId, userId },
+    select: { id: true },
+  });
+
+  if (!entry) {
+    return { ok: false as const, error: "not_found" as const };
+  }
+
+  await prisma.journalEntry.update({
+    where: { id: entryId },
+    data: {
+      translations: translations as Prisma.InputJsonValue,
+    },
   });
 
   revalidateTag("journal-entry", { expire: 0 });

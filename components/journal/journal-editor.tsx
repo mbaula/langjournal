@@ -12,7 +12,12 @@ import {
 import { journalEntryBodyClassName } from "@/components/journal/field-styles";
 import { JournalEditingBackdropContent } from "@/components/journal/journal-editing-backdrop-content";
 import type { TranslationLoadingState } from "@/components/journal/journal-editing-backdrop-content";
-import type { InlineTranslation } from "@/lib/entries/translate";
+import type { InlineTranslation, TranslationSpan } from "@/lib/entries/translate";
+import {
+  adjustTranslationSpansForEdit,
+  appendTranslationSpan,
+  pruneInvalidTranslationSpans,
+} from "@/lib/entries/translation-spans";
 import { countWords, wordCountLabel } from "@/lib/text/word-count";
 import {
   normalizeTranslationSource,
@@ -160,6 +165,7 @@ export function JournalEditor({
   const translationsRef = useRef(translations);
   translationsRef.current = translations;
   const savedBodyRef = useRef(initialBody);
+  const savedTranslationsRef = useRef(initialTranslations);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingCursorRef = useRef<number | null>(null);
@@ -211,8 +217,10 @@ export function JournalEditor({
   }, [entryId, initialBody]);
 
   useEffect(() => {
-    setTranslations(initialTranslations);
-  }, [entryId, initialTranslations]);
+    const cleaned = stripLegacyPendingMarkers(initialBody);
+    setTranslations(pruneInvalidTranslationSpans(cleaned, initialTranslations));
+    savedTranslationsRef.current = initialTranslations;
+  }, [entryId, initialBody, initialTranslations]);
 
   useEffect(() => {
     clientSessionCacheRef.current.clear();
@@ -297,12 +305,38 @@ export function JournalEditor({
   const saveBodyRef = useRef(saveBody);
   saveBodyRef.current = saveBody;
 
+  const saveTranslations = useCallback(
+    async (next: InlineTranslation[]) => {
+      if (
+        JSON.stringify(next) === JSON.stringify(savedTranslationsRef.current)
+      ) {
+        return;
+      }
+      savedTranslationsRef.current = next;
+      await fetch(`/api/entries/${entryId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ translations: next }),
+      });
+    },
+    [entryId],
+  );
+  const saveTranslationsRef = useRef(saveTranslations);
+  saveTranslationsRef.current = saveTranslations;
+
   useEffect(() => {
     const handle = window.setTimeout(() => {
       void saveBody(body);
     }, AUTOSAVE_MS);
     return () => window.clearTimeout(handle);
   }, [body, saveBody]);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      void saveTranslations(translations);
+    }, AUTOSAVE_MS);
+    return () => window.clearTimeout(handle);
+  }, [translations, saveTranslations]);
 
   useEffect(() => {
     return () => void saveBodyRef.current(bodyRef.current);
@@ -320,13 +354,22 @@ export function JournalEditor({
 
   /** Server commit only — callers apply body then merge translations (avoids id/placeholder flashes). */
   const fetchCommitTranslation = useCallback(
-    async (sourceSegment: string): Promise<InlineTranslation | null> => {
+    async (
+      sourceSegment: string,
+      bodySnapshot: string,
+      highlightSpan: TranslationSpan,
+    ): Promise<InlineTranslation | null> => {
       setError(null);
       try {
         const res = await fetch(`/api/entries/${entryId}/translate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: sourceSegment, intent: "commit" }),
+          body: JSON.stringify({
+            text: sourceSegment,
+            intent: "commit",
+            body: bodySnapshot,
+            highlightSpan,
+          }),
         });
         const data = (await res.json()) as {
           error?: string;
@@ -465,37 +508,30 @@ export function JournalEditor({
           fromState.translatedText,
         );
         if (!applied) return;
+        const span = {
+          start: absStart,
+          end: absStart + fromState.translatedText.length,
+        };
         pendingCursorRef.current = applied.cursor;
         setBody(applied.next);
+        setTranslations((prev) =>
+          mergeTranslationState(
+            prev,
+            appendTranslationSpan(fromState, span, applied.next),
+          ),
+        );
         void saveBody(applied.next);
+        void fetchCommitTranslation(trimmed, applied.next, span).then((t) => {
+          if (t) {
+            setTranslations((prev) => mergeTranslationState(prev, t));
+          }
+        });
         requestAnimationFrame(() => textareaRef.current?.focus());
         return;
       }
 
       void (async () => {
         const rollbackBody = text;
-
-        const applyCommitted = (t: InlineTranslation) => {
-          clearTranslationLoading();
-          const cur = bodyRef.current;
-          const applied = tryApplySlashTranslation(
-            cur,
-            absStart,
-            absSegmentEnd,
-            norm,
-            t.translatedText,
-          );
-          if (!applied) return;
-          pendingCursorRef.current = applied.cursor;
-          setBody(applied.next);
-          setTranslations((prev) => mergeTranslationState(prev, t));
-          void saveBody(applied.next);
-          clientSessionCacheRef.current.set(key, {
-            sourceText: t.sourceText,
-            translatedText: t.translatedText,
-          });
-          requestAnimationFrame(() => textareaRef.current?.focus());
-        };
 
         const cached = clientSessionCacheRef.current.get(key);
         if (cached) {
@@ -511,7 +547,11 @@ export function JournalEditor({
           setBody(optimistic.next);
           void saveBody(optimistic.next);
 
-          const t = await fetchCommitTranslation(trimmed);
+          const span = {
+            start: absStart,
+            end: absStart + cached.translatedText.length,
+          };
+          const t = await fetchCommitTranslation(trimmed, optimistic.next, span);
           if (!t) {
             setBody(rollbackBody);
             void saveBody(rollbackBody);
@@ -569,7 +609,11 @@ export function JournalEditor({
           void saveBody(optimistic.next);
           clearTranslationLoading();
 
-          const t = await fetchCommitTranslation(trimmed);
+          const span = {
+            start: absStart,
+            end: absStart + pref.translatedText.length,
+          };
+          const t = await fetchCommitTranslation(trimmed, optimistic.next, span);
           if (!t) {
             setBody(rollbackBody);
             void saveBody(rollbackBody);
@@ -601,12 +645,62 @@ export function JournalEditor({
         if (text.slice(absStart, absStart + 2) !== "//") return;
 
         beginTranslationLoading({ start: absStart, end: absSegmentEnd });
-        const t = await fetchCommitTranslation(trimmed);
-        if (!t) {
+        let translatedText: string;
+        try {
+          const res = await fetch(`/api/entries/${entryId}/translate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: trimmed, intent: "prefetch" }),
+          });
+          const data = (await res.json()) as {
+            error?: string;
+            translatedText?: string;
+          };
+          if (!res.ok || typeof data.translatedText !== "string") {
+            clearTranslationLoading();
+            setError(data.error ?? "Translation failed");
+            return;
+          }
+          translatedText = data.translatedText;
+        } catch {
+          clearTranslationLoading();
+          setError("Translation failed");
+          return;
+        }
+
+        const applied = tryApplySlashTranslation(
+          text,
+          absStart,
+          absSegmentEnd,
+          norm,
+          translatedText,
+        );
+        if (!applied) {
           clearTranslationLoading();
           return;
         }
-        applyCommitted(t);
+
+        pendingCursorRef.current = applied.cursor;
+        setBody(applied.next);
+        void saveBody(applied.next);
+        clearTranslationLoading();
+
+        const span = {
+          start: absStart,
+          end: absStart + translatedText.length,
+        };
+        const t = await fetchCommitTranslation(trimmed, applied.next, span);
+        if (!t) {
+          setBody(rollbackBody);
+          void saveBody(rollbackBody);
+          return;
+        }
+        setTranslations((prev) => mergeTranslationState(prev, t));
+        clientSessionCacheRef.current.set(key, {
+          sourceText: t.sourceText,
+          translatedText: t.translatedText,
+        });
+        requestAnimationFrame(() => textareaRef.current?.focus());
       })();
     },
     [
@@ -614,6 +708,7 @@ export function JournalEditor({
       clearTranslationLoading,
       fetchCommitTranslation,
       saveBody,
+      entryId,
       sourceLanguage,
       targetLanguage,
       translateTrigger,
@@ -663,8 +758,30 @@ export function JournalEditor({
           ref={textareaRef}
           value={body}
           onChange={(e) => {
+            const editStart = Math.min(
+              textareaSelection.start,
+              textareaSelection.end,
+            );
+            const editEnd = Math.max(
+              textareaSelection.start,
+              textareaSelection.end,
+            );
+            const oldBody = bodyRef.current;
+            const next = e.target.value;
+            const removedLength = editEnd - editStart;
+            const insertedLength = next.length - oldBody.length + removedLength;
+            if (removedLength !== 0 || next.length !== oldBody.length) {
+              setTranslations((prev) =>
+                adjustTranslationSpansForEdit(
+                  prev,
+                  editStart,
+                  removedLength,
+                  insertedLength,
+                ),
+              );
+            }
             syncCaretFromTextarea(e.currentTarget);
-            onBodyChange(e.target.value);
+            onBodyChange(next);
           }}
           onSelect={(e) => {
             syncCaretFromTextarea(e.currentTarget);

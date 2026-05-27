@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
 import { journalEditorTranslationHighlightClassName } from "@/components/journal/field-styles";
-import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
+import { segmentTranslatedLineBySpans } from "@/lib/entries/entry-body-segments";
 import type { InlineTranslation } from "@/lib/entries/translate";
 
 type SlashRange = { start: number; end: number } | null;
@@ -89,7 +89,7 @@ export function JournalEditingBackdropContent({
     const line = body.slice(lineStart, lineEnd);
 
     if (line.length > 0) {
-      const segs = segmentTranslatedLine(line, translations);
+      const segs = segmentTranslatedLineBySpans(line, lineStart, translations);
       let col = 0;
       for (const seg of segs) {
         const absBase = lineStart + col;

@@ -10,7 +10,7 @@ import {
   journalTranslationHighlightClassName,
 } from "@/components/journal/field-styles";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
-import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
+import { segmentTranslatedLineBySpans } from "@/lib/entries/entry-body-segments";
 import { useEntry } from "@/lib/entries/entry-context";
 import type { InlineTranslation } from "@/lib/entries/translate";
 import { cn } from "@/lib/utils";
@@ -182,7 +182,11 @@ export function JournalEntryCard({
             </p>
           ) : (
             lines.map((line, idx) => {
-              const segs = segmentTranslatedLine(line, segsList);
+              const lineStart =
+                idx === 0
+                  ? 0
+                  : lines.slice(0, idx).reduce((sum, l) => sum + l.length + 1, 0);
+              const segs = segmentTranslatedLineBySpans(line, lineStart, segsList);
               return (
                 <p
                   key={idx}
