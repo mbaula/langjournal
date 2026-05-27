@@ -11,12 +11,14 @@ type EntryTitleFieldProps = {
   entryId: string;
   initialTitle: string | null;
   inputId?: string;
+  className?: string;
 };
 
 export function EntryTitleField({
   entryId,
   initialTitle,
   inputId,
+  className,
 }: EntryTitleFieldProps) {
   const router = useRouter();
   const [value, setValue] = useState(initialTitle?.trim() ?? "");
@@ -66,9 +68,10 @@ export function EntryTitleField({
       placeholder="Entry title"
       aria-label="Entry title"
       className={cn(
-        "font-sans w-full min-w-0 border-0 bg-transparent py-1 text-2xl font-bold leading-[1.15] tracking-[-0.02em] text-foreground outline-none transition-colors sm:text-3xl lg:text-[2.5rem]",
+        "font-sans w-full min-w-0 border-0 bg-transparent py-0 leading-[1.15] outline-none transition-colors",
         "placeholder:text-muted-foreground/50",
         "focus-visible:ring-0",
+        className,
       )}
     />
   );

@@ -8,6 +8,10 @@ import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import {
+  journalPageShellClassName,
+  journalPageTitleClassName,
+} from "@/components/journal/field-styles";
+import {
   JournalEditor,
   type TranslateTrigger,
 } from "@/components/journal/journal-editor";
@@ -102,7 +106,7 @@ export function EntryViewer({
     const { title, description, Icon } = entryLoadErrorCopy(loadError.kind);
 
     return (
-      <div className="flex w-full flex-col gap-8 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-1">
+      <div className={journalPageShellClassName}>
         <header className="flex flex-col gap-6">
           <nav
             className="flex min-w-0 flex-wrap items-center gap-1 text-[13px] text-muted-foreground"
@@ -157,16 +161,16 @@ export function EntryViewer({
 
   if (isLoading && !currentEntry) {
     return (
-      <div className="flex w-full flex-col gap-8 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-1">
-        <header className="flex flex-col gap-6">
-          <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between">
+      <div className={journalPageShellClassName}>
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-10 lg:gap-y-8">
+          <header className="min-w-0 space-y-2">
             <nav
               className="flex min-w-0 flex-wrap items-center gap-1 text-[13px] text-muted-foreground"
               aria-label="Breadcrumb"
             >
               <Link
                 href="/app/journal"
-                className="truncate hover:text-foreground transition-colors"
+                className="truncate transition-colors hover:text-foreground"
               >
                 Journal
               </Link>
@@ -175,14 +179,14 @@ export function EntryViewer({
               </span>
               <span className="h-4 w-24 animate-pulse rounded bg-muted" />
             </nav>
-            <div className="h-9 w-full max-w-[12rem] animate-pulse rounded bg-muted md:w-28" />
+            <div className="h-9 w-2/3 max-w-md animate-pulse rounded bg-muted" />
+          </header>
+          <div className="h-10 w-full max-w-[12rem] animate-pulse rounded bg-muted lg:w-48" />
+          <div className="flex min-h-[300px] w-full flex-col gap-4 lg:col-span-2">
+            <div className="h-6 w-full animate-pulse rounded bg-muted" />
+            <div className="h-6 w-5/6 animate-pulse rounded bg-muted" />
+            <div className="h-6 w-4/6 animate-pulse rounded bg-muted" />
           </div>
-          <div className="h-12 w-2/3 animate-pulse rounded bg-muted" />
-        </header>
-        <div className="flex min-h-[300px] w-full flex-col gap-4">
-          <div className="h-6 w-full animate-pulse rounded bg-muted" />
-          <div className="h-6 w-5/6 animate-pulse rounded bg-muted" />
-          <div className="h-6 w-4/6 animate-pulse rounded bg-muted" />
         </div>
       </div>
     );
@@ -195,16 +199,16 @@ export function EntryViewer({
   const dayLabel = formatEntryDay(currentEntry.entryDate);
 
   return (
-    <div className="flex w-full flex-col gap-8 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-1">
-      <header className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between">
+    <div className={journalPageShellClassName}>
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-10 lg:gap-y-8">
+        <header className="min-w-0 space-y-1">
           <nav
             className="flex min-w-0 flex-wrap items-center gap-1 text-[13px] text-muted-foreground"
             aria-label="Breadcrumb"
           >
             <Link
               href="/app/journal"
-              className="truncate hover:text-foreground transition-colors"
+              className="truncate transition-colors hover:text-foreground"
             >
               Journal
             </Link>
@@ -213,61 +217,65 @@ export function EntryViewer({
             </span>
             <span className="truncate text-muted-foreground">{dayLabel}</span>
           </nav>
-          <div className="flex w-full shrink-0 items-center justify-between gap-2 md:w-auto md:justify-end">
-            <LanguageBar
-              source={sourceLanguage}
-              target={targetLanguage}
-              translateTrigger={translateTrigger}
-            />
-            <EntryActionsMenu
-              entryId={currentEntry.id}
-              onRenameTitle={handleRename}
-              onDelete={() => setDeleteConfirming(true)}
-              className="opacity-100 pointer-events-auto pr-0"
-              triggerClassName="text-muted-foreground"
-            />
-            {deleteConfirming ? (
-              <div className="absolute right-0 top-full z-40 mt-2 rounded-md border border-border bg-popover px-2 py-1 text-[12px] shadow-sm">
-                <p className="text-muted-foreground">Delete this entry?</p>
-                <div className="mt-1 flex items-center justify-end gap-1">
-                  <button
-                    type="button"
-                    className="rounded px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    disabled={deletePending}
-                    onClick={() => setDeleteConfirming(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded px-2 py-1 text-destructive transition-colors hover:bg-destructive/10"
-                    disabled={deletePending}
-                    onClick={() => void handleDelete(currentEntry.id)}
-                  >
-                    {deletePending ? "…" : "Delete"}
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </div>
-        <EntryTitleField
-          key={currentEntry.id}
-          entryId={currentEntry.id}
-          initialTitle={currentEntry.title}
-          inputId={`entry-title-${currentEntry.id}`}
-        />
-      </header>
+          <EntryTitleField
+            key={currentEntry.id}
+            entryId={currentEntry.id}
+            initialTitle={currentEntry.title}
+            inputId={`entry-title-${currentEntry.id}`}
+            className={journalPageTitleClassName}
+          />
+        </header>
 
-      <JournalEditor
-        key={currentEntry.id}
-        entryId={currentEntry.id}
-        initialBody={currentEntry.body ?? ""}
-        initialTranslations={currentEntry.translations ?? []}
-        sourceLanguage={sourceLanguage}
-        targetLanguage={targetLanguage}
-        translateTrigger={translateTrigger}
-      />
+        <div className="relative flex w-full shrink-0 items-center justify-between gap-2 lg:w-auto lg:justify-end">
+          <LanguageBar
+            source={sourceLanguage}
+            target={targetLanguage}
+            translateTrigger={translateTrigger}
+          />
+          <EntryActionsMenu
+            entryId={currentEntry.id}
+            onRenameTitle={handleRename}
+            onDelete={() => setDeleteConfirming(true)}
+            className="pointer-events-auto pr-0 opacity-100"
+            triggerClassName="text-muted-foreground"
+          />
+          {deleteConfirming ? (
+            <div className="absolute right-0 top-full z-40 mt-2 rounded-md border border-border bg-popover px-2 py-1 text-[12px] shadow-sm">
+              <p className="text-muted-foreground">Delete this entry?</p>
+              <div className="mt-1 flex items-center justify-end gap-1">
+                <button
+                  type="button"
+                  className="rounded px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  disabled={deletePending}
+                  onClick={() => setDeleteConfirming(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="rounded px-2 py-1 text-destructive transition-colors hover:bg-destructive/10"
+                  disabled={deletePending}
+                  onClick={() => void handleDelete(currentEntry.id)}
+                >
+                  {deletePending ? "…" : "Delete"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="min-w-0 lg:col-span-2">
+          <JournalEditor
+            key={currentEntry.id}
+            entryId={currentEntry.id}
+            initialBody={currentEntry.body ?? ""}
+            initialTranslations={currentEntry.translations ?? []}
+            sourceLanguage={sourceLanguage}
+            targetLanguage={targetLanguage}
+            translateTrigger={translateTrigger}
+          />
+        </div>
+      </div>
     </div>
   );
 }

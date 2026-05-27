@@ -23,6 +23,8 @@ type LanguageBarProps = {
 const popoverPanelClass =
   "absolute right-0 top-[calc(100%+0.5rem)] z-50 rounded-lg border border-border bg-popover text-popover-foreground shadow-lg";
 
+const barControlHeightClass = "h-10";
+
 const selectClass =
   "mt-2 w-full rounded-md border border-border/80 bg-background px-2.5 py-1.5 text-[13px] text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
 
@@ -254,7 +256,10 @@ export function LanguageBar({
               setOpen((o) => !o);
               setHelpOpen(false);
             }}
-            className="flex min-h-11 items-center gap-1.5 px-3 py-2 font-medium text-foreground transition-colors hover:bg-muted sm:px-2.5 sm:py-1.5"
+            className={cn(
+              "flex items-center gap-1.5 px-3 font-medium text-foreground transition-colors hover:bg-muted sm:px-2.5",
+              barControlHeightClass,
+            )}
             aria-expanded={open}
             aria-haspopup="dialog"
             aria-label="Change translation languages"
@@ -383,7 +388,10 @@ export function LanguageBar({
             setHelpOpen((h) => !h);
             setOpen(false);
           }}
-          className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className={cn(
+            "flex w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+            barControlHeightClass,
+          )}
           aria-expanded={helpOpen}
           aria-haspopup="dialog"
           aria-label="How to translate"
@@ -436,17 +444,20 @@ export function LanguageBar({
               </div>
             </div>
 
-            <p className="mt-3 text-muted-foreground">
-              For a plain new line (no translation), use{" "}
-              <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
-                Ctrl+Enter
-              </kbd>{" "}
-              or{" "}
-              <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
-                ⌘ Enter
-              </kbd>
-              .
-            </p>
+            {translateTrigger === "enter" ? (
+              <p className="mt-3 text-muted-foreground">
+                Press{" "}
+                <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
+                  Enter
+                </kbd>{" "}
+                for a new line. On a{" "}
+                <code className="rounded bg-background px-0.5">//</code> line,{" "}
+                <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
+                  Enter
+                </kbd>{" "}
+                translates instead.
+              </p>
+            ) : null}
           </div>
         ) : null}
       </div>

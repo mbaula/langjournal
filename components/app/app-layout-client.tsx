@@ -26,7 +26,8 @@ export function AppLayoutClient({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
   const pathname = usePathname();
-  const isJournalHome = pathname === "/app/journal";
+  const isWideJournalPage =
+    pathname === "/app/journal" || pathname.startsWith("/app/entry/");
 
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_QUERY);
@@ -69,7 +70,7 @@ export function AppLayoutClient({
 
   return (
     <EntryProvider initialEntry={initialEntry} initialEntryId={initialEntryId}>
-      <div className="flex h-dvh min-h-0 flex-1 gap-2 bg-app-shell p-2 transition-[background-color,color] duration-300 ease-out max-lg:gap-0 max-lg:p-0">
+      <div className="flex min-h-dvh flex-1 gap-2 bg-app-shell p-2 transition-[background-color,color] duration-300 ease-out max-lg:min-h-dvh max-lg:gap-0 max-lg:p-0">
         {isMobile && mobileSidebarOpen ? (
           <button
             type="button"
@@ -87,7 +88,7 @@ export function AppLayoutClient({
                   mobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
                 )
               : cn(
-                  "flex h-full min-h-0 shrink-0 flex-col overflow-hidden transition-[width,transform,opacity] duration-200 ease-out",
+                  "sticky top-2 z-30 flex h-[calc(100dvh-1rem)] min-h-0 shrink-0 flex-col self-start overflow-hidden transition-[width,transform,opacity] duration-200 ease-out",
                   desktopSidebarCollapsed
                     ? "pointer-events-none w-0 -translate-x-2 opacity-0"
                     : "w-[240px] opacity-100",
@@ -98,7 +99,7 @@ export function AppLayoutClient({
           {sidebar}
         </div>
 
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="relative flex min-w-0 flex-1 flex-col">
           <div className="flex shrink-0 items-center gap-2 border-b border-border/80 px-3 py-2 lg:hidden">
             <button
               type="button"
@@ -132,15 +133,15 @@ export function AppLayoutClient({
 
           <main
             className={cn(
-              "flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] transition-[background-color,border-color,box-shadow] duration-300 ease-out dark:border-border/60 dark:shadow-[0_2px_16px_-6px_rgba(0,0,0,0.45)]",
-              "max-lg:rounded-none max-lg:border-x-0 max-lg:shadow-none",
+              "flex min-h-[calc(100dvh-1rem)] flex-1 flex-col rounded-xl border border-border/80 bg-background shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] transition-[background-color,border-color,box-shadow] duration-300 ease-out dark:border-border/60 dark:shadow-[0_2px_16px_-6px_rgba(0,0,0,0.45)]",
+              "max-lg:min-h-dvh max-lg:rounded-none max-lg:border-x-0 max-lg:shadow-none",
             )}
           >
-            <div className="flex-1 overflow-auto overscroll-contain">
+            <div className="flex-1">
               <div
                 className={cn(
-                  "mx-auto w-full px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-14 lg:px-16 lg:py-14 lg:pt-14",
-                  isJournalHome ? "max-w-[1200px]" : "max-w-[900px]",
+                  "mx-auto w-full px-6 pt-10 pb-6 sm:px-8 sm:pt-12 sm:pb-8 md:px-16 md:pt-20 md:pb-14 lg:px-20 lg:pt-24 lg:pb-14",
+                  isWideJournalPage ? "max-w-[1200px]" : "max-w-[900px]",
                 )}
               >
                 {children}

@@ -23,6 +23,22 @@ export function journalTextareaClassName(...extra: (string | undefined)[]) {
   );
 }
 
+/** Entry body: borderless canvas that grows with content and fills the page. */
+export function journalEntryBodyClassName(...extra: (string | undefined)[]) {
+  return cn(
+    "journal-entry-textarea font-sans block w-full resize-none overflow-hidden break-words rounded-none border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased caret-foreground shadow-none outline-none selection:bg-primary/15 focus-visible:ring-0 placeholder:text-muted-foreground/70",
+    ...extra,
+  );
+}
+
+/** Journal home + entry pages — shared outer spacing. */
+export const journalPageShellClassName =
+  "flex w-full flex-col gap-8 pt-2 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] lg:gap-10";
+
+/** Primary page title (home greeting, entry title). */
+export const journalPageTitleClassName =
+  "text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-[1.875rem]";
+
 export function journalBlockShellClassName(extra?: string) {
   return cn(
     "rounded-md border border-border/80 bg-transparent p-0 shadow-none",

@@ -634,6 +634,14 @@ html.dark [data-marketing-theme="blue"] {
       transform: none;
       transition: none;
     }
+
+    .journal-translation-spinner svg {
+      animation: none;
+    }
+  }
+
+  .journal-entry-textarea {
+    field-sizing: content;
   }
 }
 
