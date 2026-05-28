@@ -420,6 +420,36 @@ html.dark[data-accent="teal"] {
   --contribution-fill: #7fa8a8;
 }
 
+/*
+ * Marketing site — fixed blue brand palette (independent of user accent on html).
+ * Mirrors html[data-accent="blue"] so landing/login stay consistent.
+ */
+[data-marketing-theme="blue"] {
+  --app-shell: oklch(0.94 0.038 250);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.86 0.048 250);
+  --sidebar-border: oklch(0.9 0.016 250);
+  --sidebar-ring: oklch(0.6 0.05 250);
+  --sidebar-primary: oklch(0.46 0.09 250);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.48 0.09 250);
+  --primary-foreground: oklch(0.99 0 0);
+  --contribution-fill: oklch(0.64 0.1 250);
+}
+
+html.dark [data-marketing-theme="blue"] {
+  --app-shell: oklch(0.22 0.048 250);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.27 0.052 250);
+  --sidebar-border: oklch(0.34 0.028 250 / 50%);
+  --sidebar-ring: oklch(0.52 0.06 250);
+  --sidebar-primary: oklch(0.7 0.1 250);
+  --sidebar-primary-foreground: oklch(0.16 0.02 250);
+  --primary: oklch(0.7 0.1 250);
+  --primary-foreground: oklch(0.16 0.02 250);
+  --contribution-fill: oklch(0.7 0.1 250);
+}
+
 /* Explicit utilities so backgrounds always resolve --app-shell / --sidebar at runtime. */
 @layer utilities {
   .bg-app-shell {
@@ -427,6 +457,191 @@ html.dark[data-accent="teal"] {
   }
   .bg-sidebar {
     background-color: var(--sidebar);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .bottom-safe {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  .touch-target {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+
+  .landing-accent-bar-left {
+    box-shadow: inset 3px 0 0 var(--sidebar-primary);
+  }
+
+  .landing-accent-border-top {
+    border-top: 2px solid color-mix(in oklab, var(--sidebar-primary) 40%, transparent);
+  }
+
+  .landing-accent-glow-top {
+    background-image: radial-gradient(
+      ellipse 100% 70% at 50% -25%,
+      color-mix(in oklab, var(--sidebar-primary) 18%, transparent),
+      transparent 62%
+    );
+  }
+
+  .landing-accent-glow-right {
+    background-image: radial-gradient(
+      ellipse 75% 90% at 100% 40%,
+      color-mix(in oklab, var(--sidebar-primary) 14%, transparent),
+      transparent 68%
+    );
+  }
+
+  .landing-accent-glow-left {
+    background-image: radial-gradient(
+      ellipse 75% 90% at 0% 40%,
+      color-mix(in oklab, var(--sidebar-primary) 14%, transparent),
+      transparent 68%
+    );
+  }
+
+  .landing-accent-bar-left-brand {
+    box-shadow: inset 3px 0 0
+      color-mix(in oklab, var(--sidebar-primary-foreground) 35%, transparent);
+  }
+
+  .landing-accent-border-top-brand {
+    border-top: 2px solid
+      color-mix(in oklab, var(--sidebar-primary-foreground) 25%, transparent);
+  }
+
+  .landing-accent-footer-rule {
+    border-top: 1px solid color-mix(in oklab, var(--sidebar-primary) 30%, var(--border));
+  }
+
+  @keyframes landing-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(1.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .landing-enter {
+    opacity: 0;
+    animation: landing-fade-up 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .landing-enter-delay-1 {
+    animation-delay: 100ms;
+  }
+
+  .landing-enter-delay-2 {
+    animation-delay: 200ms;
+  }
+
+  .landing-enter-delay-3 {
+    animation-delay: 300ms;
+  }
+
+  .landing-enter-delay-4 {
+    animation-delay: 420ms;
+  }
+
+  .landing-enter-delay-5 {
+    animation-delay: 560ms;
+  }
+
+  .landing-enter-delay-6 {
+    animation-delay: 680ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-enter {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .landing-reveal {
+    opacity: 0;
+    transform: translateY(1.25rem);
+    transition:
+      opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .landing-reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes slash-demo-cursor {
+    0%,
+    45% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .pricing-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--border) 80%, transparent);
+    accent-color: var(--sidebar-primary);
+  }
+
+  .pricing-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 9999px;
+    border: 2px solid var(--background);
+    background: var(--sidebar-primary);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+    cursor: pointer;
+  }
+
+  .pricing-slider::-moz-range-thumb {
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 9999px;
+    border: 2px solid var(--background);
+    background: var(--sidebar-primary);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+    cursor: pointer;
+  }
+
+  .pricing-slider:focus-visible {
+    outline: none;
+  }
+
+  .pricing-slider:focus-visible::-webkit-slider-thumb {
+    box-shadow:
+      0 0 0 3px color-mix(in oklab, var(--sidebar-primary) 35%, transparent),
+      0 1px 2px rgb(0 0 0 / 12%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+
+    .journal-translation-spinner svg {
+      animation: none;
+    }
+  }
+
+  .journal-entry-textarea {
+    field-sizing: content;
   }
 }
 
@@ -442,6 +657,7 @@ html.dark[data-accent="teal"] {
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: clip;
     transition:
       background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
       color 0.45s cubic-bezier(0.4, 0, 0.2, 1);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import {
@@ -10,7 +10,7 @@ import {
   journalTranslationHighlightClassName,
 } from "@/components/journal/field-styles";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
-import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
+import { segmentTranslatedLineBySpans } from "@/lib/entries/entry-body-segments";
 import { useEntry } from "@/lib/entries/entry-context";
 import type { InlineTranslation } from "@/lib/entries/translate";
 import { cn } from "@/lib/utils";
@@ -60,8 +60,10 @@ export function JournalEntryCard({
   const [renamePending, setRenamePending] = useState(false);
   const [renameValue, setRenameValue] = useState(title?.trim() ?? "");
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const [deleteConfirming, setDeleteConfirming] = useState(false);
   const [deletePending, setDeletePending] = useState(false);
+  const [previewClamped, setPreviewClamped] = useState(false);
 
   const trimmedTitle = titleValue?.trim();
   const displayTitle = trimmedTitle || dateLabel;
@@ -132,6 +134,27 @@ export function JournalEntryCard({
   const isEmptyBody =
     lines.length === 0 || (lines.length === 1 && !lines[0].trim());
 
+  const syncPreviewClamp = useCallback(() => {
+    const el = previewRef.current;
+    if (!el || isEmptyBody) {
+      setPreviewClamped(false);
+      return;
+    }
+    setPreviewClamped(el.scrollHeight > el.clientHeight + 1);
+  }, [isEmptyBody]);
+
+  useLayoutEffect(() => {
+    syncPreviewClamp();
+  }, [body, translations, syncPreviewClamp]);
+
+  useEffect(() => {
+    const el = previewRef.current;
+    if (!el || isEmptyBody) return;
+    const observer = new ResizeObserver(() => syncPreviewClamp());
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [body, isEmptyBody, syncPreviewClamp]);
+
   const entryHeader = (
     <>
       <h2 className="text-base font-semibold tracking-tight text-foreground">
@@ -146,44 +169,59 @@ export function JournalEntryCard({
   const entryBody = (
     <>
       <hr className="my-3 border-border" />
-      <div className="flex flex-col gap-0">
-        {isEmptyBody ? (
-          <p
-            className={cn(
-              journalEntryPreviewTextClassName,
-              "text-muted-foreground",
-            )}
-          >
-            No text yet — open this entry to write.
-          </p>
-        ) : (
-          lines.map((line, idx) => {
-            const segs = segmentTranslatedLine(line, segsList);
-            return (
-              <p
-                key={idx}
-                className={cn(
-                  journalEntryPreviewTextClassName,
-                  "min-h-[1.25em] whitespace-pre-wrap",
-                )}
-              >
-                {segs.map((seg, si) =>
-                  seg.translation ? (
-                    <span
-                      key={si}
-                      title={seg.translation.sourceText}
-                      className={cn("cursor-default", journalTranslationHighlightClassName)}
-                    >
-                      {seg.text}
-                    </span>
-                  ) : (
-                    <span key={si}>{seg.text}</span>
-                  ),
-                )}
-              </p>
-            );
-          })
-        )}
+      <div ref={previewRef} className="relative max-h-36 overflow-hidden">
+        <div className="flex flex-col gap-0">
+          {isEmptyBody ? (
+            <p
+              className={cn(
+                journalEntryPreviewTextClassName,
+                "text-muted-foreground",
+              )}
+            >
+              No text yet — open this entry to write.
+            </p>
+          ) : (
+            lines.map((line, idx) => {
+              const lineStart =
+                idx === 0
+                  ? 0
+                  : lines.slice(0, idx).reduce((sum, l) => sum + l.length + 1, 0);
+              const segs = segmentTranslatedLineBySpans(line, lineStart, segsList);
+              return (
+                <p
+                  key={idx}
+                  className={cn(
+                    journalEntryPreviewTextClassName,
+                    "min-h-[1.25em] whitespace-pre-wrap",
+                  )}
+                >
+                  {segs.map((seg, si) =>
+                    seg.translation ? (
+                      <span
+                        key={si}
+                        title={seg.translation.sourceText}
+                        className={cn(
+                          "cursor-default",
+                          journalTranslationHighlightClassName,
+                        )}
+                      >
+                        {seg.text}
+                      </span>
+                    ) : (
+                      <span key={si}>{seg.text}</span>
+                    ),
+                  )}
+                </p>
+              );
+            })
+          )}
+        </div>
+        {previewClamped ? (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent"
+            aria-hidden
+          />
+        ) : null}
       </div>
     </>
   );
@@ -211,7 +249,7 @@ export function JournalEntryCard({
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   disabled={renamePending}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={cancelRename}
@@ -220,7 +258,7 @@ export function JournalEntryCard({
                 </button>
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-[12px] text-foreground transition-colors hover:bg-muted"
+                  className="rounded-md px-3 py-2 text-[12px] text-foreground transition-colors hover:bg-muted"
                   disabled={renamePending}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => void saveRename()}
@@ -260,7 +298,7 @@ export function JournalEntryCard({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   disabled={deletePending}
                   onClick={() => setDeleteConfirming(false)}
                 >
@@ -268,7 +306,7 @@ export function JournalEntryCard({
                 </button>
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-[12px] text-destructive transition-colors hover:bg-destructive/10"
+                  className="rounded-md px-3 py-2 text-[12px] text-destructive transition-colors hover:bg-destructive/10"
                   disabled={deletePending}
                   onClick={() => void performDelete()}
                 >

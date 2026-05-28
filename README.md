@@ -76,10 +76,9 @@ Native and learning languages are per user (`LanguageProfile` in Prisma). Change
 
 ## Inline translation (behavior)
 
-- `//` can appear in the middle of a line. **Only the last** `//` on that line counts: text after it (to the end of the line) is what gets sent to Google.
-- **Enter** — if that line has a valid `//`, translate and replace that segment; no newline.
-- **Ctrl+Enter** (Cmd+Enter on Mac) — insert a newline.
-- Click outside the textarea to leave edit mode: body autosaves, translated spans show with a muted highlight; hover shows the source phrase. Click back in to edit plain text again.
+- `//` can appear in the middle of a line. **Only the last** `//` on that line counts. Only text you type after it (up to the cursor) is translated—not the rest of the line.
+- **Enter** — on a line with a valid `//` segment (and the cursor in that segment), translate and replace that segment; otherwise insert a newline.
+- Click outside the entry to autosave. Translated spans show with a muted highlight in the editor mirror.
 
 API: `POST /api/entries/[id]/translate` with `{ "text": "..." }` adds or reuses a translation record; `DELETE` with `{ "translationId": "..." }` drops the highlight metadata (the word stays in the body). `PATCH /api/settings/language-profile` with `{ "nativeLanguage": "en", "targetLanguage": "ja" }` updates the pair used for those calls.
 

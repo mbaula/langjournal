@@ -1,5 +1,6 @@
 import { CreateEntryButton } from "@/components/journal/create-entry-button";
 import { EntryList } from "@/components/journal/entry-list";
+import { journalPageShellClassName, journalPageTitleClassName } from "@/components/journal/field-styles";
 import { JournalProgressRail } from "@/components/journal/journal-progress-rail";
 import { LanguageBar } from "@/components/journal/language-bar";
 import { requireUser } from "@/lib/auth/session";
@@ -38,10 +39,10 @@ export default async function JournalPage() {
   const todayEntry = entries.find((e) => isSameUtcDay(e.entryDate, today));
 
   return (
-    <div className="flex w-full flex-col gap-8 pt-2 lg:gap-10">
+    <div className={journalPageShellClassName}>
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-x-10 lg:gap-y-8">
         <header className="min-w-0 space-y-1">
-          <h1 className="text-[1.875rem] font-bold tracking-[-0.02em] text-foreground">
+          <h1 className={journalPageTitleClassName}>
             Hi, {greetingName} 👋
           </h1>
           <p className="text-[13px] text-muted-foreground">

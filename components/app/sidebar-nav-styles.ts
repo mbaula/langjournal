@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 
 export const sidebarNavItemBase =
-  "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors";
+  "flex items-center gap-2 rounded-md px-2 py-2.5 text-[13px] transition-colors sm:py-1.5";
 
 /** Filled accent pill for the active sidebar nav row (e.g. recent entry list item). */
 export const sidebarNavRowSelectedClass =

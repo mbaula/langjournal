@@ -199,7 +199,7 @@ export function ContributionChart({
   }, [weeks.length, variant, layout.minCellSize, layout.maxCellSize]);
 
   const navButtonClass =
-    "inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-35";
+    "inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-35";
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>

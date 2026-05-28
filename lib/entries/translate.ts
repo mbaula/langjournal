@@ -5,10 +5,14 @@ import {
 import { translatePlainText } from "@/lib/translate/google";
 import { memoryCacheGet, memoryCacheSet } from "@/lib/translate/memory-cache";
 
+export type TranslationSpan = { start: number; end: number };
+
 export type InlineTranslation = {
   id: string;
   sourceText: string;
   translatedText: string;
+  /** Character ranges in `body` where this translation should highlight. */
+  spans?: TranslationSpan[];
 };
 
 export type ResolveTranslationResult =

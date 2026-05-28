@@ -61,7 +61,7 @@ export function CreateEntryButton({
   return (
     <div
       className={cn(
-        floating ? "fixed right-6 bottom-6 z-30" : "flex w-full max-w-sm flex-col gap-2",
+        floating ? "fixed right-4 bottom-safe z-30 sm:right-6" : "flex w-full max-w-sm flex-col gap-2",
         className,
       )}
     >
@@ -73,7 +73,7 @@ export function CreateEntryButton({
         onClick={() => void openTodayEntry()}
         className={cn(
           floating
-            ? "h-10 rounded-full px-4 text-[13px] shadow-lg"
+            ? "h-11 min-h-11 rounded-full px-4 text-[13px] shadow-lg"
             : "h-9 w-full justify-center gap-2 text-[13px] shadow-sm",
         )}
       >

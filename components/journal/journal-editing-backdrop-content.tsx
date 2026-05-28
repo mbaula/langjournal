@@ -1,15 +1,34 @@
 import type { ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 
 import { journalEditorTranslationHighlightClassName } from "@/components/journal/field-styles";
-import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
+import { segmentTranslatedLineBySpans } from "@/lib/entries/entry-body-segments";
 import type { InlineTranslation } from "@/lib/entries/translate";
 
 type SlashRange = { start: number; end: number } | null;
+
+export type TranslationLoadingState = {
+  start: number;
+  end: number;
+  showSpinner: boolean;
+};
+
+function TranslationSpinner() {
+  return (
+    <span
+      className="journal-translation-spinner ml-0.5 inline-flex translate-y-[0.06em] align-baseline"
+      aria-hidden
+    >
+      <Loader2 className="size-3.5 animate-spin text-sidebar-primary" strokeWidth={2.25} />
+    </span>
+  );
+}
 
 function splitPlainWithSlash(
   segText: string,
   absBase: number,
   slash: SlashRange,
+  translationLoading: TranslationLoadingState | null,
   keyCounter: { n: number },
 ): ReactNode[] {
   const out: ReactNode[] = [];
@@ -28,12 +47,19 @@ function splitPlainWithSlash(
   const i = lo - absBase;
   const j = hi - absBase;
   if (i > 0) out.push(<span key={keyCounter.n++}>{segText.slice(0, i)}</span>);
+
+  const showSpinner =
+    translationLoading?.showSpinner === true &&
+    translationLoading.start === slash.start &&
+    translationLoading.end === hi;
+
   out.push(
     <mark
       key={keyCounter.n++}
       className={journalEditorTranslationHighlightClassName}
     >
       {segText.slice(i, j)}
+      {showSpinner ? <TranslationSpinner /> : null}
     </mark>,
   );
   if (j < segText.length)
@@ -46,10 +72,12 @@ export function JournalEditingBackdropContent({
   body,
   translations,
   slashHighlight,
+  translationLoading = null,
 }: {
   body: string;
   translations: InlineTranslation[];
   slashHighlight: SlashRange;
+  translationLoading?: TranslationLoadingState | null;
 }) {
   const keyCounter = { n: 0 };
   const pieces: ReactNode[] = [];
@@ -61,7 +89,7 @@ export function JournalEditingBackdropContent({
     const line = body.slice(lineStart, lineEnd);
 
     if (line.length > 0) {
-      const segs = segmentTranslatedLine(line, translations);
+      const segs = segmentTranslatedLineBySpans(line, lineStart, translations);
       let col = 0;
       for (const seg of segs) {
         const absBase = lineStart + col;
@@ -84,6 +112,7 @@ export function JournalEditingBackdropContent({
               segText,
               absBase,
               slashHighlight,
+              translationLoading,
               keyCounter,
             ),
           );
@@ -96,5 +125,12 @@ export function JournalEditingBackdropContent({
     lineStart = lineEnd + 1;
   }
 
-  return <>{pieces}</>;
+  return (
+    <>
+      {translationLoading?.showSpinner ? (
+        <span className="sr-only">Translating…</span>
+      ) : null}
+      {pieces}
+    </>
+  );
 }

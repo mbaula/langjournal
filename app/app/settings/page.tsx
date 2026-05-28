@@ -20,7 +20,7 @@ export default async function SettingsPage() {
   return (
     <div className="flex w-full flex-col gap-8 pt-2 lg:gap-10">
       <header className="space-y-1">
-        <h1 className="text-[1.875rem] font-bold tracking-[-0.02em] text-foreground">
+        <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-[1.875rem]">
           Settings
         </h1>
         <p className="text-[13px] text-muted-foreground">

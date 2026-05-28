@@ -60,8 +60,9 @@ export function EntryActionsMenu({
       className={cn(
         "relative flex shrink-0 items-center pr-1 transition-opacity",
         "opacity-0 pointer-events-none",
-        "group-hover/row:opacity-100 group-hover/row:pointer-events-auto",
-        "group-focus-within/row:opacity-100 group-focus-within/row:pointer-events-auto",
+        "max-lg:opacity-100 max-lg:pointer-events-auto",
+        "lg:group-hover/row:opacity-100 lg:group-hover/row:pointer-events-auto",
+        "lg:group-focus-within/row:opacity-100 lg:group-focus-within/row:pointer-events-auto",
         menuOpen && "opacity-100 pointer-events-auto",
         className,
       )}
@@ -70,7 +71,7 @@ export function EntryActionsMenu({
         type="button"
         suppressHydrationWarning
         className={cn(
-          "flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors",
+          "flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors sm:size-8",
           "hover:bg-muted hover:text-foreground",
           menuOpen && "bg-muted text-foreground",
           triggerClassName,
@@ -95,7 +96,7 @@ export function EntryActionsMenu({
           <button
             type="button"
             role="menuitem"
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-muted"
+            className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-muted"
             onClick={() => {
               onRenameTitle?.(entryId);
               closeMenu();

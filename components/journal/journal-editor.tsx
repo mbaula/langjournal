@@ -9,13 +9,15 @@ import {
   useState,
 } from "react";
 
-import {
-  journalTextareaClassName,
-  journalTranslationHighlightClassName,
-} from "@/components/journal/field-styles";
+import { journalEntryBodyClassName } from "@/components/journal/field-styles";
 import { JournalEditingBackdropContent } from "@/components/journal/journal-editing-backdrop-content";
-import { segmentTranslatedLine } from "@/lib/entries/entry-body-segments";
-import type { InlineTranslation } from "@/lib/entries/translate";
+import type { TranslationLoadingState } from "@/components/journal/journal-editing-backdrop-content";
+import type { InlineTranslation, TranslationSpan } from "@/lib/entries/translate";
+import {
+  adjustTranslationSpansForEdit,
+  appendTranslationSpan,
+  pruneInvalidTranslationSpans,
+} from "@/lib/entries/translation-spans";
 import { countWords, wordCountLabel } from "@/lib/text/word-count";
 import {
   normalizeTranslationSource,
@@ -27,6 +29,8 @@ export type { InlineTranslation };
 
 const AUTOSAVE_MS = 900;
 const PREFETCH_DEBOUNCE_MS = 400;
+const TRANSLATION_SPINNER_DELAY_MS = 450;
+const ENTRY_BODY_MIN_HEIGHT_CLASS = "min-h-[calc(100dvh-16rem)]";
 
 export type TranslateTrigger = "enter" | "tab";
 
@@ -63,14 +67,28 @@ function parseCurrentSlashSegment(text: string, cursorPos: number) {
   const slashIdx = findSlashIndex(currentLine);
   if (slashIdx === -1) return null;
 
-  const afterSlash = currentLine.slice(slashIdx + 2).trim();
+  const absStart = lineStart + slashIdx;
+  const cursorRel = Math.min(Math.max(cursorPos, lineStart), lineEnd) - lineStart;
+  if (cursorRel < slashIdx + 2) return null;
+
+  const rawSegment = currentLine.slice(slashIdx + 2, cursorRel);
+  const afterSlash = rawSegment.trim();
   if (!afterSlash) return null;
 
-  const absStart = lineStart + slashIdx;
-  return { lineStart, lineEnd, slashIdx, absStart, afterSlash, currentLine };
+  const absSegmentEnd = lineStart + cursorRel;
+  return {
+    lineStart,
+    lineEnd,
+    slashIdx,
+    absStart,
+    absSegmentEnd,
+    afterSlash,
+    rawSegment,
+    currentLine,
+  };
 }
 
-/** Visual hint while editing: from `//` through line end when the caret touches that segment. */
+/** Visual hint while editing: from `//` through the typed segment (not the rest of the line). */
 function getSlashHighlightRange(
   text: string,
   selectionStart: number,
@@ -86,27 +104,24 @@ function getSlashHighlightRange(
   if (slashIdx === -1) return null;
   const absStart = lineStart + slashIdx;
   if (focus < absStart) return null;
-  return { start: absStart, end: lineEnd };
+  const highlightEnd = Math.min(Math.max(focus, absStart + 2), lineEnd);
+  return { start: absStart, end: highlightEnd };
 }
 
-/** Re-reads line bounds so paste + instant Enter still replaces the right span. */
+/** Re-reads segment bounds so paste + instant Enter still replaces the right span. */
 function tryApplySlashTranslation(
   body: string,
   absStart: number,
+  absSegmentEnd: number,
   expectedNorm: string,
   translatedText: string,
 ): { next: string; cursor: number } | null {
-  const lineEndIdx = body.indexOf("\n", absStart);
-  const end = lineEndIdx === -1 ? body.length : lineEndIdx;
-  const line = body.slice(absStart, end);
-  const si = findSlashIndex(line);
-  if (si === -1) return null;
-  const rawAfter = line.slice(si + 2);
+  if (absSegmentEnd <= absStart + 2) return null;
+  const rawAfter = body.slice(absStart + 2, absSegmentEnd);
   if (normalizeTranslationSource(rawAfter.trim()) !== expectedNorm) return null;
-  const chunkStart = absStart + si;
   return {
-    next: body.slice(0, chunkStart) + translatedText + body.slice(end),
-    cursor: chunkStart + translatedText.length,
+    next: body.slice(0, absStart) + translatedText + body.slice(absSegmentEnd),
+    cursor: absStart + translatedText.length,
   };
 }
 
@@ -144,13 +159,13 @@ export function JournalEditor({
   const [translations, setTranslations] =
     useState<InlineTranslation[]>(initialTranslations);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState(!initialBody);
 
   const bodyRef = useRef(body);
   bodyRef.current = body;
   const translationsRef = useRef(translations);
   translationsRef.current = translations;
   const savedBodyRef = useRef(initialBody);
+  const savedTranslationsRef = useRef(initialTranslations);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingCursorRef = useRef<number | null>(null);
@@ -158,7 +173,6 @@ export function JournalEditor({
     start: 0,
     end: 0,
   });
-  const [textareaScrollTop, setTextareaScrollTop] = useState(0);
 
   const clientSessionCacheRef = useRef(
     new Map<string, { sourceText: string; translatedText: string }>(),
@@ -168,6 +182,33 @@ export function JournalEditor({
   const prefetchInflightRef = useRef(
     new Map<string, Promise<{ sourceText: string; translatedText: string } | null>>(),
   );
+  const translationLoadingTimerRef = useRef<number | null>(null);
+  const [translationLoading, setTranslationLoading] =
+    useState<TranslationLoadingState | null>(null);
+
+  const clearTranslationLoading = useCallback(() => {
+    if (translationLoadingTimerRef.current !== null) {
+      window.clearTimeout(translationLoadingTimerRef.current);
+      translationLoadingTimerRef.current = null;
+    }
+    setTranslationLoading(null);
+  }, []);
+
+  const beginTranslationLoading = useCallback(
+    (range: { start: number; end: number }) => {
+      if (translationLoadingTimerRef.current !== null) {
+        window.clearTimeout(translationLoadingTimerRef.current);
+      }
+      setTranslationLoading({ ...range, showSpinner: false });
+      translationLoadingTimerRef.current = window.setTimeout(() => {
+        translationLoadingTimerRef.current = null;
+        setTranslationLoading((prev) =>
+          prev ? { ...prev, showSpinner: true } : null,
+        );
+      }, TRANSLATION_SPINNER_DELAY_MS);
+    },
+    [],
+  );
 
   useEffect(() => {
     const cleaned = stripLegacyPendingMarkers(initialBody);
@@ -176,8 +217,10 @@ export function JournalEditor({
   }, [entryId, initialBody]);
 
   useEffect(() => {
-    setTranslations(initialTranslations);
-  }, [entryId, initialTranslations]);
+    const cleaned = stripLegacyPendingMarkers(initialBody);
+    setTranslations(pruneInvalidTranslationSpans(cleaned, initialTranslations));
+    savedTranslationsRef.current = initialTranslations;
+  }, [entryId, initialBody, initialTranslations]);
 
   useEffect(() => {
     clientSessionCacheRef.current.clear();
@@ -188,7 +231,8 @@ export function JournalEditor({
       window.clearTimeout(prefetchDebounceTimerRef.current);
       prefetchDebounceTimerRef.current = null;
     }
-  }, [entryId]);
+    clearTranslationLoading();
+  }, [entryId, clearTranslationLoading]);
 
   useLayoutEffect(() => {
     const ta = textareaRef.current;
@@ -205,9 +249,17 @@ export function JournalEditor({
     });
   }, [body]);
 
-  useEffect(() => {
-    setTextareaScrollTop(0);
-  }, [entryId]);
+  const syncTextareaHeight = useCallback(() => {
+    const ta = textareaRef.current;
+    const shell = ta?.parentElement;
+    if (!ta || !shell) return;
+    ta.style.height = "0px";
+    ta.style.height = `${Math.max(ta.scrollHeight, shell.clientHeight)}px`;
+  }, []);
+
+  useLayoutEffect(() => {
+    syncTextareaHeight();
+  }, [body, syncTextareaHeight]);
 
   const slashHighlight = useMemo(
     () =>
@@ -225,9 +277,10 @@ export function JournalEditor({
         body={body}
         translations={translations}
         slashHighlight={slashHighlight}
+        translationLoading={translationLoading}
       />
     ),
-    [body, translations, slashHighlight],
+    [body, translations, slashHighlight, translationLoading],
   );
 
   const syncCaretFromTextarea = useCallback((ta: HTMLTextAreaElement) => {
@@ -252,13 +305,38 @@ export function JournalEditor({
   const saveBodyRef = useRef(saveBody);
   saveBodyRef.current = saveBody;
 
+  const saveTranslations = useCallback(
+    async (next: InlineTranslation[]) => {
+      if (
+        JSON.stringify(next) === JSON.stringify(savedTranslationsRef.current)
+      ) {
+        return;
+      }
+      savedTranslationsRef.current = next;
+      await fetch(`/api/entries/${entryId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ translations: next }),
+      });
+    },
+    [entryId],
+  );
+  const saveTranslationsRef = useRef(saveTranslations);
+  saveTranslationsRef.current = saveTranslations;
+
   useEffect(() => {
-    if (!editing) return;
     const handle = window.setTimeout(() => {
       void saveBody(body);
     }, AUTOSAVE_MS);
     return () => window.clearTimeout(handle);
-  }, [body, editing, saveBody]);
+  }, [body, saveBody]);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      void saveTranslations(translations);
+    }, AUTOSAVE_MS);
+    return () => window.clearTimeout(handle);
+  }, [translations, saveTranslations]);
 
   useEffect(() => {
     return () => void saveBodyRef.current(bodyRef.current);
@@ -270,18 +348,28 @@ export function JournalEditor({
         window.clearTimeout(prefetchDebounceTimerRef.current);
       }
       prefetchAbortRef.current?.abort();
+      clearTranslationLoading();
     };
-  }, []);
+  }, [clearTranslationLoading]);
 
   /** Server commit only — callers apply body then merge translations (avoids id/placeholder flashes). */
   const fetchCommitTranslation = useCallback(
-    async (sourceSegment: string): Promise<InlineTranslation | null> => {
+    async (
+      sourceSegment: string,
+      bodySnapshot: string,
+      highlightSpan: TranslationSpan,
+    ): Promise<InlineTranslation | null> => {
       setError(null);
       try {
         const res = await fetch(`/api/entries/${entryId}/translate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: sourceSegment, intent: "commit" }),
+          body: JSON.stringify({
+            text: sourceSegment,
+            intent: "commit",
+            body: bodySnapshot,
+            highlightSpan,
+          }),
         });
         const data = (await res.json()) as {
           error?: string;
@@ -376,69 +464,30 @@ export function JournalEditor({
     }, PREFETCH_DEBOUNCE_MS);
   }, [entryId, sourceLanguage, targetLanguage]);
 
-  const deleteTranslation = useCallback(
-    async (translationId: string) => {
-      setError(null);
-      try {
-        const res = await fetch(`/api/entries/${entryId}/translate`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ translationId }),
-        });
-        const data = (await res.json()) as {
-          error?: string;
-          translations?: InlineTranslation[];
-        };
-        if (!res.ok) {
-          setError(data.error ?? "Could not delete");
-          return;
-        }
-        if (data.translations) setTranslations(data.translations);
-      } catch {
-        setError("Could not delete");
-      }
-    },
-    [entryId],
-  );
-
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       const triggerKey = translateTrigger === "tab" ? "Tab" : "Enter";
       const isTriggerKey = e.key === triggerKey;
 
-      // When using Enter trigger: Ctrl/Cmd+Enter inserts newline
-      if (translateTrigger === "enter" && e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        const start = e.currentTarget.selectionStart;
-        const end = e.currentTarget.selectionEnd;
-        const text = bodyRef.current;
-        const next = text.slice(0, start) + "\n" + text.slice(end);
-        pendingCursorRef.current = start + 1;
-        setBody(next);
-        return;
-      }
-
-      // Check if we're in a translation segment
       const cursorPos = e.currentTarget.selectionStart;
       const text = bodyRef.current;
       const parsed = parseCurrentSlashSegment(text, cursorPos);
 
       // Tab trigger: only intercept Tab if we're in a // segment
       if (translateTrigger === "tab" && e.key === "Tab") {
-        if (!parsed) return; // Let Tab behave normally (or do nothing)
-        e.preventDefault();
-      }
-
-      // Enter trigger: always intercept Enter, but only translate if in // segment
-      if (translateTrigger === "enter" && e.key === "Enter") {
-        e.preventDefault();
         if (!parsed) return;
+        e.preventDefault();
       }
 
-      // If this isn't the trigger key, or we're not in a // segment, bail
+      // Enter trigger: only intercept Enter if we're in a // segment
+      if (translateTrigger === "enter" && e.key === "Enter") {
+        if (!parsed) return;
+        e.preventDefault();
+      }
+
       if (!isTriggerKey || !parsed) return;
 
-      const { absStart, afterSlash } = parsed;
+      const { absStart, absSegmentEnd, afterSlash } = parsed;
       const trimmed = afterSlash.trim();
       const key = translationMemoryCacheKey(
         sourceLanguage,
@@ -454,13 +503,29 @@ export function JournalEditor({
         const applied = tryApplySlashTranslation(
           text,
           absStart,
+          absSegmentEnd,
           norm,
           fromState.translatedText,
         );
         if (!applied) return;
+        const span = {
+          start: absStart,
+          end: absStart + fromState.translatedText.length,
+        };
         pendingCursorRef.current = applied.cursor;
         setBody(applied.next);
+        setTranslations((prev) =>
+          mergeTranslationState(
+            prev,
+            appendTranslationSpan(fromState, span, applied.next),
+          ),
+        );
         void saveBody(applied.next);
+        void fetchCommitTranslation(trimmed, applied.next, span).then((t) => {
+          if (t) {
+            setTranslations((prev) => mergeTranslationState(prev, t));
+          }
+        });
         requestAnimationFrame(() => textareaRef.current?.focus());
         return;
       }
@@ -468,31 +533,12 @@ export function JournalEditor({
       void (async () => {
         const rollbackBody = text;
 
-        const applyCommitted = (t: InlineTranslation) => {
-          const cur = bodyRef.current;
-          const applied = tryApplySlashTranslation(
-            cur,
-            absStart,
-            norm,
-            t.translatedText,
-          );
-          if (!applied) return;
-          pendingCursorRef.current = applied.cursor;
-          setBody(applied.next);
-          setTranslations((prev) => mergeTranslationState(prev, t));
-          void saveBody(applied.next);
-          clientSessionCacheRef.current.set(key, {
-            sourceText: t.sourceText,
-            translatedText: t.translatedText,
-          });
-          requestAnimationFrame(() => textareaRef.current?.focus());
-        };
-
         const cached = clientSessionCacheRef.current.get(key);
         if (cached) {
           const optimistic = tryApplySlashTranslation(
             text,
             absStart,
+            absSegmentEnd,
             norm,
             cached.translatedText,
           );
@@ -501,7 +547,11 @@ export function JournalEditor({
           setBody(optimistic.next);
           void saveBody(optimistic.next);
 
-          const t = await fetchCommitTranslation(trimmed);
+          const span = {
+            start: absStart,
+            end: absStart + cached.translatedText.length,
+          };
+          const t = await fetchCommitTranslation(trimmed, optimistic.next, span);
           if (!t) {
             setBody(rollbackBody);
             void saveBody(rollbackBody);
@@ -516,6 +566,7 @@ export function JournalEditor({
             const fix = tryApplySlashTranslation(
               bodyRef.current,
               absStart,
+              absSegmentEnd,
               norm,
               t.translatedText,
             );
@@ -531,22 +582,38 @@ export function JournalEditor({
 
         const inflight = prefetchInflightRef.current.get(key);
         if (inflight) {
+          beginTranslationLoading({ start: absStart, end: absSegmentEnd });
           const pref = await inflight;
-          if (!pref) return;
+          if (!pref) {
+            clearTranslationLoading();
+            return;
+          }
           const cur = bodyRef.current;
-          if (cur.slice(absStart, absStart + 2) !== "//") return;
+          if (cur.slice(absStart, absStart + 2) !== "//") {
+            clearTranslationLoading();
+            return;
+          }
           const optimistic = tryApplySlashTranslation(
             cur,
             absStart,
+            absSegmentEnd,
             norm,
             pref.translatedText,
           );
-          if (!optimistic) return;
+          if (!optimistic) {
+            clearTranslationLoading();
+            return;
+          }
           pendingCursorRef.current = optimistic.cursor;
           setBody(optimistic.next);
           void saveBody(optimistic.next);
+          clearTranslationLoading();
 
-          const t = await fetchCommitTranslation(trimmed);
+          const span = {
+            start: absStart,
+            end: absStart + pref.translatedText.length,
+          };
+          const t = await fetchCommitTranslation(trimmed, optimistic.next, span);
           if (!t) {
             setBody(rollbackBody);
             void saveBody(rollbackBody);
@@ -561,6 +628,7 @@ export function JournalEditor({
             const fix = tryApplySlashTranslation(
               bodyRef.current,
               absStart,
+              absSegmentEnd,
               norm,
               t.translatedText,
             );
@@ -576,12 +644,75 @@ export function JournalEditor({
 
         if (text.slice(absStart, absStart + 2) !== "//") return;
 
-        const t = await fetchCommitTranslation(trimmed);
-        if (!t) return;
-        applyCommitted(t);
+        beginTranslationLoading({ start: absStart, end: absSegmentEnd });
+        let translatedText: string;
+        try {
+          const res = await fetch(`/api/entries/${entryId}/translate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: trimmed, intent: "prefetch" }),
+          });
+          const data = (await res.json()) as {
+            error?: string;
+            translatedText?: string;
+          };
+          if (!res.ok || typeof data.translatedText !== "string") {
+            clearTranslationLoading();
+            setError(data.error ?? "Translation failed");
+            return;
+          }
+          translatedText = data.translatedText;
+        } catch {
+          clearTranslationLoading();
+          setError("Translation failed");
+          return;
+        }
+
+        const applied = tryApplySlashTranslation(
+          text,
+          absStart,
+          absSegmentEnd,
+          norm,
+          translatedText,
+        );
+        if (!applied) {
+          clearTranslationLoading();
+          return;
+        }
+
+        pendingCursorRef.current = applied.cursor;
+        setBody(applied.next);
+        void saveBody(applied.next);
+        clearTranslationLoading();
+
+        const span = {
+          start: absStart,
+          end: absStart + translatedText.length,
+        };
+        const t = await fetchCommitTranslation(trimmed, applied.next, span);
+        if (!t) {
+          setBody(rollbackBody);
+          void saveBody(rollbackBody);
+          return;
+        }
+        setTranslations((prev) => mergeTranslationState(prev, t));
+        clientSessionCacheRef.current.set(key, {
+          sourceText: t.sourceText,
+          translatedText: t.translatedText,
+        });
+        requestAnimationFrame(() => textareaRef.current?.focus());
       })();
     },
-    [fetchCommitTranslation, saveBody, sourceLanguage, targetLanguage, translateTrigger],
+    [
+      beginTranslationLoading,
+      clearTranslationLoading,
+      fetchCommitTranslation,
+      saveBody,
+      entryId,
+      sourceLanguage,
+      targetLanguage,
+      translateTrigger,
+    ],
   );
 
   const handleBlur = useCallback(
@@ -595,7 +726,6 @@ export function JournalEditor({
         return;
 
       void saveBody(bodyRef.current);
-      setEditing(false);
     },
     [saveBody],
   );
@@ -608,127 +738,75 @@ export function JournalEditor({
     [schedulePrefetch],
   );
 
-  const lines = useMemo(() => body.split("\n"), [body]);
   const wordCount = useMemo(() => countWords(body), [body]);
 
-  if (editing) {
-    return (
-      <div
-        ref={containerRef}
-        className="flex w-full max-w-none flex-col gap-3"
-      >
-        <div className="w-full">
-          <div className="relative w-full">
-            <div
-              className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
-              aria-hidden="true"
-            >
-              <pre
-                className="font-sans m-0 min-h-full whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased"
-                style={{
-                  transform: `translateY(-${textareaScrollTop}px)`,
-                }}
-              >
-                {editingBackdrop}
-              </pre>
-            </div>
-            <textarea
-              ref={textareaRef}
-              value={body}
-              onChange={(e) => {
-                syncCaretFromTextarea(e.currentTarget);
-                onBodyChange(e.target.value);
-              }}
-              onSelect={(e) => {
-                syncCaretFromTextarea(e.currentTarget);
-                schedulePrefetch();
-              }}
-              onKeyUp={(e) => syncCaretFromTextarea(e.currentTarget)}
-              onClick={(e) => syncCaretFromTextarea(e.currentTarget)}
-              onScroll={(e) =>
-                setTextareaScrollTop(e.currentTarget.scrollTop)
-              }
-              onKeyDown={onKeyDown}
-              onBlur={handleBlur}
-              rows={Math.max(12, lines.length + 2)}
-              autoFocus
-              placeholder="Start writing…"
-              className={journalTextareaClassName(
-                "relative z-10 min-h-[30vh] resize-y break-words placeholder:text-muted-foreground/70 text-transparent",
-              )}
-            />
-          </div>
-          <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
-            {wordCountLabel(wordCount)}
-          </p>
-        </div>
-        {error && (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex w-full max-w-none flex-col gap-3">
-      <div className="w-full cursor-text" onClick={() => setEditing(true)}>
-        <div className="flex min-h-[30vh] flex-col gap-0 py-1">
-          {lines.length === 0 || (lines.length === 1 && !lines[0]) ? (
-            <p className="text-[15px] leading-[1.65] text-muted-foreground/70">
-              Click to start writing…
-            </p>
-          ) : (
-            lines.map((line, idx) => {
-              const segs = segmentTranslatedLine(line, translations);
-              return (
-                <p
-                  key={idx}
-                  className="min-h-[1.65em] whitespace-pre-wrap text-[15px] leading-[1.65] text-foreground"
-                >
-                  {segs.map((seg, si) =>
-                    seg.translation ? (
-                      <span key={si} className="group/tw relative inline">
-                        <span
-                          title={seg.translation.sourceText}
-                          className={cn(
-                            "cursor-help",
-                            journalTranslationHighlightClassName,
-                          )}
-                        >
-                          {seg.text}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void deleteTranslation(seg.translation!.id);
-                          }}
-                          aria-label="Remove translation"
-                          className="ml-0.5 hidden align-super text-[10px] leading-none text-muted-foreground hover:text-destructive group-hover/tw:inline"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ) : (
-                      <span key={si}>{seg.text}</span>
-                    ),
-                  )}
-                </p>
-              );
-            })
-          )}
+    <div
+      ref={containerRef}
+      className="flex w-full max-w-none flex-col gap-3"
+    >
+      <div className={cn("relative w-full flex-1", ENTRY_BODY_MIN_HEIGHT_CLASS)}>
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          aria-hidden="true"
+        >
+          <pre className="font-sans m-0 min-h-full whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased">
+            {editingBackdrop}
+          </pre>
         </div>
-        <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
-          {wordCountLabel(wordCount)}
-        </p>
+        <textarea
+          ref={textareaRef}
+          value={body}
+          onChange={(e) => {
+            const editStart = Math.min(
+              textareaSelection.start,
+              textareaSelection.end,
+            );
+            const editEnd = Math.max(
+              textareaSelection.start,
+              textareaSelection.end,
+            );
+            const oldBody = bodyRef.current;
+            const next = e.target.value;
+            const removedLength = editEnd - editStart;
+            const insertedLength = next.length - oldBody.length + removedLength;
+            if (removedLength !== 0 || next.length !== oldBody.length) {
+              setTranslations((prev) =>
+                adjustTranslationSpansForEdit(
+                  prev,
+                  editStart,
+                  removedLength,
+                  insertedLength,
+                ),
+              );
+            }
+            syncCaretFromTextarea(e.currentTarget);
+            onBodyChange(next);
+          }}
+          onSelect={(e) => {
+            syncCaretFromTextarea(e.currentTarget);
+            schedulePrefetch();
+          }}
+          onKeyUp={(e) => syncCaretFromTextarea(e.currentTarget)}
+          onClick={(e) => syncCaretFromTextarea(e.currentTarget)}
+          onKeyDown={onKeyDown}
+          onBlur={handleBlur}
+          autoFocus
+          placeholder="Start writing…"
+          className={journalEntryBodyClassName(
+            "relative z-10 text-transparent",
+            ENTRY_BODY_MIN_HEIGHT_CLASS,
+          )}
+        />
       </div>
-      {error && (
+      <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
+        {wordCountLabel(wordCount)}
+      </p>
+      {error ? (
         <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

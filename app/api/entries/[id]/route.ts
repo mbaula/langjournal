@@ -6,6 +6,7 @@ import {
   getJournalEntryForUser,
   updateJournalEntryBody,
   updateJournalEntryTitle,
+  updateJournalEntryTranslations,
 } from "@/lib/entries/service";
 import { patchJournalEntryBodySchema } from "@/lib/validations/entry";
 
@@ -59,6 +60,17 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (parsed.data.body !== undefined) {
     const result = await updateJournalEntryBody(id, user.id, parsed.data.body);
+    if (!result.ok) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+  }
+
+  if (parsed.data.translations !== undefined) {
+    const result = await updateJournalEntryTranslations(
+      id,
+      user.id,
+      parsed.data.translations,
+    );
     if (!result.ok) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

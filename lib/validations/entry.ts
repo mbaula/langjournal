@@ -28,8 +28,31 @@ export const patchJournalEntryBodySchema = z
   .object({
     title: z.string().max(500).optional(),
     body: z.string().max(200_000).optional(),
+    translations: z
+      .array(
+        z.object({
+          id: z.string(),
+          sourceText: z.string(),
+          translatedText: z.string(),
+          spans: z
+            .array(
+              z.object({
+                start: z.number().int().min(0),
+                end: z.number().int().min(0),
+              }),
+            )
+            .optional(),
+        }),
+      )
+      .optional(),
   })
   .strict()
-  .refine((d) => d.title !== undefined || d.body !== undefined, {
-    message: "Provide title or body",
-  });
+  .refine(
+    (d) =>
+      d.title !== undefined ||
+      d.body !== undefined ||
+      d.translations !== undefined,
+    {
+      message: "Provide title, body, or translations",
+    },
+  );
