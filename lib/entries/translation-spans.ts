@@ -1,7 +1,5 @@
 import type { InlineTranslation, TranslationSpan } from "@/lib/entries/translate";
 
-export type TranslationSpan = { start: number; end: number };
-
 export function appendTranslationSpan(
   translation: InlineTranslation,
   span: TranslationSpan,

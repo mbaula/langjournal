@@ -38,9 +38,13 @@ const LEVEL_COPY: Record<
 
 type OnboardingFlowProps = {
   initialState: OnboardingState;
+  previewMode?: boolean;
 };
 
-export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
+export function OnboardingFlow({
+  initialState,
+  previewMode = false,
+}: OnboardingFlowProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [name, setName] = useState(initialState.displayName ?? "");
@@ -163,7 +167,13 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
 
   return (
     <div className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center px-6 pb-16 pt-20">
-      <OnboardingExitHeader />
+      <OnboardingExitHeader previewMode={previewMode} />
+      {previewMode ? (
+        <p className="absolute inset-x-0 top-[max(4.5rem,env(safe-area-inset-top,0px))] z-10 px-6 text-center text-[12px] text-muted-foreground">
+          Dev preview — pre-filled from your profile. Submit only if you want to
+          save changes.
+        </p>
+      ) : null}
       {/* Completion */}
       {completed ? (
         <div className="flex flex-col items-center text-center">

@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { safeNextPath } from "@/lib/auth/redirect";
+import { isDevPreviewParam } from "@/lib/dev/preview";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export async function updateSession(request: NextRequest) {
@@ -42,9 +43,16 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (user && pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/app/journal";
-    return NextResponse.redirect(url);
+    const previewMarketing = isDevPreviewParam(
+      request.nextUrl.searchParams.get("preview"),
+      "marketing",
+    );
+
+    if (!previewMarketing) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/app/journal";
+      return NextResponse.redirect(url);
+    }
   }
 
   if (user && pathname === "/login") {

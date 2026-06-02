@@ -8,9 +8,16 @@ const exitLinkClass =
 
 type OnboardingExitHeaderProps = {
   className?: string;
+  previewMode?: boolean;
 };
 
-export function OnboardingExitHeader({ className }: OnboardingExitHeaderProps) {
+export function OnboardingExitHeader({
+  className,
+  previewMode = false,
+}: OnboardingExitHeaderProps) {
+  const homeHref = previewMode ? "/app/journal" : "/auth/signout";
+  const homeLabel = previewMode ? "Back to journal" : "Home";
+
   return (
     <header
       className={cn(
@@ -19,9 +26,11 @@ export function OnboardingExitHeader({ className }: OnboardingExitHeaderProps) {
       )}
     >
       <Link
-        href="/auth/signout"
+        href={homeHref}
         className="rounded-md transition-opacity hover:opacity-90"
-        aria-label="Exit setup and return to Folio home"
+        aria-label={
+          previewMode ? "Back to journal" : "Exit setup and return to Folio home"
+        }
       >
         <FolioWordmark />
       </Link>
@@ -30,15 +39,19 @@ export function OnboardingExitHeader({ className }: OnboardingExitHeaderProps) {
         className="flex items-center gap-1 sm:gap-4"
         aria-label="Exit options"
       >
-        <Link href="/auth/signout" className={exitLinkClass}>
-          Home
+        <Link href={homeHref} className={exitLinkClass}>
+          {homeLabel}
         </Link>
-        <span className="hidden text-muted-foreground/40 sm:inline" aria-hidden>
-          ·
-        </span>
-        <Link href="/auth/signout" className={exitLinkClass}>
-          Sign out
-        </Link>
+        {previewMode ? null : (
+          <>
+            <span className="hidden text-muted-foreground/40 sm:inline" aria-hidden>
+              ·
+            </span>
+            <Link href="/auth/signout" className={exitLinkClass}>
+              Sign out
+            </Link>
+          </>
+        )}
       </nav>
     </header>
   );

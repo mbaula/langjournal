@@ -132,3 +132,20 @@ export async function updateOnboardingProfile(
 
   await syncUserLanguages(userId, input.languages);
 }
+
+/** Dev-only: wipe onboarding progress so `/onboarding` can be exercised again. */
+export async function resetOnboardingForDev(userId: string) {
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        displayName: null,
+        ageRange: null,
+        onboardingCompletedAt: null,
+      },
+    });
+    await tx.userLanguage.deleteMany({ where: { userId } });
+  });
+
+  invalidateLanguagePairCache();
+}
