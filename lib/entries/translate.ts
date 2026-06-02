@@ -2,6 +2,7 @@ import {
   normalizeTranslationSource,
   translationMemoryCacheKey,
 } from "@/lib/text/translation-cache-key";
+import { clientTranslationMatchesServerCache } from "@/lib/translate/realtime";
 import { translatePlainText } from "@/lib/translate/google";
 import { memoryCacheGet, memoryCacheSet } from "@/lib/translate/memory-cache";
 
@@ -95,6 +96,62 @@ export async function resolveTranslationText(
     fromExisting: null,
     fromServerMemory: false,
   };
+}
+
+/**
+ * Resolves text for commit. Skips Google when `clientTranslatedText` matches server memory cache.
+ */
+export async function resolveCommitTranslation(
+  text: string,
+  existingTranslations: InlineTranslation[],
+  sourceLanguage: string,
+  targetLanguage: string,
+  clientTranslatedText?: string,
+): Promise<ResolveTranslationResult> {
+  const trimmed = text.trim();
+  if (!trimmed) return { ok: false, error: "Nothing to translate" };
+
+  const norm = normalizeTranslationSource(trimmed);
+  const fromExisting =
+    existingTranslations.find(
+      (t) => normalizeTranslationSource(t.sourceText) === norm,
+    ) ?? null;
+
+  if (fromExisting) {
+    return {
+      ok: true,
+      sourceText: fromExisting.sourceText,
+      translatedText: fromExisting.translatedText,
+      fromExisting,
+      fromServerMemory: false,
+    };
+  }
+
+  if (
+    typeof clientTranslatedText === "string" &&
+    clientTranslatedText.length > 0 &&
+    clientTranslationMatchesServerCache(
+      trimmed,
+      sourceLanguage,
+      targetLanguage,
+      clientTranslatedText,
+    )
+  ) {
+    return {
+      ok: true,
+      sourceText: trimmed,
+      translatedText: clientTranslatedText,
+      fromExisting: null,
+      fromServerMemory: true,
+    };
+  }
+
+  return resolveTranslationText(
+    text,
+    existingTranslations,
+    sourceLanguage,
+    targetLanguage,
+  );
 }
 
 export function removeTranslation(

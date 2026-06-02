@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
   randomUUID: vi.fn(),
   getAuthenticatedAppUser: vi.fn(),
   languagePairFromProfile: vi.fn(),
-  resolveTranslationText: vi.fn(),
+  resolveCommitTranslation: vi.fn(),
   removeTranslation: vi.fn(),
   prisma: {
     journalEntry: {
@@ -27,7 +27,7 @@ vi.mock("@/lib/db/language", () => ({
 }));
 
 vi.mock("@/lib/entries/translate", () => ({
-  resolveTranslationText: mocks.resolveTranslationText,
+  resolveCommitTranslation: mocks.resolveCommitTranslation,
   removeTranslation: mocks.removeTranslation,
 }));
 
@@ -77,38 +77,6 @@ describe("api/entries/[id]/translate route", () => {
     expect(res.status).toBe(404);
   });
 
-  it("POST prefetch returns translated text without DB update", async () => {
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
-    mocks.prisma.journalEntry.findFirst.mockResolvedValueOnce({
-      id: "e1",
-      translations: [],
-      user: { languageProfile: { nativeLanguage: "en", targetLanguage: "es" } },
-    });
-    mocks.languagePairFromProfile.mockReturnValueOnce({ source: "en", target: "es" });
-    mocks.resolveTranslationText.mockResolvedValueOnce({
-      ok: true,
-      sourceText: "hello",
-      translatedText: "hola",
-      fromExisting: null,
-      fromServerMemory: false,
-    });
-
-    const req = new Request("http://localhost", {
-      method: "POST",
-      body: JSON.stringify({ text: "hello", intent: "prefetch" }),
-      headers: { "content-type": "application/json" },
-    });
-    const res = await POST(req, ctx("e1"));
-
-    expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({
-      requestId: "uuid-1",
-      sourceText: "hello",
-      translatedText: "hola",
-    });
-    expect(mocks.prisma.journalEntry.update).not.toHaveBeenCalled();
-  });
-
   it("POST commit returns existing translation without DB update", async () => {
     const existing = { id: "t1", sourceText: "hello", translatedText: "hola" };
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
@@ -118,7 +86,7 @@ describe("api/entries/[id]/translate route", () => {
       user: { languageProfile: { nativeLanguage: "en", targetLanguage: "es" } },
     });
     mocks.languagePairFromProfile.mockReturnValueOnce({ source: "en", target: "es" });
-    mocks.resolveTranslationText.mockResolvedValueOnce({
+    mocks.resolveCommitTranslation.mockResolvedValueOnce({
       ok: true,
       sourceText: "hello",
       translatedText: "hola",
@@ -128,7 +96,7 @@ describe("api/entries/[id]/translate route", () => {
 
     const req = new Request("http://localhost", {
       method: "POST",
-      body: JSON.stringify({ text: "hello" }),
+      body: JSON.stringify({ text: "hello", translatedText: "hola" }),
       headers: { "content-type": "application/json" },
     });
     const res = await POST(req, ctx("e1"));
@@ -146,26 +114,43 @@ describe("api/entries/[id]/translate route", () => {
       user: { languageProfile: { nativeLanguage: "en", targetLanguage: "es" } },
     });
     mocks.languagePairFromProfile.mockReturnValueOnce({ source: "en", target: "es" });
-    mocks.resolveTranslationText.mockResolvedValueOnce({
+    mocks.resolveCommitTranslation.mockResolvedValueOnce({
       ok: true,
       sourceText: "hello",
       translatedText: "hola",
       fromExisting: null,
-      fromServerMemory: false,
+      fromServerMemory: true,
     });
     mocks.prisma.journalEntry.update.mockResolvedValueOnce({});
 
     const req = new Request("http://localhost", {
       method: "POST",
-      body: JSON.stringify({ text: "hello" }),
+      body: JSON.stringify({
+        text: "hello",
+        translatedText: "hola",
+        body: "hola",
+        highlightSpan: { start: 0, end: 4 },
+      }),
       headers: { "content-type": "application/json" },
     });
     const res = await POST(req, ctx("e1"));
 
+    expect(mocks.resolveCommitTranslation).toHaveBeenCalledWith(
+      "hello",
+      [],
+      "en",
+      "es",
+      "hola",
+    );
     expect(mocks.prisma.journalEntry.update).toHaveBeenCalledOnce();
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({
-      translation: { id: "uuid-1", sourceText: "hello", translatedText: "hola" },
+      translation: {
+        id: "uuid-1",
+        sourceText: "hello",
+        translatedText: "hola",
+        spans: [{ start: 0, end: 4 }],
+      },
     });
   });
 

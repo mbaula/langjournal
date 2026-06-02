@@ -9,20 +9,12 @@ import { prisma } from "@/lib/db/prisma";
 import {
   type InlineTranslation,
   removeTranslation,
-  resolveTranslationText,
+  resolveCommitTranslation,
   type TranslationSpan,
 } from "@/lib/entries/translate";
 import { appendTranslationSpan } from "@/lib/entries/translation-spans";
 
 type RouteContext = { params: Promise<{ id: string }> };
-
-function parseIntent(json: unknown): "prefetch" | "commit" {
-  if (typeof json !== "object" || json === null || !("intent" in json)) {
-    return "commit";
-  }
-  const v = (json as { intent: unknown }).intent;
-  return v === "prefetch" ? "prefetch" : "commit";
-}
 
 function parseHighlightSpan(
   json: unknown,
@@ -58,7 +50,7 @@ function parseHighlightSpan(
   return { start, end };
 }
 
-/** Prefetch: translate only (no DB). Commit: translate + persist when new. */
+/** Persist inline translation metadata for an entry (commit only). */
 export async function POST(request: Request, context: RouteContext) {
   const user = await getAuthenticatedAppUser();
   if (!user) {
@@ -91,7 +83,10 @@ export async function POST(request: Request, context: RouteContext) {
       ? (json as { body: unknown }).body
       : undefined;
 
-  const intent = parseIntent(json);
+  const clientTranslatedText =
+    typeof json === "object" && json !== null && "translatedText" in json
+      ? (json as { translatedText: unknown }).translatedText
+      : undefined;
 
   const entry = await prisma.journalEntry.findFirst({
     where: { id: entryId, userId: user.id },
@@ -120,18 +115,16 @@ export async function POST(request: Request, context: RouteContext) {
     entry.user.languageProfile,
   );
 
-  const result = await resolveTranslationText(text, existing, source, target);
+  const result = await resolveCommitTranslation(
+    text,
+    existing,
+    source,
+    target,
+    typeof clientTranslatedText === "string" ? clientTranslatedText : undefined,
+  );
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
-  }
-
-  if (intent === "prefetch") {
-    return NextResponse.json({
-      requestId: randomUUID(),
-      sourceText: result.sourceText,
-      translatedText: result.translatedText,
-    });
   }
 
   const highlightSpan = parseHighlightSpan(

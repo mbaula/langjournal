@@ -28,9 +28,12 @@ import { cn } from "@/lib/utils";
 export type { InlineTranslation };
 
 const AUTOSAVE_MS = 900;
-const PREFETCH_DEBOUNCE_MS = 400;
+const PREFETCH_DEBOUNCE_MS = 150;
+const PREFETCH_MIN_LENGTH = 2;
 const TRANSLATION_SPINNER_DELAY_MS = 450;
 const ENTRY_BODY_MIN_HEIGHT_CLASS = "min-h-[calc(100dvh-16rem)]";
+
+type PrefetchResult = { sourceText: string; translatedText: string };
 
 export type TranslateTrigger = "enter" | "tab";
 
@@ -179,8 +182,9 @@ export function JournalEditor({
   );
   const prefetchAbortRef = useRef<AbortController | null>(null);
   const prefetchDebounceTimerRef = useRef<number | null>(null);
+  const leadingPrefetchKeyRef = useRef<string | null>(null);
   const prefetchInflightRef = useRef(
-    new Map<string, Promise<{ sourceText: string; translatedText: string } | null>>(),
+    new Map<string, Promise<PrefetchResult | null>>(),
   );
   const translationLoadingTimerRef = useRef<number | null>(null);
   const [translationLoading, setTranslationLoading] =
@@ -225,6 +229,7 @@ export function JournalEditor({
   useEffect(() => {
     clientSessionCacheRef.current.clear();
     prefetchInflightRef.current.clear();
+    leadingPrefetchKeyRef.current = null;
     prefetchAbortRef.current?.abort();
     prefetchAbortRef.current = null;
     if (prefetchDebounceTimerRef.current !== null) {
@@ -352,12 +357,20 @@ export function JournalEditor({
     };
   }, [clearTranslationLoading]);
 
-  /** Server commit only — callers apply body then merge translations (avoids id/placeholder flashes). */
+  const cancelScheduledPrefetch = useCallback(() => {
+    if (prefetchDebounceTimerRef.current !== null) {
+      window.clearTimeout(prefetchDebounceTimerRef.current);
+      prefetchDebounceTimerRef.current = null;
+    }
+  }, []);
+
+  /** Server commit only — callers apply body first, then persist in the background. */
   const fetchCommitTranslation = useCallback(
     async (
       sourceSegment: string,
       bodySnapshot: string,
       highlightSpan: TranslationSpan,
+      translatedText: string,
     ): Promise<InlineTranslation | null> => {
       setError(null);
       try {
@@ -366,7 +379,7 @@ export function JournalEditor({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             text: sourceSegment,
-            intent: "commit",
+            translatedText,
             body: bodySnapshot,
             highlightSpan,
           }),
@@ -388,45 +401,36 @@ export function JournalEditor({
     [entryId],
   );
 
-  const schedulePrefetch = useCallback(() => {
-    if (prefetchDebounceTimerRef.current !== null) {
-      window.clearTimeout(prefetchDebounceTimerRef.current);
-    }
-    prefetchDebounceTimerRef.current = window.setTimeout(() => {
-      prefetchDebounceTimerRef.current = null;
-      const ta = textareaRef.current;
-      if (!ta) return;
-      const cursor = ta.selectionStart;
-      const doc = bodyRef.current;
-      const parsed = parseCurrentSlashSegment(doc, cursor);
-      if (!parsed) return;
+  const startPrefetch = useCallback(
+    (trimmed: string, signal?: AbortSignal): Promise<PrefetchResult | null> => {
+      if (trimmed.length < PREFETCH_MIN_LENGTH) {
+        return Promise.resolve(null);
+      }
 
-      const trimmed = parsed.afterSlash.trim();
       const key = translationMemoryCacheKey(
         sourceLanguage,
         targetLanguage,
         trimmed,
       );
-      if (clientSessionCacheRef.current.has(key)) return;
-      if (prefetchInflightRef.current.has(key)) return;
 
-      prefetchAbortRef.current?.abort();
-      const ac = new AbortController();
-      prefetchAbortRef.current = ac;
+      const cached = clientSessionCacheRef.current.get(key);
+      if (cached) return Promise.resolve(cached);
 
-      const prefetchCell: {
-        p?: Promise<{ sourceText: string; translatedText: string } | null>;
-      } = {};
-      prefetchCell.p = (async (): Promise<{
-        sourceText: string;
-        translatedText: string;
-      } | null> => {
+      const inflight = prefetchInflightRef.current.get(key);
+      if (inflight) return inflight;
+
+      const cell: { p?: Promise<PrefetchResult | null> } = {};
+      cell.p = (async (): Promise<PrefetchResult | null> => {
         try {
-          const res = await fetch(`/api/entries/${entryId}/translate`, {
+          const res = await fetch("/api/translate/realtime", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: trimmed, intent: "prefetch" }),
-            signal: ac.signal,
+            body: JSON.stringify({
+              text: trimmed,
+              source: sourceLanguage,
+              target: targetLanguage,
+            }),
+            signal,
           });
           const data = (await res.json()) as {
             error?: string;
@@ -438,31 +442,137 @@ export function JournalEditor({
             typeof data.sourceText === "string" &&
             typeof data.translatedText === "string"
           ) {
-            clientSessionCacheRef.current.set(key, {
-              sourceText: data.sourceText,
-              translatedText: data.translatedText,
-            });
-            return {
+            const row: PrefetchResult = {
               sourceText: data.sourceText,
               translatedText: data.translatedText,
             };
+            clientSessionCacheRef.current.set(key, row);
+            return row;
           }
           return null;
         } catch {
           return null;
         } finally {
-          if (prefetchInflightRef.current.get(key) === prefetchCell.p) {
+          if (prefetchInflightRef.current.get(key) === cell.p) {
             prefetchInflightRef.current.delete(key);
-          }
-          if (prefetchAbortRef.current === ac) {
-            prefetchAbortRef.current = null;
           }
         }
       })();
 
-      prefetchInflightRef.current.set(key, prefetchCell.p);
+      prefetchInflightRef.current.set(key, cell.p);
+      return cell.p;
+    },
+    [sourceLanguage, targetLanguage],
+  );
+
+  const runPrefetchWithAbort = useCallback(
+    (trimmed: string) => {
+      if (trimmed.length < PREFETCH_MIN_LENGTH) return;
+      prefetchAbortRef.current?.abort();
+      const ac = new AbortController();
+      prefetchAbortRef.current = ac;
+      void startPrefetch(trimmed, ac.signal).finally(() => {
+        if (prefetchAbortRef.current === ac) {
+          prefetchAbortRef.current = null;
+        }
+      });
+    },
+    [startPrefetch],
+  );
+
+  const getOrStartTranslationForEnter = useCallback(
+    async (trimmed: string, key: string): Promise<PrefetchResult | null> => {
+      const cached = clientSessionCacheRef.current.get(key);
+      if (cached) return cached;
+
+      const inflight = prefetchInflightRef.current.get(key);
+      if (inflight) return inflight;
+
+      cancelScheduledPrefetch();
+      prefetchAbortRef.current?.abort();
+      const ac = new AbortController();
+      prefetchAbortRef.current = ac;
+      try {
+        return await startPrefetch(trimmed, ac.signal);
+      } finally {
+        if (prefetchAbortRef.current === ac) {
+          prefetchAbortRef.current = null;
+        }
+      }
+    },
+    [cancelScheduledPrefetch, startPrefetch],
+  );
+
+  const schedulePrefetch = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+
+    const parsed = parseCurrentSlashSegment(
+      bodyRef.current,
+      ta.selectionStart,
+    );
+    if (!parsed) {
+      cancelScheduledPrefetch();
+      leadingPrefetchKeyRef.current = null;
+      return;
+    }
+
+    const trimmed = parsed.afterSlash.trim();
+    if (trimmed.length < PREFETCH_MIN_LENGTH) {
+      cancelScheduledPrefetch();
+      leadingPrefetchKeyRef.current = null;
+      return;
+    }
+
+    const key = translationMemoryCacheKey(
+      sourceLanguage,
+      targetLanguage,
+      trimmed,
+    );
+
+    if (
+      !clientSessionCacheRef.current.has(key) &&
+      !prefetchInflightRef.current.has(key) &&
+      leadingPrefetchKeyRef.current !== key
+    ) {
+      leadingPrefetchKeyRef.current = key;
+      runPrefetchWithAbort(trimmed);
+    }
+
+    cancelScheduledPrefetch();
+    prefetchDebounceTimerRef.current = window.setTimeout(() => {
+      prefetchDebounceTimerRef.current = null;
+      const taNow = textareaRef.current;
+      if (!taNow) return;
+      const parsedNow = parseCurrentSlashSegment(
+        bodyRef.current,
+        taNow.selectionStart,
+      );
+      if (!parsedNow) return;
+
+      const trimmedNow = parsedNow.afterSlash.trim();
+      if (trimmedNow.length < PREFETCH_MIN_LENGTH) return;
+
+      const keyNow = translationMemoryCacheKey(
+        sourceLanguage,
+        targetLanguage,
+        trimmedNow,
+      );
+      if (
+        clientSessionCacheRef.current.has(keyNow) ||
+        prefetchInflightRef.current.has(keyNow)
+      ) {
+        return;
+      }
+
+      runPrefetchWithAbort(trimmedNow);
     }, PREFETCH_DEBOUNCE_MS);
-  }, [entryId, sourceLanguage, targetLanguage]);
+  }, [
+    cancelScheduledPrefetch,
+    runPrefetchWithAbort,
+    sourceLanguage,
+    targetLanguage,
+  ]);
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -521,7 +631,12 @@ export function JournalEditor({
           ),
         );
         void saveBody(applied.next);
-        void fetchCommitTranslation(trimmed, applied.next, span).then((t) => {
+        void fetchCommitTranslation(
+          trimmed,
+          applied.next,
+          span,
+          fromState.translatedText,
+        ).then((t) => {
           if (t) {
             setTranslations((prev) => mergeTranslationState(prev, t));
           }
@@ -530,176 +645,83 @@ export function JournalEditor({
         return;
       }
 
+      if (trimmed.length < PREFETCH_MIN_LENGTH) return;
+
       void (async () => {
-        const rollbackBody = text;
-
-        const cached = clientSessionCacheRef.current.get(key);
-        if (cached) {
-          const optimistic = tryApplySlashTranslation(
-            text,
-            absStart,
-            absSegmentEnd,
-            norm,
-            cached.translatedText,
-          );
-          if (!optimistic) return;
-          pendingCursorRef.current = optimistic.cursor;
-          setBody(optimistic.next);
-          void saveBody(optimistic.next);
-
-          const span = {
-            start: absStart,
-            end: absStart + cached.translatedText.length,
-          };
-          const t = await fetchCommitTranslation(trimmed, optimistic.next, span);
-          if (!t) {
-            setBody(rollbackBody);
-            void saveBody(rollbackBody);
-            return;
-          }
-          setTranslations((prev) => mergeTranslationState(prev, t));
-          clientSessionCacheRef.current.set(key, {
-            sourceText: t.sourceText,
-            translatedText: t.translatedText,
-          });
-          if (t.translatedText !== cached.translatedText) {
-            const fix = tryApplySlashTranslation(
-              bodyRef.current,
-              absStart,
-              absSegmentEnd,
-              norm,
-              t.translatedText,
-            );
-            if (fix) {
-              pendingCursorRef.current = fix.cursor;
-              setBody(fix.next);
-              void saveBody(fix.next);
-            }
-          }
-          requestAnimationFrame(() => textareaRef.current?.focus());
-          return;
-        }
-
-        const inflight = prefetchInflightRef.current.get(key);
-        if (inflight) {
+        const hadCache = clientSessionCacheRef.current.has(key);
+        const hadInflight = prefetchInflightRef.current.has(key);
+        if (!hadCache && !hadInflight) {
           beginTranslationLoading({ start: absStart, end: absSegmentEnd });
-          const pref = await inflight;
-          if (!pref) {
-            clearTranslationLoading();
-            return;
-          }
-          const cur = bodyRef.current;
-          if (cur.slice(absStart, absStart + 2) !== "//") {
-            clearTranslationLoading();
-            return;
-          }
-          const optimistic = tryApplySlashTranslation(
-            cur,
-            absStart,
-            absSegmentEnd,
-            norm,
-            pref.translatedText,
-          );
-          if (!optimistic) {
-            clearTranslationLoading();
-            return;
-          }
-          pendingCursorRef.current = optimistic.cursor;
-          setBody(optimistic.next);
-          void saveBody(optimistic.next);
-          clearTranslationLoading();
-
-          const span = {
-            start: absStart,
-            end: absStart + pref.translatedText.length,
-          };
-          const t = await fetchCommitTranslation(trimmed, optimistic.next, span);
-          if (!t) {
-            setBody(rollbackBody);
-            void saveBody(rollbackBody);
-            return;
-          }
-          setTranslations((prev) => mergeTranslationState(prev, t));
-          clientSessionCacheRef.current.set(key, {
-            sourceText: t.sourceText,
-            translatedText: t.translatedText,
-          });
-          if (t.translatedText !== pref.translatedText) {
-            const fix = tryApplySlashTranslation(
-              bodyRef.current,
-              absStart,
-              absSegmentEnd,
-              norm,
-              t.translatedText,
-            );
-            if (fix) {
-              pendingCursorRef.current = fix.cursor;
-              setBody(fix.next);
-              void saveBody(fix.next);
-            }
-          }
-          requestAnimationFrame(() => textareaRef.current?.focus());
-          return;
         }
 
-        if (text.slice(absStart, absStart + 2) !== "//") return;
+        const fetched = await getOrStartTranslationForEnter(trimmed, key);
+        clearTranslationLoading();
 
-        beginTranslationLoading({ start: absStart, end: absSegmentEnd });
-        let translatedText: string;
-        try {
-          const res = await fetch(`/api/entries/${entryId}/translate`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: trimmed, intent: "prefetch" }),
-          });
-          const data = (await res.json()) as {
-            error?: string;
-            translatedText?: string;
-          };
-          if (!res.ok || typeof data.translatedText !== "string") {
-            clearTranslationLoading();
-            setError(data.error ?? "Translation failed");
-            return;
-          }
-          translatedText = data.translatedText;
-        } catch {
-          clearTranslationLoading();
+        if (!fetched) {
           setError("Translation failed");
           return;
         }
 
+        const cur = bodyRef.current;
+        if (cur.slice(absStart, absStart + 2) !== "//") return;
+
         const applied = tryApplySlashTranslation(
-          text,
+          cur,
           absStart,
           absSegmentEnd,
           norm,
-          translatedText,
+          fetched.translatedText,
         );
-        if (!applied) {
-          clearTranslationLoading();
-          return;
-        }
-
-        pendingCursorRef.current = applied.cursor;
-        setBody(applied.next);
-        void saveBody(applied.next);
-        clearTranslationLoading();
+        if (!applied) return;
 
         const span = {
           start: absStart,
-          end: absStart + translatedText.length,
+          end: absStart + fetched.translatedText.length,
         };
-        const t = await fetchCommitTranslation(trimmed, applied.next, span);
-        if (!t) {
-          setBody(rollbackBody);
-          void saveBody(rollbackBody);
-          return;
-        }
-        setTranslations((prev) => mergeTranslationState(prev, t));
-        clientSessionCacheRef.current.set(key, {
-          sourceText: t.sourceText,
-          translatedText: t.translatedText,
+        const optimistic: InlineTranslation = {
+          id: `opt-${key}`,
+          sourceText: fetched.sourceText,
+          translatedText: fetched.translatedText,
+          spans: [span],
+        };
+
+        pendingCursorRef.current = applied.cursor;
+        setBody(applied.next);
+        setTranslations((prev) =>
+          mergeTranslationState(prev, optimistic),
+        );
+        void saveBody(applied.next);
+
+        clientSessionCacheRef.current.set(key, fetched);
+
+        void fetchCommitTranslation(
+          trimmed,
+          applied.next,
+          span,
+          fetched.translatedText,
+        ).then((t) => {
+          if (!t) return;
+          setTranslations((prev) => mergeTranslationState(prev, t));
+          clientSessionCacheRef.current.set(key, {
+            sourceText: t.sourceText,
+            translatedText: t.translatedText,
+          });
+          if (t.translatedText !== fetched.translatedText) {
+            const fix = tryApplySlashTranslation(
+              bodyRef.current,
+              absStart,
+              absSegmentEnd,
+              norm,
+              t.translatedText,
+            );
+            if (fix) {
+              pendingCursorRef.current = fix.cursor;
+              setBody(fix.next);
+              void saveBody(fix.next);
+            }
+          }
         });
+
         requestAnimationFrame(() => textareaRef.current?.focus());
       })();
     },
@@ -707,8 +729,8 @@ export function JournalEditor({
       beginTranslationLoading,
       clearTranslationLoading,
       fetchCommitTranslation,
+      getOrStartTranslationForEnter,
       saveBody,
-      entryId,
       sourceLanguage,
       targetLanguage,
       translateTrigger,
