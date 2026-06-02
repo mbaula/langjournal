@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   CONTRIBUTION_MONTHS_PER_PAGE,
@@ -17,6 +17,15 @@ describe("utcMonthAdd", () => {
 });
 
 describe("getUtcMonthPageRange", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-20T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("returns six inclusive calendar months for page 0", () => {
     const { start, end } = getUtcMonthPageRange(0, 6);
     expect(start.toISOString().slice(0, 10)).toBe("2025-12-01");

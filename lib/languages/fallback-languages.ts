@@ -112,4 +112,5 @@ export const FALLBACK_LANGUAGES: { code: string; name: string }[] = [
   { code: "yo", name: "Yoruba" },
   { code: "zu", name: "Zulu" },
   { code: "fil", name: "Filipino" },
+  { code: "tl", name: "Tagalog" },
 ].sort((a, b) => a.name.localeCompare(b.name, "en"));
