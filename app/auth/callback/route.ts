@@ -2,6 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import {
+  getAuthCallbackErrorMessage,
+  loginUrlWithAuthError,
+  resolveLoginErrorMessage,
+} from "@/lib/auth/callback-errors";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { getOnboardingState } from "@/lib/db/onboarding";
 import { ensureAppUser } from "@/lib/db/user";
@@ -13,15 +18,21 @@ export async function GET(request: Request) {
   const next = safeNextPath(url.searchParams.get("next"));
 
   if (!code) {
+    const authError =
+      getAuthCallbackErrorMessage(url.searchParams) ??
+      "Invalid sign-in link. Request a new one below.";
     return NextResponse.redirect(
-      new URL("/login?error=missing_code", url.origin).href,
+      loginUrlWithAuthError(url.origin, authError).href,
     );
   }
 
   const env = getSupabasePublicEnv();
   if (!env) {
     return NextResponse.redirect(
-      new URL("/login?error=supabase_not_configured", url.origin).href,
+      loginUrlWithAuthError(
+        url.origin,
+        resolveLoginErrorMessage("supabase_not_configured"),
+      ).href,
     );
   }
 
@@ -47,10 +58,7 @@ export async function GET(request: Request) {
 
   if (error) {
     return NextResponse.redirect(
-      new URL(
-        `/login?error=${encodeURIComponent(error.message)}`,
-        url.origin,
-      ).href,
+      loginUrlWithAuthError(url.origin, error.message).href,
     );
   }
 

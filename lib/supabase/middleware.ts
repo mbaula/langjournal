@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import {
+  getAuthCallbackErrorMessage,
+  loginUrlWithAuthError,
+} from "@/lib/auth/callback-errors";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { isDevPreviewParam } from "@/lib/dev/preview";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
@@ -41,6 +45,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+
+  const authError = getAuthCallbackErrorMessage(request.nextUrl.searchParams);
+  if (authError && (pathname === "/" || pathname === "/auth/callback")) {
+    return NextResponse.redirect(
+      loginUrlWithAuthError(request.nextUrl.origin, authError),
+    );
+  }
 
   if (user && pathname === "/") {
     const previewMarketing = isDevPreviewParam(

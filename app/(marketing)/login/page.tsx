@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { buttonVariants } from "@/components/ui/button";
+import { resolveLoginErrorMessage } from "@/lib/auth/callback-errors";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -24,7 +25,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           We&apos;ll email you a magic link — no password to remember.
         </p>
       </div>
-      <LoginForm redirectTo={redirectTo} error={error} />
+      <LoginForm
+        redirectTo={redirectTo}
+        error={error ? resolveLoginErrorMessage(error) : undefined}
+      />
       <Link href="/" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
         Back to home
       </Link>
