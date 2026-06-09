@@ -2,14 +2,14 @@ import { cn } from "@/lib/utils";
 
 /** Blue pill behind `//` segments while typing and around committed translations. */
 export const journalTranslationHighlightClassName =
-  "rounded bg-blue-100 px-0.5 py-px text-foreground [box-decoration-break:clone] dark:bg-blue-500/25";
+  "rounded bg-blue-100 px-0.5 py-px text-foreground [box-decoration-break:clone]";
 
 /**
  * Editor mirror highlight must not change text width; keep visual-only background.
  * Any horizontal/vertical padding here desynchronizes caret vs. mirrored text.
  */
 export const journalEditorTranslationHighlightClassName =
-  "rounded bg-blue-100 text-foreground [box-decoration-break:clone] dark:bg-blue-500/25";
+  "rounded bg-blue-100 text-foreground [box-decoration-break:clone]";
 
 /** Journal home list: entry preview lines (matches date subtitle / page encouraging text). */
 export const journalEntryPreviewTextClassName =

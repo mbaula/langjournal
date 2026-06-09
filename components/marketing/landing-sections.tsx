@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 
 import { LandingBulletList, LandingSection } from "./landing-section";
 import { LandingReveal } from "./landing-reveal";
-import { PricingFeedback } from "./pricing-feedback";
 import { SlashTranslateDemo } from "./slash-translate-demo";
 
 const chaosApps: {
@@ -28,31 +27,31 @@ const chaosApps: {
     name: "Google Translate",
     icon: Languages,
     className:
-      "left-[4%] top-[8%] rotate-[-6deg] border-blue-200/80 bg-blue-50/90 dark:border-blue-900/50 dark:bg-blue-950/40",
+      "left-[4%] top-[8%] rotate-[-6deg] border-blue-200/80 bg-blue-50/90",
   },
   {
     name: "Duolingo",
     icon: GraduationCap,
     className:
-      "right-[6%] top-[14%] rotate-[5deg] border-lime-200/80 bg-lime-50/90 dark:border-lime-900/50 dark:bg-lime-950/40",
+      "right-[6%] top-[14%] rotate-[5deg] border-lime-200/80 bg-lime-50/90",
   },
   {
     name: "Conjugation site",
     icon: BookOpen,
     className:
-      "left-[18%] bottom-[12%] rotate-[3deg] border-violet-200/80 bg-violet-50/90 dark:border-violet-900/50 dark:bg-violet-950/40",
+      "left-[18%] bottom-[12%] rotate-[3deg] border-violet-200/80 bg-violet-50/90",
   },
   {
     name: "Dictionary",
     icon: BookMarked,
     className:
-      "right-[20%] bottom-[18%] rotate-[-4deg] border-amber-200/80 bg-amber-50/90 dark:border-amber-900/50 dark:bg-amber-950/40",
+      "right-[20%] bottom-[18%] rotate-[-4deg] border-amber-200/80 bg-amber-50/90",
   },
   {
     name: "Reddit",
     icon: MessageSquare,
     className:
-      "left-[42%] top-[38%] rotate-[-2deg] border-orange-200/80 bg-orange-50/90 dark:border-orange-900/50 dark:bg-orange-950/40",
+      "left-[42%] top-[38%] rotate-[-2deg] border-orange-200/80 bg-orange-50/90",
   },
 ];
 
@@ -306,36 +305,19 @@ export function LandingSections() {
         <AudienceCards />
       </LandingSection>
 
-      <LandingSection
-        id="pricing"
-        align="center"
-        eyebrow="Pricing"
-        title="How much would you pay?"
-      >
-        <LandingReveal>
-          <PricingFeedback />
-        </LandingReveal>
-      </LandingSection>
-
-      <LandingSection
-        id="faq"
-        tone="brand"
-        accent="border-top"
-        align="center"
-        title="FAQ"
-      >
-        <LandingReveal className="landing-accent-bar-left-brand mx-auto mt-10 max-w-2xl divide-y divide-sidebar-primary-foreground/15 pl-5 sm:pl-6">
+      <LandingSection id="faq" align="center" title="FAQ">
+        <LandingReveal className="landing-accent-bar-left mx-auto mt-10 max-w-2xl divide-y divide-border/60 pl-5 sm:pl-6">
           {faqItems.map((item) => (
             <details key={item.question} className="group py-5">
-              <summary className="cursor-pointer list-none text-[15px] font-medium text-sidebar-primary-foreground [&::-webkit-details-marker]:hidden">
+              <summary className="cursor-pointer list-none text-[15px] font-medium text-foreground [&::-webkit-details-marker]:hidden">
                 <span className="flex items-start justify-between gap-4">
                   {item.question}
-                  <span className="mt-0.5 shrink-0 text-sidebar-primary-foreground/50 transition-colors transition-transform group-open:rotate-45 group-open:text-sidebar-primary-foreground">
+                  <span className="mt-0.5 shrink-0 text-muted-foreground transition-colors transition-transform group-open:rotate-45 group-open:text-sidebar-primary">
                     +
                   </span>
                 </span>
               </summary>
-              <p className="mt-3 text-left text-[14px] leading-relaxed text-sidebar-primary-foreground/75">
+              <p className="mt-3 text-left text-[14px] leading-relaxed text-muted-foreground">
                 {item.answer}
               </p>
             </details>

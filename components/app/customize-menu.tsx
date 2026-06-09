@@ -3,10 +3,9 @@
 /** Accent picker UI; palette tokens live in globals.css (see lib/theme/accent.ts). */
 
 import { useEffect, useRef, useState } from "react";
-import { Moon, Palette, Sun } from "lucide-react";
+import { Palette } from "lucide-react";
 
 import { useAccent } from "@/components/accent-provider";
-import { useTheme } from "@/components/theme-provider";
 import {
   ACCENT_OPTIONS,
   accentLabel,
@@ -15,15 +14,9 @@ import {
 import { cn } from "@/lib/utils";
 
 export function CustomizeMenu() {
-  const { resolvedTheme, setTheme } = useTheme();
   const { accent, setAccent } = useAccent();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -34,10 +27,6 @@ export function CustomizeMenu() {
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open]);
-
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
-  };
 
   const selectAccent = (id: AccentId) => {
     setAccent(id);
@@ -97,7 +86,7 @@ export function CustomizeMenu() {
                   )}
                 >
                   <span
-                    className="size-5 rounded-full ring-1 ring-black/10 dark:ring-white/15"
+                    className="size-5 rounded-full ring-1 ring-black/10"
                     style={{ backgroundColor: option.swatch }}
                     aria-hidden
                   />
@@ -106,34 +95,6 @@ export function CustomizeMenu() {
               );
             })}
           </div>
-
-          <div className="my-3 border-t border-border/60" />
-
-          <button
-            type="button"
-            role="menuitem"
-            onClick={toggleTheme}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-muted"
-          >
-            {mounted ? (
-              resolvedTheme === "dark" ? (
-                <>
-                  <Sun className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
-                  Light mode
-                </>
-              ) : (
-                <>
-                  <Moon className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
-                  Dark mode
-                </>
-              )
-            ) : (
-              <>
-                <Moon className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
-                Theme
-              </>
-            )}
-          </button>
         </div>
       ) : null}
     </div>

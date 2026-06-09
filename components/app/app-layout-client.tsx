@@ -133,7 +133,7 @@ export function AppLayoutClient({
 
           <main
             className={cn(
-              "flex min-h-[calc(100dvh-1rem)] flex-1 flex-col rounded-xl border border-border/80 bg-background shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] transition-[background-color,border-color,box-shadow] duration-300 ease-out dark:border-border/60 dark:shadow-[0_2px_16px_-6px_rgba(0,0,0,0.45)]",
+              "flex min-h-[calc(100dvh-1rem)] flex-1 flex-col rounded-xl border border-border/80 bg-background shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] transition-[background-color,border-color,box-shadow] duration-300 ease-out",
               "max-lg:min-h-dvh max-lg:rounded-none max-lg:border-x-0 max-lg:shadow-none",
             )}
           >
