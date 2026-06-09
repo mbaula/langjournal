@@ -1,4 +1,8 @@
-import { requireUser } from "@/lib/auth/session";
+import { isAccountPreviewMode, requireUser } from "@/lib/auth/session";
+import {
+  getDevPreviewOnboardingState,
+  getDevPreviewSidebarRecents,
+} from "@/lib/dev/preview-account";
 import { getOnboardingState } from "@/lib/db/onboarding";
 import { listJournalRecentsForSidebar } from "@/lib/entries/service";
 import { bodySnippetForSidebar } from "@/lib/text/entry-sidebar-preview";
@@ -6,6 +10,19 @@ import { bodySnippetForSidebar } from "@/lib/text/entry-sidebar-preview";
 import { AppSidebarClient } from "./app-sidebar-client";
 
 export async function AppSidebar() {
+  const preview = await isAccountPreviewMode();
+
+  if (preview) {
+    const onboarding = getDevPreviewOnboardingState();
+    return (
+      <AppSidebarClient
+        userLabel={onboarding.displayName?.trim() || "Alex (preview)"}
+        recents={getDevPreviewSidebarRecents()}
+        previewMode
+      />
+    );
+  }
+
   const user = await requireUser();
   const [entries, onboarding] = await Promise.all([
     listJournalRecentsForSidebar(user.id),
