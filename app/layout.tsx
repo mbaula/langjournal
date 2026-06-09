@@ -2,10 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist_Mono, Inter } from "next/font/google";
 
 import { AccentProvider } from "@/components/accent-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ACCENT_IDS, LEGACY_ACCENT_IDS } from "@/lib/theme/accent";
 import "./globals.css";
 
-const accentBootScript = `(function(){try{document.documentElement.classList.remove("dark");localStorage.removeItem("theme");var a=localStorage.getItem("accent");var leg=${JSON.stringify(LEGACY_ACCENT_IDS)};if(a&&leg[a])a=leg[a];var accents=${JSON.stringify(ACCENT_IDS)};document.documentElement.dataset.accent=accents.indexOf(a)>=0?a:"gray";}catch(e){}})();`;
+const themeBootScript = `(function(){try{var path=window.location.pathname;var forceLight=path==="/";var t=localStorage.getItem("theme");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;var dark=!forceLight&&(t==="dark"||((t===null||t==="system"||t==="")&&d));document.documentElement.classList.toggle("dark",dark);var a=localStorage.getItem("accent");var leg=${JSON.stringify(LEGACY_ACCENT_IDS)};if(a&&leg[a])a=leg[a];var accents=${JSON.stringify(ACCENT_IDS)};document.documentElement.dataset.accent=accents.indexOf(a)>=0?a:"gray";}catch(e){}})();`;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -50,11 +51,13 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} ${folioDisplay.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: accentBootScript }} />
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body className="relative flex min-h-full flex-col">
         <div className="app-grain" aria-hidden />
-        <AccentProvider>{children}</AccentProvider>
+        <ThemeProvider>
+          <AccentProvider>{children}</AccentProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -93,6 +95,43 @@
   --contribution-fill: oklch(0.55 0 0);
 }
 
+/* Dark mode — neutral charcoal (achromatic, no blue/warm hue) */
+.dark {
+  --background: oklch(0.2 0 0);
+  --foreground: oklch(0.93 0 0);
+  --card: oklch(0.24 0 0);
+  --card-foreground: oklch(0.93 0 0);
+  --popover: oklch(0.25 0 0);
+  --popover-foreground: oklch(0.93 0 0);
+  --secondary: oklch(0.3 0 0);
+  --secondary-foreground: oklch(0.93 0 0);
+  --muted: oklch(0.28 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.32 0 0);
+  --accent-foreground: oklch(0.93 0 0);
+  --destructive: oklch(0.62 0.2 22);
+  --border: oklch(0.38 0 0 / 45%);
+  --input: oklch(0.34 0 0 / 55%);
+  --ring: oklch(0.52 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --app-shell: oklch(0.22 0 0);
+  --sidebar: var(--app-shell);
+  --sidebar-foreground: oklch(0.91 0 0);
+  --primary: oklch(0.78 0 0);
+  --primary-foreground: oklch(0.12 0 0);
+  --sidebar-primary: oklch(0.78 0 0);
+  --sidebar-primary-foreground: oklch(0.12 0 0);
+  --sidebar-accent: oklch(0.26 0 0);
+  --sidebar-accent-foreground: oklch(0.93 0 0);
+  --sidebar-border: oklch(0.34 0 0 / 50%);
+  --sidebar-ring: oklch(0.52 0 0);
+  --contribution-fill: oklch(0.58 0 0);
+}
+
 /* Film grain — fixed overlay, soft-light so it reads over solid UIs; below z-50 popovers */
 .app-grain {
   position: fixed;
@@ -106,12 +145,17 @@
   mix-blend-mode: soft-light;
 }
 
+.dark .app-grain {
+  opacity: 0.065;
+}
+
 /*
  * Accent palettes (Customize menu)
  * --------------------------------
  * Source of truth for accent colors. IDs must match lib/theme/accent.ts (AccentId).
  *
- * Selectors: html[data-accent="<id>"]. Legacy ids (sand, sage, …) are aliased on each block.
+ * Selectors: html[data-accent="<id>"] (light), html.dark[data-accent="<id>"] (dark).
+ * Legacy ids (sand, sage, …) are aliased on each block.
  * Gray uses :root only (no data-accent block).
  *
  * Per palette, override these roles (8 values + sidebar alias):
@@ -122,7 +166,7 @@
  *   --contribution-fill  Contribution chart
  *   --sidebar-border, --sidebar-ring  Optional chrome
  *
- * Main journal content stays --background (white), not tinted here.
+ * Main journal content stays --background (white / dark card), not tinted here.
  */
 /* Green — muted #C8D5CC */
 html[data-accent="green"],
@@ -139,6 +183,21 @@ html[data-accent="sage"] {
   --contribution-fill: #8fa899;
 }
 
+html.dark[data-accent="green"],
+html.dark[data-accent="sage"] {
+  --app-shell: #2a302c;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #353d38;
+  --sidebar-border: #404a44;
+  --sidebar-ring: #7f9686;
+  --sidebar-primary: #a8bdb0;
+  --sidebar-primary-foreground: #1e2420;
+  --primary: #a8bdb0;
+  --primary-foreground: #1e2420;
+  --contribution-fill: #8fa899;
+}
+
+
 html[data-accent="blue"],
 html[data-accent="slate"] {
   --app-shell: oklch(0.94 0.038 250);
@@ -152,6 +211,21 @@ html[data-accent="slate"] {
   --primary-foreground: oklch(0.99 0 0);
   --contribution-fill: oklch(0.64 0.1 250);
 }
+
+html.dark[data-accent="blue"],
+html.dark[data-accent="slate"] {
+  --app-shell: oklch(0.22 0.048 250);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.27 0.052 250);
+  --sidebar-border: oklch(0.34 0.028 250 / 50%);
+  --sidebar-ring: oklch(0.52 0.06 250);
+  --sidebar-primary: oklch(0.7 0.1 250);
+  --sidebar-primary-foreground: oklch(0.16 0.02 250);
+  --primary: oklch(0.7 0.1 250);
+  --primary-foreground: oklch(0.16 0.02 250);
+  --contribution-fill: oklch(0.7 0.1 250);
+}
+
 
 /* Yellow — butter #FBE29D */
 html[data-accent="yellow"],
@@ -168,6 +242,21 @@ html[data-accent="sand"] {
   --contribution-fill: #e8b840;
 }
 
+html.dark[data-accent="yellow"],
+html.dark[data-accent="sand"] {
+  --app-shell: #2e2a1c;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #3d3824;
+  --sidebar-border: #4a442c;
+  --sidebar-ring: #a88430;
+  --sidebar-primary: #f2c75c;
+  --sidebar-primary-foreground: #2a2210;
+  --primary: #f2c75c;
+  --primary-foreground: #2a2210;
+  --contribution-fill: #e8b840;
+}
+
+
 /* Pink — soft baby pink (picker swatch unchanged in accent.ts) */
 html[data-accent="pink"],
 html[data-accent="rose"] {
@@ -183,6 +272,21 @@ html[data-accent="rose"] {
   --contribution-fill: #cc94a6;
 }
 
+html.dark[data-accent="pink"],
+html.dark[data-accent="rose"] {
+  --app-shell: #362a2e;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #423438;
+  --sidebar-border: #504044;
+  --sidebar-ring: #c08094;
+  --sidebar-primary: #dcb0c0;
+  --sidebar-primary-foreground: #24181c;
+  --primary: #dcb0c0;
+  --primary-foreground: #24181c;
+  --contribution-fill: #b88898;
+}
+
+
 html[data-accent="sky"],
 html[data-accent="mist"] {
   --app-shell: oklch(0.94 0.038 210);
@@ -196,6 +300,21 @@ html[data-accent="mist"] {
   --primary-foreground: oklch(0.99 0 0);
   --contribution-fill: oklch(0.64 0.1 210);
 }
+
+html.dark[data-accent="sky"],
+html.dark[data-accent="mist"] {
+  --app-shell: oklch(0.22 0.048 210);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.27 0.052 210);
+  --sidebar-border: oklch(0.34 0.028 210 / 50%);
+  --sidebar-ring: oklch(0.52 0.06 210);
+  --sidebar-primary: oklch(0.7 0.1 210);
+  --sidebar-primary-foreground: oklch(0.16 0.02 210);
+  --primary: oklch(0.7 0.1 210);
+  --primary-foreground: oklch(0.16 0.02 210);
+  --contribution-fill: oklch(0.7 0.1 210);
+}
+
 
 /* Muted lavender anchor #AB92BF */
 html[data-accent="purple"] {
@@ -211,6 +330,20 @@ html[data-accent="purple"] {
   --contribution-fill: #9580ab;
 }
 
+html.dark[data-accent="purple"] {
+  --app-shell: #2c2834;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #3a3544;
+  --sidebar-border: #484354;
+  --sidebar-ring: #8a7898;
+  --sidebar-primary: #c4b0d4;
+  --sidebar-primary-foreground: #221c28;
+  --primary: #c4b0d4;
+  --primary-foreground: #221c28;
+  --contribution-fill: #ab92bf;
+}
+
+
 html[data-accent="red"] {
   --app-shell: oklch(0.9 0.08 27);
   --sidebar: var(--app-shell);
@@ -223,6 +356,20 @@ html[data-accent="red"] {
   --primary-foreground: oklch(0.99 0 0);
   --contribution-fill: oklch(0.66 0.17 27);
 }
+
+html.dark[data-accent="red"] {
+  --app-shell: oklch(0.24 0.065 27);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.29 0.075 27);
+  --sidebar-border: oklch(0.34 0.05 27 / 50%);
+  --sidebar-ring: oklch(0.55 0.12 27);
+  --sidebar-primary: oklch(0.72 0.17 27);
+  --sidebar-primary-foreground: oklch(0.16 0.03 27);
+  --primary: oklch(0.72 0.17 27);
+  --primary-foreground: oklch(0.16 0.03 27);
+  --contribution-fill: oklch(0.72 0.17 27);
+}
+
 
 /* Muted orange #E8C9A8 (replaces brown) */
 html[data-accent="orange"],
@@ -239,6 +386,21 @@ html[data-accent="brown"] {
   --contribution-fill: #c9a06a;
 }
 
+html.dark[data-accent="orange"],
+html.dark[data-accent="brown"] {
+  --app-shell: #2e2a24;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #3a352c;
+  --sidebar-border: #484234;
+  --sidebar-ring: #a88458;
+  --sidebar-primary: #e0b888;
+  --sidebar-primary-foreground: #2a2218;
+  --primary: #e0b888;
+  --primary-foreground: #2a2218;
+  --contribution-fill: #c9a06a;
+}
+
+
 /* Muted teal #B8D4D4 */
 html[data-accent="teal"] {
   --app-shell: #b8d4d4;
@@ -252,6 +414,20 @@ html[data-accent="teal"] {
   --primary-foreground: #fffdf8;
   --contribution-fill: #7fa8a8;
 }
+
+html.dark[data-accent="teal"] {
+  --app-shell: #262f2f;
+  --sidebar: var(--app-shell);
+  --sidebar-accent: #303c3c;
+  --sidebar-border: #3c4a4a;
+  --sidebar-ring: #6a9090;
+  --sidebar-primary: #a8c8c8;
+  --sidebar-primary-foreground: #1c2424;
+  --primary: #a8c8c8;
+  --primary-foreground: #1c2424;
+  --contribution-fill: #7fa8a8;
+}
+
 
 /*
  * Marketing site — fixed blue brand palette (independent of user accent on html).
@@ -269,6 +445,20 @@ html[data-accent="teal"] {
   --primary-foreground: oklch(0.99 0 0);
   --contribution-fill: oklch(0.64 0.1 250);
 }
+
+html.dark [data-marketing-theme="blue"] {
+  --app-shell: oklch(0.22 0.048 250);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.27 0.052 250);
+  --sidebar-border: oklch(0.34 0.028 250 / 50%);
+  --sidebar-ring: oklch(0.52 0.06 250);
+  --sidebar-primary: oklch(0.7 0.1 250);
+  --sidebar-primary-foreground: oklch(0.16 0.02 250);
+  --primary: oklch(0.7 0.1 250);
+  --primary-foreground: oklch(0.16 0.02 250);
+  --contribution-fill: oklch(0.7 0.1 250);
+}
+
 
 /* Explicit utilities so backgrounds always resolve --app-shell / --sidebar at runtime. */
 @layer utilities {
