@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, Home, LogOut, Plus, Settings, User } from "lucide-react";
 
 import { CustomizeMenu } from "@/components/app/customize-menu";
+import { FeedbackButton } from "@/components/feedback/feedback-button";
 import { SidebarBrandFooter } from "@/components/app/sidebar-brand-footer";
 import { sidebarNavItemClass } from "@/components/app/sidebar-nav-styles";
 import { SidebarRecentEntryItem } from "@/components/app/sidebar-recent-entry-item";
@@ -426,6 +427,7 @@ export function AppSidebarClient({
               })}
             </ul>
           )}
+          <FeedbackButton variant="sidebar" className="mt-3 shrink-0" />
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FolioWordmark } from "@/components/app/folio-wordmark";
+import { FeedbackButton } from "@/components/feedback/feedback-button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export function MarketingNav() {
           <Link href="/#solution" className={cn(navLinkClass, "hidden sm:inline-flex")}>
             Features
           </Link>
+          <FeedbackButton variant="nav" />
           <Link
             href="/login"
             className={cn(
