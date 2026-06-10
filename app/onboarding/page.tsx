@@ -23,6 +23,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   if (previewOnboarding) {
     return (
       <div
+        data-force-light-scope
         data-marketing-theme="blue"
         className="min-h-dvh bg-background text-foreground transition-colors"
       >
@@ -40,6 +41,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
 
   return (
     <div
+      data-force-light-scope
       data-marketing-theme="blue"
       className="min-h-dvh bg-background text-foreground transition-colors"
     >

@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(html.dark:not([data-force-light]) *));
 
 @theme inline {
   --color-background: var(--background);
@@ -95,8 +95,62 @@
   --contribution-fill: oklch(0.55 0 0);
 }
 
+/*
+ * Scoped light mode for marketing home + onboarding.
+ * Sets tokens on this element so children ignore html.dark inheritance.
+ */
+[data-force-light-scope] {
+  color-scheme: light;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --app-shell: oklch(0.955 0 0);
+  --sidebar: var(--app-shell);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.36 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --sidebar-primary: oklch(0.42 0 0);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.91 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  --contribution-fill: oklch(0.55 0 0);
+}
+
+[data-force-light-scope][data-marketing-theme="blue"] {
+  --app-shell: oklch(0.94 0.038 250);
+  --sidebar: var(--app-shell);
+  --sidebar-accent: oklch(0.86 0.048 250);
+  --sidebar-border: oklch(0.9 0.016 250);
+  --sidebar-ring: oklch(0.6 0.05 250);
+  --sidebar-primary: oklch(0.46 0.09 250);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.48 0.09 250);
+  --primary-foreground: oklch(0.99 0 0);
+  --contribution-fill: oklch(0.64 0.1 250);
+}
+
 /* Dark mode — neutral charcoal (achromatic, no blue/warm hue) */
-.dark {
+html.dark:not([data-force-light]) {
   --background: oklch(0.2 0 0);
   --foreground: oklch(0.93 0 0);
   --card: oklch(0.24 0 0);
@@ -145,7 +199,7 @@
   mix-blend-mode: soft-light;
 }
 
-.dark .app-grain {
+html.dark:not([data-force-light]) .app-grain {
   opacity: 0.065;
 }
 
@@ -154,7 +208,7 @@
  * --------------------------------
  * Source of truth for accent colors. IDs must match lib/theme/accent.ts (AccentId).
  *
- * Selectors: html[data-accent="<id>"] (light), html.dark[data-accent="<id>"] (dark).
+ * Selectors: html[data-accent="<id>"] (light), html.dark:not([data-force-light])[data-accent="<id>"] (dark).
  * Legacy ids (sand, sage, …) are aliased on each block.
  * Gray uses :root only (no data-accent block).
  *
@@ -183,8 +237,8 @@ html[data-accent="sage"] {
   --contribution-fill: #8fa899;
 }
 
-html.dark[data-accent="green"],
-html.dark[data-accent="sage"] {
+html.dark:not([data-force-light])[data-accent="green"],
+html.dark:not([data-force-light])[data-accent="sage"] {
   --app-shell: #2a302c;
   --sidebar: var(--app-shell);
   --sidebar-accent: #353d38;
@@ -212,8 +266,8 @@ html[data-accent="slate"] {
   --contribution-fill: oklch(0.64 0.1 250);
 }
 
-html.dark[data-accent="blue"],
-html.dark[data-accent="slate"] {
+html.dark:not([data-force-light])[data-accent="blue"],
+html.dark:not([data-force-light])[data-accent="slate"] {
   --app-shell: oklch(0.22 0.048 250);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.27 0.052 250);
@@ -242,8 +296,8 @@ html[data-accent="sand"] {
   --contribution-fill: #e8b840;
 }
 
-html.dark[data-accent="yellow"],
-html.dark[data-accent="sand"] {
+html.dark:not([data-force-light])[data-accent="yellow"],
+html.dark:not([data-force-light])[data-accent="sand"] {
   --app-shell: #2e2a1c;
   --sidebar: var(--app-shell);
   --sidebar-accent: #3d3824;
@@ -272,8 +326,8 @@ html[data-accent="rose"] {
   --contribution-fill: #cc94a6;
 }
 
-html.dark[data-accent="pink"],
-html.dark[data-accent="rose"] {
+html.dark:not([data-force-light])[data-accent="pink"],
+html.dark:not([data-force-light])[data-accent="rose"] {
   --app-shell: #362a2e;
   --sidebar: var(--app-shell);
   --sidebar-accent: #423438;
@@ -301,8 +355,8 @@ html[data-accent="mist"] {
   --contribution-fill: oklch(0.64 0.1 210);
 }
 
-html.dark[data-accent="sky"],
-html.dark[data-accent="mist"] {
+html.dark:not([data-force-light])[data-accent="sky"],
+html.dark:not([data-force-light])[data-accent="mist"] {
   --app-shell: oklch(0.22 0.048 210);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.27 0.052 210);
@@ -330,7 +384,7 @@ html[data-accent="purple"] {
   --contribution-fill: #9580ab;
 }
 
-html.dark[data-accent="purple"] {
+html.dark:not([data-force-light])[data-accent="purple"] {
   --app-shell: #2c2834;
   --sidebar: var(--app-shell);
   --sidebar-accent: #3a3544;
@@ -357,7 +411,7 @@ html[data-accent="red"] {
   --contribution-fill: oklch(0.66 0.17 27);
 }
 
-html.dark[data-accent="red"] {
+html.dark:not([data-force-light])[data-accent="red"] {
   --app-shell: oklch(0.24 0.065 27);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.29 0.075 27);
@@ -386,8 +440,8 @@ html[data-accent="brown"] {
   --contribution-fill: #c9a06a;
 }
 
-html.dark[data-accent="orange"],
-html.dark[data-accent="brown"] {
+html.dark:not([data-force-light])[data-accent="orange"],
+html.dark:not([data-force-light])[data-accent="brown"] {
   --app-shell: #2e2a24;
   --sidebar: var(--app-shell);
   --sidebar-accent: #3a352c;
@@ -415,7 +469,7 @@ html[data-accent="teal"] {
   --contribution-fill: #7fa8a8;
 }
 
-html.dark[data-accent="teal"] {
+html.dark:not([data-force-light])[data-accent="teal"] {
   --app-shell: #262f2f;
   --sidebar: var(--app-shell);
   --sidebar-accent: #303c3c;
@@ -446,7 +500,7 @@ html.dark[data-accent="teal"] {
   --contribution-fill: oklch(0.64 0.1 250);
 }
 
-html.dark [data-marketing-theme="blue"] {
+html.dark:not([data-force-light]) [data-marketing-theme="blue"] {
   --app-shell: oklch(0.22 0.048 250);
   --sidebar: var(--app-shell);
   --sidebar-accent: oklch(0.27 0.052 250);
