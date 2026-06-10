@@ -4,12 +4,14 @@ import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { DevAccountPreviewBanner } from "@/components/app/dev-account-preview-banner";
 import { EntryProvider, type JournalEntry } from "@/lib/entries/entry-context";
 import { cn } from "@/lib/utils";
 
 type AppLayoutClientProps = {
   sidebar: React.ReactNode;
   children: React.ReactNode;
+  accountPreview?: boolean;
   initialEntry?: JournalEntry | null;
   initialEntryId?: string | null;
 };
@@ -19,6 +21,7 @@ const MOBILE_QUERY = "(max-width: 1023px)";
 export function AppLayoutClient({
   sidebar,
   children,
+  accountPreview = false,
   initialEntry,
   initialEntryId,
 }: AppLayoutClientProps) {
@@ -133,10 +136,11 @@ export function AppLayoutClient({
 
           <main
             className={cn(
-              "flex min-h-[calc(100dvh-1rem)] flex-1 flex-col rounded-xl border border-border/80 bg-background shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] transition-[background-color,border-color,box-shadow] duration-300 ease-out dark:border-border/60 dark:shadow-[0_2px_16px_-6px_rgba(0,0,0,0.45)]",
+              "flex min-h-[calc(100dvh-1rem)] flex-1 flex-col rounded-xl border border-border/80 bg-background shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] transition-[background-color,border-color,box-shadow] duration-300 ease-out",
               "max-lg:min-h-dvh max-lg:rounded-none max-lg:border-x-0 max-lg:shadow-none",
             )}
           >
+            {accountPreview ? <DevAccountPreviewBanner /> : null}
             <div className="flex-1">
               <div
                 className={cn(

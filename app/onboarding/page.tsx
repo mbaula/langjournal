@@ -9,9 +9,28 @@ type OnboardingPageProps = {
   searchParams: Promise<{ preview?: string }>;
 };
 
+const emptyOnboardingState = {
+  displayName: null,
+  ageRange: null,
+  languages: [],
+  isComplete: false,
+} as const;
+
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const { preview } = await searchParams;
   const previewOnboarding = isDevPreviewParam(preview, "onboarding");
+
+  if (previewOnboarding) {
+    return (
+      <div
+        data-force-light-scope
+        data-marketing-theme="blue"
+        className="min-h-dvh bg-background text-foreground transition-colors"
+      >
+        <OnboardingFlow initialState={emptyOnboardingState} />
+      </div>
+    );
+  }
 
   const user = await requireUser("/onboarding");
   const onboarding = await getOnboardingState(user.id);
@@ -21,11 +40,12 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   }
 
   return (
-    <div className="min-h-screen bg-background transition-colors">
-      <OnboardingFlow
-        initialState={onboarding}
-        previewMode={previewOnboarding}
-      />
+    <div
+      data-force-light-scope
+      data-marketing-theme="blue"
+      className="min-h-dvh bg-background text-foreground transition-colors"
+    >
+      <OnboardingFlow initialState={onboarding} />
     </div>
   );
 }

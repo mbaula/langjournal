@@ -2,10 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X } from "lucide-react";
+import { ArrowRight, Plus, X } from "lucide-react";
 
+import {
+  marketingFlowDescriptionClassName,
+  marketingFlowEyebrowClassName,
+  marketingFlowFieldClassName,
+  marketingFlowNavButtonClassName,
+  marketingFlowTitleClassName,
+} from "@/components/marketing/marketing-flow-styles";
+import {
+  ONBOARDING_QUESTION_COUNT,
+} from "@/components/onboarding/onboarding-progress";
+import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import {
+  OnboardingStepTransition,
+  type OnboardingStepDirection,
+} from "@/components/onboarding/onboarding-step-transition";
 import { Button } from "@/components/ui/button";
-import { OnboardingExitHeader } from "@/components/onboarding/onboarding-exit-header";
 import type { OnboardingState, UserLanguageEntry } from "@/lib/db/onboarding";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
@@ -15,6 +29,7 @@ import {
   ONBOARDING_AGE_RANGES,
   ONBOARDING_LANGUAGE_LEVELS,
 } from "@/lib/onboarding/labels";
+import { cn } from "@/lib/utils";
 
 type Lang = { code: string; name: string };
 
@@ -36,17 +51,55 @@ const LEVEL_COPY: Record<
   },
 };
 
+const selectChevronClass =
+  "pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground";
+
 type OnboardingFlowProps = {
   initialState: OnboardingState;
-  previewMode?: boolean;
 };
 
-export function OnboardingFlow({
-  initialState,
-  previewMode = false,
-}: OnboardingFlowProps) {
+function OnboardingStepIntro({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <>
+      <h1 className={marketingFlowTitleClassName}>{title}</h1>
+      <p className={marketingFlowDescriptionClassName}>{description}</p>
+    </>
+  );
+}
+
+function OnboardingNextButton({
+  onClick,
+  disabled = false,
+  loading = false,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="default"
+      onClick={onClick}
+      disabled={disabled || loading}
+      className="h-10 gap-1.5 rounded-full px-5 text-[13px] shadow-sm"
+    >
+      {loading ? "Saving…" : "Next"}
+      {!loading ? <ArrowRight className="size-4" strokeWidth={2} /> : null}
+    </Button>
+  );
+}
+
+export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState<OnboardingStepDirection>("forward");
   const [name, setName] = useState(initialState.displayName ?? "");
   const [ageRange, setAgeRange] = useState(initialState.ageRange ?? "");
   const [userLanguages, setUserLanguages] = useState<UserLanguageEntry[]>(
@@ -60,7 +113,14 @@ export function OnboardingFlow({
 
   const [addingLanguage, setAddingLanguage] = useState(false);
   const [newLangCode, setNewLangCode] = useState("");
-  const [newLangLevel, setNewLangLevel] = useState<OnboardingLanguageLevel | "">("");
+  const [newLangLevel, setNewLangLevel] = useState<OnboardingLanguageLevel | "">(
+    "",
+  );
+
+  const goToStep = useCallback((next: number) => {
+    setDirection(next > step ? "forward" : "back");
+    setStep(next);
+  }, [step]);
 
   useEffect(() => {
     let cancelled = false;
@@ -157,6 +217,7 @@ export function OnboardingFlow({
         setError(data.error ?? "Could not save onboarding");
         return;
       }
+      setDirection("forward");
       setCompleted(true);
     } catch {
       setError("Could not save onboarding");
@@ -165,22 +226,15 @@ export function OnboardingFlow({
     }
   }
 
-  return (
-    <div className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center px-6 pb-16 pt-20">
-      <OnboardingExitHeader previewMode={previewMode} />
-      {previewMode ? (
-        <p className="absolute inset-x-0 top-[max(4.5rem,env(safe-area-inset-top,0px))] z-10 px-6 text-center text-[12px] text-muted-foreground">
-          Dev preview — pre-filled from your profile. Submit only if you want to
-          save changes.
-        </p>
-      ) : null}
-      {/* Completion */}
-      {completed ? (
-        <div className="flex flex-col items-center text-center">
-          <h1 className="text-[2rem] font-semibold tracking-tight text-foreground sm:text-[2.5rem]">
-            {completionHeading}
-          </h1>
-          <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
+  if (completed) {
+    return (
+      <OnboardingShell showProgress={false} error={error}>
+        <OnboardingStepTransition step={0} direction="forward">
+          <p className={cn("mb-3", marketingFlowEyebrowClassName)}>
+            Setup complete
+          </p>
+          <h1 className={marketingFlowTitleClassName}>{completionHeading}</h1>
+          <p className={marketingFlowDescriptionClassName}>
             Your journal is ready. Start writing and use{" "}
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
               {"//"}
@@ -190,278 +244,319 @@ export function OnboardingFlow({
           </p>
           <Button
             onClick={() => router.push("/app/journal")}
-            className="mt-8 h-12 rounded-full px-8 text-[15px]"
+            className="mt-8 h-12 rounded-full px-8 text-[15px] shadow-sm"
           >
             Start journaling
           </Button>
-        </div>
-      ) : null}
+        </OnboardingStepTransition>
+      </OnboardingShell>
+    );
+  }
 
-      {/* Step 1: Name */}
-      {!completed && step === 1 ? (
-        <>
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-[2rem] font-semibold tracking-tight text-foreground sm:text-[2.5rem]">
-              What&apos;s your name?
-            </h1>
-            <p className="mt-2 text-[15px] text-muted-foreground">
-              This is just for personalizing your experience!
-            </p>
-            <input
-              type="text"
-              value={name}
-              maxLength={50}
-              placeholder="Your name or nickname..."
-              className="mt-10 h-14 w-full max-w-xs rounded-full bg-muted/60 px-6 text-center text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none transition-colors focus:bg-muted/80 dark:bg-muted/40 dark:focus:bg-muted/50"
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") setStep(2);
-              }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => setStep(2)}
-            className="absolute right-6 bottom-8 text-[13px] text-muted-foreground hover:text-foreground transition-colors sm:right-10 sm:bottom-10"
-          >
-            Skip
-          </button>
-        </>
-      ) : null}
-
-      {/* Step 2: Age */}
-      {!completed && step === 2 ? (
-        <>
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-[2rem] font-semibold tracking-tight text-foreground sm:text-[2.5rem]">
-              How old are you?
-            </h1>
-            <p className="mt-2 text-[15px] text-muted-foreground">
-              This helps us tailor prompts and suggestions to you.
-            </p>
-            <div className="relative mt-10 w-full max-w-xs">
-              <select
-                value={ageRange}
-                onChange={(e) => setAgeRange(e.target.value)}
-                className="h-14 w-full cursor-pointer appearance-none rounded-full bg-muted/60 pl-6 pr-12 text-center text-[15px] text-foreground outline-none transition-colors focus:bg-muted/80 dark:bg-muted/40 dark:focus:bg-muted/50"
+  if (step === 1) {
+    return (
+      <OnboardingShell
+        step={step}
+        questionCount={ONBOARDING_QUESTION_COUNT}
+        error={error}
+        footer={
+          <>
+            <span aria-hidden className="min-w-[3rem]" />
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => goToStep(2)}
+                className={marketingFlowNavButtonClassName}
               >
-                <option value="">Select age range...</option>
-                {ONBOARDING_AGE_RANGES.map((value) => (
-                  <option key={value} value={value}>
-                    {AGE_RANGE_LABELS[value]}
-                  </option>
-                ))}
-              </select>
-              <svg
-                className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+                Skip
+              </button>
+              {name.trim() ? (
+                <OnboardingNextButton onClick={() => goToStep(2)} />
+              ) : null}
             </div>
-          </div>
-          <div className="absolute right-6 bottom-8 flex items-center gap-6 sm:right-10 sm:bottom-10">
+          </>
+        }
+      >
+        <OnboardingStepTransition step={step} direction={direction}>
+          <OnboardingStepIntro
+            title="What's your name?"
+            description="This is just for personalizing your experience."
+          />
+          <input
+            type="text"
+            value={name}
+            maxLength={50}
+            placeholder="Your name or nickname..."
+            className={cn(marketingFlowFieldClassName, "mt-8")}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") goToStep(2);
+            }}
+          />
+        </OnboardingStepTransition>
+      </OnboardingShell>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <OnboardingShell
+        step={step}
+        questionCount={ONBOARDING_QUESTION_COUNT}
+        error={error}
+        footer={
+          <>
             <button
               type="button"
-              onClick={() => setStep(1)}
-              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => goToStep(1)}
+              className={marketingFlowNavButtonClassName}
             >
               Back
             </button>
-            <button
-              type="button"
-              onClick={() => setStep(3)}
-              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {ageRange ? "Continue" : "Skip"}
-            </button>
-          </div>
-        </>
-      ) : null}
-
-      {/* Step 3: Languages */}
-      {!completed && step === 3 ? (
-        <>
-          <div className="flex w-full max-w-lg flex-col items-center text-center">
-            <h1 className="text-[1.75rem] font-semibold tracking-tight text-foreground sm:text-[2rem]">
-              What languages are you learning?
-            </h1>
-            <p className="mt-2 text-[15px] text-muted-foreground">
-              Add at least one language. You can always update this later.
-            </p>
-
-            {/* Added languages */}
-            {userLanguages.length > 0 ? (
-              <div className="mt-8 w-full space-y-3">
-                {userLanguages.map((lang) => (
-                  <div
-                    key={lang.languageCode}
-                    className="flex items-center gap-3 rounded-2xl bg-muted/60 p-4 dark:bg-muted/40"
-                  >
-                    <div className="min-w-0 flex-1 text-left">
-                      <p className="text-[15px] font-medium text-foreground">
-                        {getLanguageName(lang.languageCode)}
-                      </p>
-                    </div>
-                    <div className="relative">
-                      <select
-                        value={lang.level}
-                        onChange={(e) =>
-                          updateLanguageLevel(
-                            lang.languageCode,
-                            e.target.value as OnboardingLanguageLevel,
-                          )
-                        }
-                        className="h-9 cursor-pointer appearance-none rounded-full bg-background/80 pl-3 pr-8 text-[13px] text-foreground outline-none dark:bg-background/50"
-                      >
-                        {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
-                          <option key={level} value={level}>
-                            {LANGUAGE_LEVEL_LABELS[level]}
-                          </option>
-                        ))}
-                      </select>
-                      <svg
-                        className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeLanguage(lang.languageCode)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
-                      aria-label={`Remove ${getLanguageName(lang.languageCode)}`}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            {/* Add language form */}
-            {addingLanguage ? (
-              <div className="mt-4 w-full rounded-2xl border-2 border-dashed border-border/60 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <div className="relative flex-1">
-                    <select
-                      value={newLangCode}
-                      onChange={(e) => setNewLangCode(e.target.value)}
-                      disabled={loadingLanguages}
-                      className="h-12 w-full cursor-pointer appearance-none rounded-full bg-muted/60 pl-4 pr-10 text-[14px] text-foreground outline-none transition-colors focus:bg-muted/80 disabled:opacity-50 dark:bg-muted/40"
-                    >
-                      <option value="">
-                        {loadingLanguages ? "Loading..." : "Select language..."}
-                      </option>
-                      {unusedLanguages.map((language) => (
-                        <option key={language.code} value={language.code}>
-                          {language.name}
-                        </option>
-                      ))}
-                    </select>
-                    <svg
-                      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                  <div className="relative flex-1">
-                    <select
-                      value={newLangLevel}
-                      onChange={(e) => setNewLangLevel(e.target.value as OnboardingLanguageLevel)}
-                      className="h-12 w-full cursor-pointer appearance-none rounded-full bg-muted/60 pl-4 pr-10 text-[14px] text-foreground outline-none transition-colors focus:bg-muted/80 dark:bg-muted/40"
-                    >
-                      <option value="">Select level...</option>
-                      {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
-                        <option key={level} value={level}>
-                          {LEVEL_COPY[level].title} — {LEVEL_COPY[level].description}
-                        </option>
-                      ))}
-                    </select>
-                    <svg
-                      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="mt-3 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAddingLanguage(false);
-                      setNewLangCode("");
-                      setNewLangLevel("");
-                    }}
-                    className="rounded-full px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={addLanguage}
-                    disabled={!newLangCode || !newLangLevel}
-                    className="rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-opacity disabled:opacity-40"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
+            {ageRange ? (
+              <OnboardingNextButton onClick={() => goToStep(3)} />
             ) : (
               <button
                 type="button"
-                onClick={() => setAddingLanguage(true)}
-                className="mt-6 flex items-center gap-2 rounded-full bg-muted/60 px-5 py-3 text-[14px] text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground dark:bg-muted/40 dark:hover:bg-muted/50"
+                onClick={() => goToStep(3)}
+                className={marketingFlowNavButtonClassName}
               >
-                <Plus className="h-4 w-4" />
-                Add a language
+                Skip
               </button>
             )}
-          </div>
-
-          <div className="absolute right-6 bottom-8 flex items-center gap-6 sm:right-10 sm:bottom-10">
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+          </>
+        }
+      >
+        <OnboardingStepTransition step={step} direction={direction}>
+          <OnboardingStepIntro
+            title="How old are you?"
+            description="This helps us tailor prompts and suggestions to you. Your answers are anonymous."
+          />
+          <div className="relative mt-8">
+            <select
+              value={ageRange}
+              onChange={(e) => setAgeRange(e.target.value)}
+              className={cn(
+                marketingFlowFieldClassName,
+                "cursor-pointer appearance-none pr-12",
+              )}
             >
-              Back
-            </button>
-            {userLanguages.length > 0 ? (
+              <option value="">Select age range...</option>
+              {ONBOARDING_AGE_RANGES.map((value) => (
+                <option key={value} value={value}>
+                  {AGE_RANGE_LABELS[value]}
+                </option>
+              ))}
+            </select>
+            <svg
+              className={cn(selectChevronClass, "right-5")}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </OnboardingStepTransition>
+      </OnboardingShell>
+    );
+  }
+
+  return (
+    <OnboardingShell
+      step={step}
+      questionCount={ONBOARDING_QUESTION_COUNT}
+      wideContent
+      error={error}
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={() => goToStep(2)}
+            className={marketingFlowNavButtonClassName}
+          >
+            Back
+          </button>
+          {userLanguages.length > 0 ? (
+            <OnboardingNextButton
+              onClick={() => void finishOnboarding()}
+              loading={submitting}
+            />
+          ) : (
+            <span aria-hidden className="min-w-[3rem]" />
+          )}
+        </>
+      }
+    >
+      <OnboardingStepTransition step={step} direction={direction}>
+        <OnboardingStepIntro
+          title="What languages are you learning?"
+          description="Add at least one language. You can always update this later."
+        />
+
+        {userLanguages.length > 0 ? (
+          <div className="mt-8 w-full space-y-3">
+            {userLanguages.map((lang) => (
+              <div
+                key={lang.languageCode}
+                className="flex items-center gap-3 rounded-2xl border border-border/80 bg-background/80 p-4 shadow-sm"
+              >
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-[15px] font-medium text-foreground">
+                    {getLanguageName(lang.languageCode)}
+                  </p>
+                </div>
+                <div className="relative">
+                  <select
+                    value={lang.level}
+                    onChange={(e) =>
+                      updateLanguageLevel(
+                        lang.languageCode,
+                        e.target.value as OnboardingLanguageLevel,
+                      )
+                    }
+                    className="h-9 cursor-pointer appearance-none rounded-full border border-border/80 bg-background pl-3 pr-8 text-[13px] text-foreground outline-none"
+                  >
+                    {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {LANGUAGE_LEVEL_LABELS[level]}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    className={cn(selectChevronClass, "right-2.5 size-3")}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeLanguage(lang.languageCode)}
+                  className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                  aria-label={`Remove ${getLanguageName(lang.languageCode)}`}
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {addingLanguage ? (
+          <div className="mt-4 w-full rounded-2xl border-2 border-dashed border-border/60 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="relative min-w-0 flex-1">
+                <select
+                  value={newLangCode}
+                  onChange={(e) => setNewLangCode(e.target.value)}
+                  disabled={loadingLanguages}
+                  className={cn(
+                    marketingFlowFieldClassName,
+                    "cursor-pointer appearance-none pr-10 text-[14px] disabled:opacity-50",
+                  )}
+                >
+                  <option value="">
+                    {loadingLanguages ? "Loading..." : "Select language..."}
+                  </option>
+                  {unusedLanguages.map((language) => (
+                    <option key={language.code} value={language.code}>
+                      {language.name}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className={cn(selectChevronClass, "right-4")}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+              <div className="relative min-w-0 flex-1">
+                <select
+                  value={newLangLevel}
+                  onChange={(e) =>
+                    setNewLangLevel(e.target.value as OnboardingLanguageLevel)
+                  }
+                  className={cn(
+                    marketingFlowFieldClassName,
+                    "cursor-pointer appearance-none pr-10 text-[14px]",
+                  )}
+                >
+                  <option value="">Select level...</option>
+                  {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
+                    <option key={level} value={level}>
+                      {LEVEL_COPY[level].title} — {LEVEL_COPY[level].description}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className={cn(selectChevronClass, "right-4")}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-3 flex justify-end gap-2">
               <button
                 type="button"
-                disabled={submitting}
-                onClick={() => void finishOnboarding()}
-                className="text-[13px] font-medium text-foreground hover:text-foreground/80 transition-colors disabled:opacity-50"
+                onClick={() => {
+                  setAddingLanguage(false);
+                  setNewLangCode("");
+                  setNewLangLevel("");
+                }}
+                className={marketingFlowNavButtonClassName}
               >
-                {submitting ? "Saving..." : "Continue"}
+                Cancel
               </button>
-            ) : null}
+              <button
+                type="button"
+                onClick={addLanguage}
+                disabled={!newLangCode || !newLangLevel}
+                className="rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-opacity disabled:opacity-40"
+              >
+                Add
+              </button>
+            </div>
           </div>
-        </>
-      ) : null}
-
-      {/* Error */}
-      {error ? (
-        <p className="absolute bottom-20 text-[13px] text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-    </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAddingLanguage(true)}
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-5 py-3 text-[14px] text-muted-foreground shadow-sm transition-colors hover:border-sidebar-primary/30 hover:text-foreground"
+          >
+            <Plus className="size-4" />
+            Add a language
+          </button>
+        )}
+      </OnboardingStepTransition>
+    </OnboardingShell>
   );
 }

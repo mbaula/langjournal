@@ -4,7 +4,7 @@
  * **Id = name:** `AccentId` is used for `html[data-accent]`, localStorage, and UI labels
  * (capitalized via `accentLabel`). Color tokens live in `app/globals.css`.
  *
- * **Adding an accent:** add to `AccentId` + `ACCENT_OPTIONS`, add light/dark blocks in
+ * **Adding an accent:** add to `AccentId` + `ACCENT_OPTIONS`, add a light palette block in
  * `globals.css`, and extend `LEGACY_ACCENT_IDS` if renaming an existing id.
  */
 export const ACCENT_STORAGE_KEY = "accent";

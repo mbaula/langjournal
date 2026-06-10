@@ -6,7 +6,8 @@ import {
   loginUrlWithAuthError,
 } from "@/lib/auth/callback-errors";
 import { safeNextPath } from "@/lib/auth/redirect";
-import { isDevPreviewParam } from "@/lib/dev/preview";
+import { DEV_ACCOUNT_PREVIEW_COOKIE } from "@/lib/dev/preview-account";
+import { isDevEnvironment, isDevPreviewParam } from "@/lib/dev/preview";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export async function updateSession(request: NextRequest) {
@@ -71,6 +72,31 @@ export async function updateSession(request: NextRequest) {
     url.pathname = safeNextPath(request.nextUrl.searchParams.get("redirectTo"));
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  const accountPreviewActive =
+    isDevEnvironment() &&
+    (isDevPreviewParam(
+      request.nextUrl.searchParams.get("preview"),
+      "account",
+    ) ||
+      request.cookies.get(DEV_ACCOUNT_PREVIEW_COOKIE)?.value === "1");
+
+  if (accountPreviewActive && pathname.startsWith("/app")) {
+    if (
+      isDevPreviewParam(
+        request.nextUrl.searchParams.get("preview"),
+        "account",
+      )
+    ) {
+      supabaseResponse.cookies.set(DEV_ACCOUNT_PREVIEW_COOKIE, "1", {
+        path: "/",
+        sameSite: "lax",
+        httpOnly: true,
+        maxAge: 60 * 60 * 8,
+      });
+    }
+    return supabaseResponse;
   }
 
   if (

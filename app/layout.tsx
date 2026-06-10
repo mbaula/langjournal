@@ -2,11 +2,15 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist_Mono, Inter } from "next/font/google";
 
 import { AccentProvider } from "@/components/accent-provider";
-import { ACCENT_IDS, LEGACY_ACCENT_IDS } from "@/lib/theme/accent";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ACCENT_IDS, LEGACY_ACCENT_IDS } from "@/lib/theme/accent";
+import {
+  FORCE_LIGHT_DATA_ATTR,
+  LIGHT_ONLY_PATHS,
+} from "@/lib/theme/light-only-paths";
 import "./globals.css";
 
-const themeBootScript = `(function(){try{var t=localStorage.getItem("theme");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;var dark=t==="dark"||((t===null||t==="system"||t==="")&&d);document.documentElement.classList.toggle("dark",dark);var a=localStorage.getItem("accent");var leg=${JSON.stringify(LEGACY_ACCENT_IDS)};if(a&&leg[a])a=leg[a];var accents=${JSON.stringify(ACCENT_IDS)};document.documentElement.dataset.accent=accents.indexOf(a)>=0?a:"gray";}catch(e){}})();`;
+const themeBootScript = `(function(){try{var path=window.location.pathname;if(path.length>1&&path.charAt(path.length-1)==="/")path=path.slice(0,-1);var lightOnly=${JSON.stringify(LIGHT_ONLY_PATHS)};var forceLight=lightOnly.indexOf(path)>=0;var html=document.documentElement;if(forceLight){html.dataset.${FORCE_LIGHT_DATA_ATTR}="true";html.classList.remove("dark");}else{delete html.dataset.${FORCE_LIGHT_DATA_ATTR};}var t=localStorage.getItem("theme");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;var dark=!forceLight&&(t==="dark"||((t===null||t==="system"||t==="")&&d));if(!forceLight)html.classList.toggle("dark",dark);var a=localStorage.getItem("accent");var leg=${JSON.stringify(LEGACY_ACCENT_IDS)};if(a&&leg[a])a=leg[a];var accents=${JSON.stringify(ACCENT_IDS)};html.dataset.accent=accents.indexOf(a)>=0?a:"gray";}catch(e){}})();`;
 
 const inter = Inter({
   variable: "--font-inter",

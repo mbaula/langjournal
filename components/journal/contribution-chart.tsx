@@ -38,7 +38,7 @@ const DAY_LABEL_WIDTH = 28;
 const DAY_LABEL_GAP = 4;
 const CELL_GAP = 3;
 const LEVELS = [
-  "bg-muted/80 dark:bg-muted/40",
+  "bg-muted/80",
   "bg-contribution-fill",
 ];
 

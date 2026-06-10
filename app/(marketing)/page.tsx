@@ -1,10 +1,14 @@
 import { LandingHero } from "@/components/marketing/landing-hero";
 import { LandingSections } from "@/components/marketing/landing-sections";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
+import { ForceLightScope } from "@/components/theme/force-light-scope";
 
 export default function MarketingHomePage() {
   return (
-    <>
+    <ForceLightScope
+      data-marketing-theme="blue"
+      className="flex min-h-dvh flex-col"
+    >
       <MarketingNav />
       <main>
         <LandingHero />
@@ -16,6 +20,6 @@ export default function MarketingHomePage() {
           <p>Practice any language, one entry at a time.</p>
         </div>
       </footer>
-    </>
+    </ForceLightScope>
   );
 }

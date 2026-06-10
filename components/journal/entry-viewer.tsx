@@ -127,7 +127,7 @@ export function EntryViewer({
 
         <div className="flex w-full justify-center px-2 sm:px-0">
           <div
-            className="w-full max-w-md rounded-2xl border border-border bg-card/80 p-8 text-center shadow-sm backdrop-blur-sm dark:border-input dark:bg-card/40"
+            className="w-full max-w-md rounded-2xl border border-border bg-card/80 p-8 text-center shadow-sm backdrop-blur-sm"
             role="alert"
           >
             <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">

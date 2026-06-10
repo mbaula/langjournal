@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 
+import { marketingFlowFieldClassName } from "@/components/marketing/marketing-flow-styles";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/auth/redirect";
+import { cn } from "@/lib/utils";
 
 type LoginFormProps = {
   redirectTo?: string;
@@ -50,29 +50,30 @@ export function LoginForm({ redirectTo, error: initialError }: LoginFormProps) {
   return (
     <form
       onSubmit={onSubmit}
-      className="flex w-full max-w-sm flex-col gap-4"
+      className="mt-6 flex w-full min-w-0 flex-col gap-4 sm:mt-8"
     >
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={status === "loading" || status === "sent"}
-          aria-invalid={status === "error" || Boolean(initialError)}
-        />
-      </div>
+      <label htmlFor="email" className="sr-only">
+        Email
+      </label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        placeholder="you@example.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        disabled={status === "loading" || status === "sent"}
+        aria-invalid={status === "error" || Boolean(initialError)}
+        className={marketingFlowFieldClassName}
+      />
       {message ? (
         <p
           className={
             status === "error" || initialError
-              ? "text-sm text-destructive"
-              : "text-sm text-muted-foreground"
+              ? "text-[14px] text-destructive"
+              : "text-[14px] text-muted-foreground"
           }
           role={status === "error" || initialError ? "alert" : undefined}
         >
@@ -82,7 +83,10 @@ export function LoginForm({ redirectTo, error: initialError }: LoginFormProps) {
       <Button
         type="submit"
         disabled={status === "loading" || status === "sent"}
-        className="w-full"
+        className={cn(
+          "h-12 w-full rounded-full px-6 text-[15px] shadow-sm",
+          status === "sent" && "opacity-80",
+        )}
       >
         {status === "loading" ? "Sending link…" : "Email me a magic link"}
       </Button>

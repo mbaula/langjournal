@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -8,6 +9,11 @@ import {
   useMemo,
   useState,
 } from "react";
+
+import {
+  FORCE_LIGHT_DATA_ATTR,
+  isLightOnlyPath,
+} from "@/lib/theme/light-only-paths";
 
 const STORAGE_KEY = "theme";
 
@@ -44,9 +50,21 @@ function applyThemeClass(resolved: "light" | "dark") {
   document.documentElement.classList.toggle("dark", resolved === "dark");
 }
 
+function applyForceLight(forceLight: boolean) {
+  const html = document.documentElement;
+  if (forceLight) {
+    html.dataset[FORCE_LIGHT_DATA_ATTR] = "true";
+    html.classList.remove("dark");
+    return;
+  }
+  delete html.dataset[FORCE_LIGHT_DATA_ATTR];
+}
+
 export function ThemeProvider({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const forceLight = isLightOnlyPath(pathname);
   const [theme, setThemeState] = useState<ThemeSetting>(() => readStoredTheme());
   const [systemTheme, setSystemTheme] = useState<"light" | "dark">(() =>
     getSystemTheme(),
@@ -56,13 +74,16 @@ export function ThemeProvider({
     theme === "system" ? systemTheme : theme;
 
   useLayoutEffect(() => {
-    applyThemeClass(resolvedTheme);
+    applyForceLight(forceLight);
+    if (!forceLight) {
+      applyThemeClass(resolvedTheme);
+    }
     try {
       localStorage.setItem(STORAGE_KEY, theme);
     } catch {
       /* ignore */
     }
-  }, [theme, resolvedTheme]);
+  }, [forceLight, theme, resolvedTheme]);
 
   useLayoutEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");

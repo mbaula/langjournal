@@ -18,6 +18,7 @@ export type { RecentEntry };
 type AppSidebarClientProps = {
   userLabel: string;
   recents: RecentEntry[];
+  previewMode?: boolean;
 };
 
 function formatDefaultTitle(): string {
@@ -50,6 +51,7 @@ function profilePlaceholderInitials(label: string): string | null {
 export function AppSidebarClient({
   userLabel,
   recents: initialRecents,
+  previewMode = false,
 }: AppSidebarClientProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -90,6 +92,11 @@ export function AppSidebarClient({
   const openTodayEntry = useCallback(async () => {
     if (newEntryPending) return;
 
+    if (previewMode) {
+      router.push("/app/journal");
+      return;
+    }
+
     const todayEntry = recents.find((entry) =>
       isSameUtcDay(new Date(entry.entryDate), new Date()),
     );
@@ -128,7 +135,7 @@ export function AppSidebarClient({
     } finally {
       setNewEntryPending(false);
     }
-  }, [newEntryPending, recents, switchEntry]);
+  }, [newEntryPending, previewMode, recents, router, switchEntry]);
 
   const handleRenameStart = useCallback((entryId: string) => {
     const entry = initialRecents.find((e) => e.id === entryId);
@@ -198,7 +205,7 @@ export function AppSidebarClient({
   }, [deleteConfirm, deletePending, pathname, router]);
 
   const handleOpenEntry = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement>, entryId: string) => {
+    (event: React.MouseEvent<HTMLAnchorElement>, _entryId: string) => {
       if (
         event.defaultPrevented ||
         event.button !== 0 ||
@@ -210,16 +217,21 @@ export function AppSidebarClient({
         return;
       }
       event.preventDefault();
-      void switchEntry(entryId);
+      if (previewMode) {
+        router.push("/app/journal");
+        return;
+      }
+      void switchEntry(_entryId);
     },
-    [switchEntry],
+    [previewMode, router, switchEntry],
   );
 
   const handlePrefetchEntry = useCallback(
     (entryId: string) => {
+      if (previewMode) return;
       void prefetchEntry(entryId);
     },
-    [prefetchEntry],
+    [prefetchEntry, previewMode],
   );
 
   const journalActive = pathname === "/app/journal";
@@ -280,13 +292,17 @@ export function AppSidebarClient({
               Settings
             </Link>
             <Link
-              href="/auth/signout"
+              href={
+                previewMode
+                  ? "/api/dev/exit-account-preview"
+                  : "/auth/signout"
+              }
               role="menuitem"
               className="flex items-center gap-2 px-3 py-2 text-[13px] transition-colors hover:bg-muted"
               onClick={() => setUserMenuOpen(false)}
             >
               <LogOut className="size-4 opacity-70" strokeWidth={1.75} />
-              Sign out
+              {previewMode ? "Exit preview" : "Sign out"}
             </Link>
           </div>
         ) : null}
@@ -403,8 +419,8 @@ export function AppSidebarClient({
                     active={isActive}
                     onOpenEntry={handleOpenEntry}
                     onPrefetchEntry={handlePrefetchEntry}
-                    onRenameTitle={handleRenameStart}
-                    onDelete={handleDeleteStart}
+                    onRenameTitle={previewMode ? undefined : handleRenameStart}
+                    onDelete={previewMode ? undefined : handleDeleteStart}
                   />
                 );
               })}

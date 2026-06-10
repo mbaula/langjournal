@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
+import {
+  marketingHeroGridClassName,
+  marketingWatermarkClassName,
+} from "@/components/marketing/marketing-flow-styles";
 import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,8 +17,8 @@ export function LandingHero() {
         aria-hidden
       />
 
-      <div className="relative mx-auto grid min-h-[min(88vh,52rem)] max-w-6xl grid-cols-1 items-center gap-10 px-4 py-20 sm:px-6 sm:py-24 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:items-center md:gap-8 lg:gap-10 lg:px-8 lg:py-28">
-        <div className="relative z-10 self-center md:max-w-[34rem]">
+      <div className={marketingHeroGridClassName}>
+        <div className="relative z-10 w-full min-w-0 self-start md:max-w-[34rem] md:self-center">
           <p className="landing-enter landing-enter-delay-1 mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-sidebar-primary">
             Daily language journal
           </p>
@@ -38,13 +42,17 @@ export function LandingHero() {
           </div>
         </div>
 
-        <div className="landing-enter landing-enter-delay-5 relative z-10 w-full self-center md:w-4/5 md:justify-self-end">
+        <div className="landing-enter landing-enter-delay-5 relative z-10 w-full min-w-0 self-start md:w-4/5 md:justify-self-end md:self-center">
           <SlashTranslateDemo variant="hero" />
         </div>
       </div>
 
       <p
-        className="landing-enter landing-enter-delay-5 pointer-events-none absolute inset-x-4 bottom-8 z-0 mx-auto max-w-6xl select-none font-[family-name:var(--font-folio)] text-[clamp(4rem,18vw,11rem)] font-semibold leading-none tracking-[-0.04em] text-foreground/[0.06] sm:inset-x-6 lg:inset-x-8"
+        className={cn(
+          marketingWatermarkClassName,
+          "landing-enter landing-enter-delay-5 bottom-6 sm:bottom-8",
+          "text-[clamp(3rem,16vw,11rem)]",
+        )}
         aria-hidden
       >
         Folio
