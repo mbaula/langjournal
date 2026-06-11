@@ -2,19 +2,19 @@ import { redirect } from "next/navigation";
 
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { requireUser } from "@/lib/auth/session";
-import { getOnboardingState } from "@/lib/db/onboarding";
+import { getOnboardingState, type OnboardingState } from "@/lib/db/onboarding";
 import { isDevPreviewParam } from "@/lib/dev/preview";
 
 type OnboardingPageProps = {
   searchParams: Promise<{ preview?: string }>;
 };
 
-const emptyOnboardingState = {
+const emptyOnboardingState: OnboardingState = {
   displayName: null,
   ageRange: null,
   languages: [],
   isComplete: false,
-} as const;
+};
 
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const { preview } = await searchParams;

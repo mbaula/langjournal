@@ -1,8 +1,7 @@
-import { CreateEntryButton } from "@/components/journal/create-entry-button";
 import { EntryList } from "@/components/journal/entry-list";
-import { journalPageShellClassName, journalPageTitleClassName } from "@/components/journal/field-styles";
+import { appPageShellClassName } from "@/components/journal/field-styles";
+import { JournalHomeHeader } from "@/components/journal/journal-home-header";
 import { JournalProgressRail } from "@/components/journal/journal-progress-rail";
-import { LanguageBar } from "@/components/journal/language-bar";
 import { isAccountPreviewMode, requireUser } from "@/lib/auth/session";
 import {
   getDevPreviewContributionData,
@@ -21,11 +20,49 @@ import {
   getContributionData,
   getJournalStats,
   listJournalEntries,
-  utcCalendarDate,
 } from "@/lib/entries/service";
 
-function isSameUtcDay(a: Date, b: Date): boolean {
-  return utcCalendarDate(a).getTime() === utcCalendarDate(b).getTime();
+type JournalHomeBodyProps = {
+  greetingName: string;
+  encouragingSubtitle: string;
+  source: string;
+  target: string;
+  entries: Awaited<ReturnType<typeof listJournalEntries>>;
+  stats: Awaited<ReturnType<typeof getJournalStats>>;
+  contributions: Awaited<ReturnType<typeof getContributionData>>;
+};
+
+function JournalHomeBody({
+  greetingName,
+  encouragingSubtitle,
+  source,
+  target,
+  entries,
+  stats,
+  contributions,
+}: JournalHomeBodyProps) {
+  return (
+    <div className={appPageShellClassName}>
+      <JournalHomeHeader
+        greetingName={greetingName}
+        subtitle={encouragingSubtitle}
+        source={source}
+        target={target}
+      />
+
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-x-10 lg:gap-y-8">
+        <div className="order-3 min-w-0 lg:order-none">
+          <EntryList entries={entries} />
+        </div>
+
+        <JournalProgressRail
+          stats={stats}
+          contributions={contributions}
+          className="order-2 lg:order-none lg:sticky lg:top-6 lg:self-start"
+        />
+      </div>
+    </div>
+  );
 }
 
 export default async function JournalPage() {
@@ -42,38 +79,17 @@ export default async function JournalPage() {
       "alex.preview@folio.local",
     );
     const encouragingSubtitle = pickEncouragingSubtitle();
-    const today = new Date();
-    const todayEntry = entries.find((e) => isSameUtcDay(e.entryDate, today));
 
     return (
-      <div className={journalPageShellClassName}>
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-x-10 lg:gap-y-8">
-          <header className="min-w-0 space-y-1">
-            <h1 className={journalPageTitleClassName}>
-              Hi, {greetingName} 👋
-            </h1>
-            <p className="text-[13px] text-muted-foreground">
-              {encouragingSubtitle}
-            </p>
-          </header>
-
-          <div className="flex justify-start lg:justify-end">
-            <LanguageBar source={source} target={target} />
-          </div>
-
-          <div className="order-3 min-w-0 lg:order-none">
-            <EntryList entries={entries} />
-          </div>
-
-          <JournalProgressRail
-            stats={stats}
-            contributions={contributions}
-            className="order-2 lg:sticky lg:top-6 lg:order-none lg:self-start"
-          />
-        </div>
-
-        <CreateEntryButton todayEntryId={todayEntry?.id} floating />
-      </div>
+      <JournalHomeBody
+        greetingName={greetingName}
+        encouragingSubtitle={encouragingSubtitle}
+        source={source}
+        target={target}
+        entries={entries}
+        stats={stats}
+        contributions={contributions}
+      />
     );
   }
 
@@ -90,37 +106,15 @@ export default async function JournalPage() {
   const greetingName = journalGreetingName(onboarding.displayName, user.email);
   const encouragingSubtitle = pickEncouragingSubtitle();
 
-  const today = new Date();
-  const todayEntry = entries.find((e) => isSameUtcDay(e.entryDate, today));
-
   return (
-    <div className={journalPageShellClassName}>
-      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-x-10 lg:gap-y-8">
-        <header className="min-w-0 space-y-1">
-          <h1 className={journalPageTitleClassName}>
-            Hi, {greetingName} 👋
-          </h1>
-          <p className="text-[13px] text-muted-foreground">
-            {encouragingSubtitle}
-          </p>
-        </header>
-
-        <div className="flex justify-start lg:justify-end">
-          <LanguageBar source={source} target={target} />
-        </div>
-
-        <div className="order-3 min-w-0 lg:order-none">
-          <EntryList entries={entries} />
-        </div>
-
-        <JournalProgressRail
-          stats={stats}
-          contributions={contributions}
-          className="order-2 lg:sticky lg:top-6 lg:order-none lg:self-start"
-        />
-      </div>
-
-      <CreateEntryButton todayEntryId={todayEntry?.id} floating />
-    </div>
+    <JournalHomeBody
+      greetingName={greetingName}
+      encouragingSubtitle={encouragingSubtitle}
+      source={source}
+      target={target}
+      entries={entries}
+      stats={stats}
+      contributions={contributions}
+    />
   );
 }

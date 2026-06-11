@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, CircleHelp } from "lucide-react";
 
+import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo";
+import { CreateEntryButton } from "@/components/journal/create-entry-button";
 import { Button } from "@/components/ui/button";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
+import { resolveLanguageLabel } from "@/lib/languages/display-name";
 import { cn } from "@/lib/utils";
 
 import type { TranslateTrigger } from "@/components/journal/journal-editor";
@@ -21,9 +24,12 @@ type LanguageBarProps = {
 };
 
 const popoverPanelClass =
-  "absolute right-0 top-[calc(100%+0.5rem)] z-50 rounded-lg border border-border bg-popover text-popover-foreground shadow-lg";
+  "absolute right-0 top-[calc(100%+0.5rem)] z-50 rounded-3xl border border-border bg-popover text-popover-foreground shadow-lg";
 
 const barControlHeightClass = "h-10";
+
+const barControlSurfaceClass =
+  "rounded-full border border-border bg-muted/80 shadow-none";
 
 const selectClass =
   "mt-2 w-full rounded-md border border-border/80 bg-background px-2.5 py-1.5 text-[13px] text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
@@ -64,7 +70,7 @@ function LanguagePicker({
       >
         {options.map((l) => (
           <option key={`${id}-${l.code}`} value={l.code}>
-            {l.name} ({l.code})
+            {l.name}
           </option>
         ))}
       </select>
@@ -107,10 +113,10 @@ export function LanguageBar({
   const [panelEntered, setPanelEntered] = useState(false);
   const [panelClosing, setPanelClosing] = useState(false);
 
-  const draftSourceRef = useRef(draftSource);
-  const draftTargetRef = useRef(draftTarget);
-  draftSourceRef.current = draftSource;
-  draftTargetRef.current = draftTarget;
+  const sourceRef = useRef(source);
+  const targetRef = useRef(target);
+  sourceRef.current = source;
+  targetRef.current = target;
 
   const rootRef = useRef<HTMLDivElement>(null);
   const panelWasOpenRef = useRef(false);
@@ -182,8 +188,8 @@ export function LanguageBar({
           setLanguages(
             mergeProfileCodes(
               data.languages,
-              draftSourceRef.current,
-              draftTargetRef.current,
+              sourceRef.current,
+              targetRef.current,
             ),
           );
         }
@@ -196,10 +202,17 @@ export function LanguageBar({
   }, []);
 
   useEffect(() => {
-    if (!open) return;
     if (languages?.length) return;
     loadLanguages();
-  }, [open, languages, loadLanguages]);
+  }, [languages, loadLanguages]);
+
+  const displayCatalog = useMemo(
+    () => mergeProfileCodes(languages ?? [], source, target),
+    [languages, source, target],
+  );
+
+  const sourceLabel = resolveLanguageLabel(source, displayCatalog);
+  const targetLabel = resolveLanguageLabel(target, displayCatalog);
 
   const options = useMemo(
     () => mergeProfileCodes(languages ?? [], draftSource, draftTarget),
@@ -245,11 +258,18 @@ export function LanguageBar({
 
   return (
     <div
-      className="inline-flex flex-wrap items-center gap-2"
+      className="inline-flex max-w-full shrink-0 flex-nowrap items-center gap-2"
       ref={rootRef}
     >
-      <div className="relative">
-        <div className="inline-flex items-center overflow-hidden rounded-md border border-border bg-muted/80 font-sans text-[13px] shadow-none">
+      <CreateEntryButton />
+
+      <div className="relative min-w-0 shrink">
+        <div
+          className={cn(
+            "inline-flex min-w-0 max-w-full items-center overflow-hidden font-sans text-[13px]",
+            barControlSurfaceClass,
+          )}
+        >
           <button
             type="button"
             onClick={() => {
@@ -257,15 +277,15 @@ export function LanguageBar({
               setHelpOpen(false);
             }}
             className={cn(
-              "flex items-center gap-1.5 px-3 font-medium text-foreground transition-colors hover:bg-muted sm:px-2.5",
+              "flex min-w-0 items-center gap-1.5 rounded-full px-4 font-medium whitespace-nowrap text-foreground transition-colors hover:bg-muted sm:px-3.5",
               barControlHeightClass,
             )}
             aria-expanded={open}
             aria-haspopup="dialog"
             aria-label="Change translation languages"
           >
-            <span>
-              {source.toUpperCase()} → {target.toUpperCase()}
+            <span className="truncate">
+              {sourceLabel} → {targetLabel}
             </span>
             <ChevronDown
               className={cn(
@@ -381,83 +401,44 @@ export function LanguageBar({
         ) : null}
       </div>
 
-      <div className="relative">
+      <div className="relative shrink-0">
         <button
           type="button"
           onClick={() => {
             setHelpOpen((h) => !h);
             setOpen(false);
           }}
-          className={cn(
-            "flex w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-            barControlHeightClass,
-          )}
+          className="flex shrink-0 items-center justify-center p-1 text-muted-foreground transition-colors hover:text-foreground"
           aria-expanded={helpOpen}
           aria-haspopup="dialog"
           aria-label="How to translate"
         >
-          <CircleHelp className="size-4" strokeWidth={1.75} />
+          <CircleHelp className="size-5" strokeWidth={1.75} />
         </button>
 
         {helpOpen ? (
           <div
-            className={`${popoverPanelClass} w-[min(100vw-2rem,22.5rem)] p-4 text-[13px] leading-relaxed`}
+            className={`${popoverPanelClass} w-[min(100vw-2rem,26rem)] p-4 text-[13px] leading-relaxed`}
             role="dialog"
             aria-label="Translation help"
           >
             <p className="font-medium text-foreground">How to translate</p>
             <p className="mt-2 text-muted-foreground">
-              To start translating something, press{" "}
+              Type{" "}
               <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>{" "}
-              + what you want to translate +{" "}
+              followed by the word or phrase you want, then press{" "}
               <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
                 {triggerKeyLabel}
               </kbd>
               .
             </p>
 
-            <p className="mt-3 text-xs font-semibold tracking-wide text-foreground uppercase">
-              Example
-            </p>
-            <div className="mt-2 space-y-2 rounded-md border border-border bg-muted/50 p-3 font-mono text-[12px] text-foreground leading-snug">
-              <div>
-                <span className="text-muted-foreground">Before:</span>
-                <pre className="mt-1 whitespace-pre-wrap break-words">
-                  I practiced saying //good morning
-                </pre>
-              </div>
-              <div>
-                <span className="text-muted-foreground">
-                  After{" "}
-                  <kbd className="rounded border border-border bg-background px-1">
-                    {triggerKeyLabel}
-                  </kbd>
-                  :
-                </span>
-                <pre className="mt-1 whitespace-pre-wrap break-words">
-                  I practiced saying bonjour
-                </pre>
-                <p className="mt-1.5 font-sans text-[11px] text-muted-foreground normal-case">
-                  (<code className="rounded bg-background px-0.5">bonjour</code> is just an
-                  example—the app shows the real translation for your languages.)
-                </p>
-              </div>
+            <div className="mt-4">
+              <SlashTranslateDemo
+                variant="compact"
+                translateTriggerKey={triggerKeyLabel}
+              />
             </div>
-
-            {translateTrigger === "enter" ? (
-              <p className="mt-3 text-muted-foreground">
-                Press{" "}
-                <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
-                  Enter
-                </kbd>{" "}
-                for a new line. On a{" "}
-                <code className="rounded bg-background px-0.5">//</code> line,{" "}
-                <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
-                  Enter
-                </kbd>{" "}
-                translates instead.
-              </p>
-            ) : null}
           </div>
         ) : null}
       </div>

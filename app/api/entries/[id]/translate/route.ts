@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
 import { languagePairFromProfile } from "@/lib/db/language";
 import { prisma } from "@/lib/db/prisma";
+import { upsertFlashcardFromTranslation } from "@/lib/flashcards/service";
 import {
   type InlineTranslation,
   removeTranslation,
@@ -92,6 +93,7 @@ export async function POST(request: Request, context: RouteContext) {
     where: { id: entryId, userId: user.id },
     select: {
       id: true,
+      body: true,
       translations: true,
       user: {
         select: {
@@ -159,6 +161,16 @@ export async function POST(request: Request, context: RouteContext) {
       },
     });
 
+    void upsertFlashcardFromTranslation({
+      userId: user.id,
+      entryId,
+      languageCode: target,
+      translation: updatedTranslation,
+      body: typeof body === "string" ? body : entry.body,
+    }).catch(() => {
+      // flashcard sync should not block translation commit
+    });
+
     return NextResponse.json({ translation: updatedTranslation });
   }
 
@@ -174,6 +186,16 @@ export async function POST(request: Request, context: RouteContext) {
     data: {
       translations: [...existing, record] as Prisma.InputJsonValue,
     },
+  });
+
+  void upsertFlashcardFromTranslation({
+    userId: user.id,
+    entryId,
+    languageCode: target,
+    translation: record,
+    body: typeof body === "string" ? body : entry.body,
+  }).catch(() => {
+    // flashcard sync should not block translation commit
   });
 
   return NextResponse.json({ translation: record });

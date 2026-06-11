@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { OnboardingState, UserLanguageEntry } from "@/lib/db/onboarding";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
+import { resolveLanguageLabel } from "@/lib/languages/display-name";
 import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
 import {
   AGE_RANGE_LABELS,
@@ -154,10 +155,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
   }, []);
 
   const getLanguageName = useCallback(
-    (code: string) => {
-      const match = availableLanguages.find((l) => l.code === code);
-      return match?.name ?? code;
-    },
+    (code: string) => resolveLanguageLabel(code, availableLanguages),
     [availableLanguages],
   );
 

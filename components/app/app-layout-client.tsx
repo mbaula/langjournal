@@ -1,10 +1,11 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import { ChevronsRight, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { DevAccountPreviewBanner } from "@/components/app/dev-account-preview-banner";
+import { SidebarShellProvider } from "@/components/app/sidebar-shell-context";
 import { EntryProvider, type JournalEntry } from "@/lib/entries/entry-context";
 import { cn } from "@/lib/utils";
 
@@ -29,8 +30,6 @@ export function AppLayoutClient({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
   const pathname = usePathname();
-  const isWideJournalPage =
-    pathname === "/app/journal" || pathname.startsWith("/app/entry/");
 
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_QUERY);
@@ -73,7 +72,10 @@ export function AppLayoutClient({
 
   return (
     <EntryProvider initialEntry={initialEntry} initialEntryId={initialEntryId}>
-      <div className="flex min-h-dvh flex-1 gap-2 bg-app-shell p-2 transition-[background-color,color] duration-300 ease-out max-lg:min-h-dvh max-lg:gap-0 max-lg:p-0">
+      <SidebarShellProvider
+        value={{ isMobile, sidebarExpanded, toggleSidebar }}
+      >
+        <div className="flex min-h-dvh flex-1 gap-2 bg-app-shell p-2 transition-[background-color,color] duration-300 ease-out max-lg:min-h-dvh max-lg:gap-0 max-lg:p-0">
         {isMobile && mobileSidebarOpen ? (
           <button
             type="button"
@@ -121,17 +123,14 @@ export function AppLayoutClient({
           <button
             type="button"
             onClick={toggleSidebar}
-            className="absolute top-4 left-4 z-20 hidden size-11 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground lg:inline-flex"
-            aria-label={
-              desktopSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
-            }
-            title={desktopSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {desktopSidebarCollapsed ? (
-              <ChevronRight className="size-4" strokeWidth={1.75} />
-            ) : (
-              <ChevronLeft className="size-4" strokeWidth={1.75} />
+            className={cn(
+              "absolute top-4 left-4 z-20 hidden size-11 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground lg:inline-flex",
+              !desktopSidebarCollapsed && "lg:hidden",
             )}
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+          >
+            <ChevronsRight className="size-4" strokeWidth={1.75} />
           </button>
 
           <main
@@ -144,8 +143,7 @@ export function AppLayoutClient({
             <div className="flex-1">
               <div
                 className={cn(
-                  "mx-auto w-full px-6 pt-10 pb-6 sm:px-8 sm:pt-12 sm:pb-8 md:px-16 md:pt-20 md:pb-14 lg:px-20 lg:pt-24 lg:pb-14",
-                  isWideJournalPage ? "max-w-[1200px]" : "max-w-[900px]",
+                  "mx-auto w-full max-w-[1200px] px-6 pt-10 pb-6 sm:px-8 sm:pt-12 sm:pb-8 md:px-16 md:pt-20 md:pb-14 lg:px-20 lg:pt-24 lg:pb-14",
                 )}
               >
                 {children}
@@ -153,7 +151,8 @@ export function AppLayoutClient({
             </div>
           </main>
         </div>
-      </div>
+        </div>
+      </SidebarShellProvider>
     </EntryProvider>
   );
 }

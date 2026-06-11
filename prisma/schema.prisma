@@ -20,6 +20,15 @@ model User {
   languageProfile LanguageProfile?
   entries         JournalEntry[]
   learningLanguages UserLanguage[]
+  flashcards      Flashcard[]
+  flashcardPracticeStats FlashcardPracticeStats?
+}
+
+enum FlashcardProficiency {
+  NEW
+  LEARNING
+  FAMILIAR
+  MASTERED
 }
 
 enum CefrLevel {
@@ -126,7 +135,39 @@ model JournalEntry {
   updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcards Flashcard[]
 
   @@unique([userId, entryDate])
   @@index([userId])
+}
+
+model Flashcard {
+  id              String @id @default(uuid()) @db.Uuid
+  userId          String @db.Uuid
+  word            String
+  translation     String
+  exampleSentence String? @db.Text
+  audioMimeType   String?
+  languageCode    String
+  proficiency     FlashcardProficiency @default(NEW)
+  entryId         String? @db.Uuid
+  translationId   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entry JournalEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, languageCode, word])
+  @@index([userId, proficiency])
+  @@index([userId, languageCode])
+  @@index([userId, createdAt])
+}
+
+model FlashcardPracticeStats {
+  userId           String @id @db.Uuid
+  currentStreak    Int @default(0)
+  lastPracticeDate DateTime? @db.Date
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

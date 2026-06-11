@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getLanguageDisplayName } from "@/lib/languages/display-name";
+import { getLanguageDisplayName, resolveLanguageLabel } from "@/lib/languages/display-name";
 
 describe("getLanguageDisplayName", () => {
   it("returns the fallback catalog name for a known code", () => {
@@ -15,5 +15,16 @@ describe("getLanguageDisplayName", () => {
 
   it("returns the code when unknown", () => {
     expect(getLanguageDisplayName("xx-unknown")).toBe("xx-unknown");
+  });
+});
+
+describe("resolveLanguageLabel", () => {
+  it("prefers the loaded catalog label over fallback names", () => {
+    const catalog = [{ code: "tl", name: "Filipino" }];
+    expect(resolveLanguageLabel("tl", catalog)).toBe("Filipino");
+  });
+
+  it("falls back to display-name helper when code is missing from catalog", () => {
+    expect(resolveLanguageLabel("ja", [])).toBe("Japanese");
   });
 });

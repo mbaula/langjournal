@@ -16,8 +16,8 @@ describe("mergeProfileCodes", () => {
     ]);
   });
 
-  it("adds missing profile codes using code as display name", () => {
+  it("adds missing profile codes using the display-name helper", () => {
     const merged = mergeProfileCodes([{ code: "en", name: "English" }], "en", "ja");
-    expect(merged).toContainEqual({ code: "ja", name: "ja" });
+    expect(merged).toContainEqual({ code: "ja", name: "Japanese" });
   });
 });

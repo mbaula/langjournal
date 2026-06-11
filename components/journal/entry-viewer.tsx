@@ -8,7 +8,7 @@ import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import {
-  journalPageShellClassName,
+  appPageShellClassName,
   journalPageTitleClassName,
 } from "@/components/journal/field-styles";
 import {
@@ -106,7 +106,7 @@ export function EntryViewer({
     const { title, description, Icon } = entryLoadErrorCopy(loadError.kind);
 
     return (
-      <div className={journalPageShellClassName}>
+      <div className={appPageShellClassName}>
         <header className="flex flex-col gap-6">
           <nav
             className="flex min-w-0 flex-wrap items-center gap-1 text-[13px] text-muted-foreground"
@@ -161,7 +161,7 @@ export function EntryViewer({
 
   if (isLoading && !currentEntry) {
     return (
-      <div className={journalPageShellClassName}>
+      <div className={appPageShellClassName}>
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-10 lg:gap-y-8">
           <header className="min-w-0 space-y-2">
             <nav
@@ -199,7 +199,7 @@ export function EntryViewer({
   const dayLabel = formatEntryDay(currentEntry.entryDate);
 
   return (
-    <div className={journalPageShellClassName}>
+    <div className={appPageShellClassName}>
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-10 lg:gap-y-8">
         <header className="min-w-0 space-y-1">
           <nav
@@ -226,7 +226,7 @@ export function EntryViewer({
           />
         </header>
 
-        <div className="relative flex w-full shrink-0 items-center justify-between gap-2 lg:w-auto lg:justify-end">
+        <div className="relative flex w-full min-w-0 shrink-0 flex-nowrap items-center justify-end gap-2 lg:w-auto">
           <LanguageBar
             source={sourceLanguage}
             target={targetLanguage}
