@@ -133,6 +133,12 @@ function stripLegacyPendingMarkers(body: string): string {
   return body.replace(/⟦tr:[0-9a-f-]{36}⟧/gi, "");
 }
 
+function translationsForPersistence(
+  translations: InlineTranslation[],
+): InlineTranslation[] {
+  return translations.filter((t) => !t.id.startsWith("opt-"));
+}
+
 function mergeTranslationState(
   prev: InlineTranslation[],
   t: InlineTranslation,
@@ -298,12 +304,18 @@ export function JournalEditor({
   const saveBody = useCallback(
     async (text: string) => {
       if (text === savedBodyRef.current) return;
+      const previous = savedBodyRef.current;
       savedBodyRef.current = text;
-      await fetch(`/api/entries/${entryId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: text }),
-      });
+      try {
+        const res = await fetch(`/api/entries/${entryId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body: text }),
+        });
+        if (!res.ok) savedBodyRef.current = previous;
+      } catch {
+        savedBodyRef.current = previous;
+      }
     },
     [entryId],
   );
@@ -312,17 +324,25 @@ export function JournalEditor({
 
   const saveTranslations = useCallback(
     async (next: InlineTranslation[]) => {
+      const toPersist = translationsForPersistence(next);
       if (
-        JSON.stringify(next) === JSON.stringify(savedTranslationsRef.current)
+        JSON.stringify(toPersist) ===
+        JSON.stringify(savedTranslationsRef.current)
       ) {
         return;
       }
-      savedTranslationsRef.current = next;
-      await fetch(`/api/entries/${entryId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ translations: next }),
-      });
+      const previous = savedTranslationsRef.current;
+      savedTranslationsRef.current = toPersist;
+      try {
+        const res = await fetch(`/api/entries/${entryId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ translations: toPersist }),
+        });
+        if (!res.ok) savedTranslationsRef.current = previous;
+      } catch {
+        savedTranslationsRef.current = previous;
+      }
     },
     [entryId],
   );
@@ -344,7 +364,10 @@ export function JournalEditor({
   }, [translations, saveTranslations]);
 
   useEffect(() => {
-    return () => void saveBodyRef.current(bodyRef.current);
+    return () => {
+      void saveBodyRef.current(bodyRef.current);
+      void saveTranslationsRef.current(translationsRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -679,7 +702,7 @@ export function JournalEditor({
           end: absStart + fetched.translatedText.length,
         };
         const optimistic: InlineTranslation = {
-          id: `opt-${key}`,
+          id: `opt-${crypto.randomUUID()}`,
           sourceText: fetched.sourceText,
           translatedText: fetched.translatedText,
           spans: [span],
