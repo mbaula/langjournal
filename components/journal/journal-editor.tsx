@@ -192,6 +192,19 @@ export function JournalEditor({
   const prefetchInflightRef = useRef(
     new Map<string, Promise<PrefetchResult | null>>(),
   );
+
+  // Track language pair so we can clear caches when it changes
+  const languagePairRef = useRef({ source: sourceLanguage, target: targetLanguage });
+  useEffect(() => {
+    const prev = languagePairRef.current;
+    if (prev.source !== sourceLanguage || prev.target !== targetLanguage) {
+      // Language changed — clear all translation caches to avoid stale results
+      clientSessionCacheRef.current.clear();
+      prefetchInflightRef.current.clear();
+      leadingPrefetchKeyRef.current = null;
+      languagePairRef.current = { source: sourceLanguage, target: targetLanguage };
+    }
+  }, [sourceLanguage, targetLanguage]);
   const translationLoadingTimerRef = useRef<number | null>(null);
   const [translationLoading, setTranslationLoading] =
     useState<TranslationLoadingState | null>(null);
@@ -622,62 +635,63 @@ export function JournalEditor({
 
       const { absStart, absSegmentEnd, afterSlash } = parsed;
       const trimmed = afterSlash.trim();
-      const key = translationMemoryCacheKey(
+      const norm = normalizeTranslationSource(trimmed);
+
+      // Check client session cache first (keyed by language pair + text)
+      const cacheKey = translationMemoryCacheKey(
         sourceLanguage,
         targetLanguage,
         trimmed,
       );
-
-      const norm = normalizeTranslationSource(trimmed);
-      const fromState = translationsRef.current.find(
-        (t) => normalizeTranslationSource(t.sourceText) === norm,
-      );
-      if (fromState) {
+      const cachedInSession = clientSessionCacheRef.current.get(cacheKey);
+      if (cachedInSession) {
         const applied = tryApplySlashTranslation(
           text,
           absStart,
           absSegmentEnd,
           norm,
-          fromState.translatedText,
+          cachedInSession.translatedText,
         );
-        if (!applied) return;
-        const span = {
-          start: absStart,
-          end: absStart + fromState.translatedText.length,
-        };
-        pendingCursorRef.current = applied.cursor;
-        setBody(applied.next);
-        setTranslations((prev) =>
-          mergeTranslationState(
-            prev,
-            appendTranslationSpan(fromState, span, applied.next),
-          ),
-        );
-        void saveBody(applied.next);
-        void fetchCommitTranslation(
-          trimmed,
-          applied.next,
-          span,
-          fromState.translatedText,
-        ).then((t) => {
-          if (t) {
-            setTranslations((prev) => mergeTranslationState(prev, t));
-          }
-        });
-        requestAnimationFrame(() => textareaRef.current?.focus());
-        return;
+        if (applied) {
+          const span = {
+            start: absStart,
+            end: absStart + cachedInSession.translatedText.length,
+          };
+          pendingCursorRef.current = applied.cursor;
+          setBody(applied.next);
+          const optimistic: InlineTranslation = {
+            id: `opt-${crypto.randomUUID()}`,
+            sourceText: cachedInSession.sourceText,
+            translatedText: cachedInSession.translatedText,
+            spans: [span],
+          };
+          setTranslations((prev) => mergeTranslationState(prev, optimistic));
+          void saveBody(applied.next);
+          void fetchCommitTranslation(
+            trimmed,
+            applied.next,
+            span,
+            cachedInSession.translatedText,
+          ).then((t) => {
+            if (t) {
+              setTranslations((prev) => mergeTranslationState(prev, t));
+            }
+          });
+          requestAnimationFrame(() => textareaRef.current?.focus());
+          return;
+        }
       }
 
       if (trimmed.length < PREFETCH_MIN_LENGTH) return;
 
       void (async () => {
-        const hadCache = clientSessionCacheRef.current.has(key);
-        const hadInflight = prefetchInflightRef.current.has(key);
+        const hadCache = clientSessionCacheRef.current.has(cacheKey);
+        const hadInflight = prefetchInflightRef.current.has(cacheKey);
         if (!hadCache && !hadInflight) {
           beginTranslationLoading({ start: absStart, end: absSegmentEnd });
         }
 
-        const fetched = await getOrStartTranslationForEnter(trimmed, key);
+        const fetched = await getOrStartTranslationForEnter(trimmed, cacheKey);
         clearTranslationLoading();
 
         if (!fetched) {
@@ -715,7 +729,7 @@ export function JournalEditor({
         );
         void saveBody(applied.next);
 
-        clientSessionCacheRef.current.set(key, fetched);
+        clientSessionCacheRef.current.set(cacheKey, fetched);
 
         void fetchCommitTranslation(
           trimmed,
@@ -725,7 +739,7 @@ export function JournalEditor({
         ).then((t) => {
           if (!t) return;
           setTranslations((prev) => mergeTranslationState(prev, t));
-          clientSessionCacheRef.current.set(key, {
+          clientSessionCacheRef.current.set(cacheKey, {
             sourceText: t.sourceText,
             translatedText: t.translatedText,
           });
@@ -802,6 +816,9 @@ export function JournalEditor({
         <textarea
           ref={textareaRef}
           value={body}
+          spellCheck={false}
+          autoCorrect="off"
+          autoCapitalize="off"
           onChange={(e) => {
             const editStart = Math.min(
               textareaSelection.start,
