@@ -42,6 +42,18 @@ export const journalPageShellClassName = appPageShellClassName;
 export const primaryPillButtonClassName =
   "h-10 shrink-0 gap-1.5 rounded-full px-4 text-[13px] whitespace-nowrap shadow-sm";
 
+/** Segmented icon toggle group matching primary pill controls. */
+export const pillToggleGroupClassName =
+  "inline-flex shrink-0 flex-nowrap items-center gap-2";
+
+/** Secondary pill control matching the journal language bar. */
+export const secondaryPillButtonClassName =
+  "size-10 shrink-0 rounded-full border border-border bg-muted/80 text-muted-foreground shadow-none hover:bg-muted hover:text-foreground";
+
+/** Primary icon-only pill control. */
+export const primaryPillIconButtonClassName =
+  "size-10 shrink-0 rounded-full shadow-sm";
+
 /** Primary page title (home greeting, entry title). */
 export const journalPageTitleClassName =
   "text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-[1.875rem]";

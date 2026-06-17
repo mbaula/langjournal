@@ -331,7 +331,7 @@ export function AppSidebarClient({
             className={sidebarNavItemClass(flashcardsActive)}
           >
             <Layers className="size-4 shrink-0" strokeWidth={1.75} />
-            Flashcards
+            Practice
           </Link>
 
           <CustomizeMenu />

@@ -10,6 +10,7 @@ type FlashcardAudioControlsProps = {
   flashcardId: string;
   hasAudio: boolean;
   disabled?: boolean;
+  className?: string;
   onAudioChange: (hasAudio: boolean) => void;
 };
 
@@ -17,6 +18,7 @@ export function FlashcardAudioControls({
   flashcardId,
   hasAudio,
   disabled = false,
+  className,
   onAudioChange,
 }: FlashcardAudioControlsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,7 +121,7 @@ export function FlashcardAudioControls({
   }, []);
 
   return (
-    <div className="space-y-2">
+    <div className={cn("min-w-0", className)}>
       <div className="flex flex-wrap items-center gap-2">
         {hasAudio ? (
           <Button
@@ -182,9 +184,9 @@ export function FlashcardAudioControls({
       </div>
 
       {uploading ? (
-        <p className="text-[12px] text-muted-foreground">Saving audio…</p>
+        <p className="mt-2 text-[12px] text-muted-foreground">Saving audio…</p>
       ) : null}
-      {error ? <p className="text-[12px] text-destructive">{error}</p> : null}
+      {error ? <p className="mt-2 text-[12px] text-destructive">{error}</p> : null}
     </div>
   );
 }

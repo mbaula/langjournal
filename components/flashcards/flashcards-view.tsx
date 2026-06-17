@@ -1,23 +1,23 @@
 "use client";
 
-import Link from "next/link";
 import {
-  ChevronDown,
-  ExternalLink,
   RotateCcw,
   Search,
-  Trash2,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { FlashcardAudioControls } from "@/components/flashcards/flashcard-audio-controls";
 import {
   CardLanguageViewSelector,
   type CardLanguageView,
 } from "@/components/flashcards/card-language-view-selector";
+import { FlashcardLibraryCard } from "@/components/flashcards/flashcard-library-card";
+import { FlashcardLibraryGrid } from "@/components/flashcards/flashcard-library-grid";
 import { Button } from "@/components/ui/button";
-import { primaryPillButtonClassName } from "@/components/journal/field-styles";
+import {
+  journalPageTitleClassName,
+  primaryPillButtonClassName,
+} from "@/components/journal/field-styles";
 import {
   type FlashcardPracticeStats,
   type FlashcardRecord,
@@ -44,98 +44,6 @@ function itemCountLabel(count: number): string {
   return `${count} ${count === 1 ? "item" : "items"}`;
 }
 
-type InlineEditableTextProps = {
-  value: string;
-  onChange: (value: string) => void;
-  className?: string;
-  muted?: boolean;
-};
-
-function InlineEditableText({
-  value,
-  onChange,
-  className,
-  muted = false,
-}: InlineEditableTextProps) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (!editing) setDraft(value);
-  }, [editing, value]);
-
-  useEffect(() => {
-    if (editing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
-  }, [editing]);
-
-  const commit = useCallback(() => {
-    setEditing(false);
-    const trimmed = draft.trim();
-    if (trimmed && trimmed !== value) {
-      onChange(trimmed);
-    } else {
-      setDraft(value);
-    }
-  }, [draft, onChange, value]);
-
-  if (editing) {
-    return (
-      <textarea
-        ref={inputRef}
-        rows={1}
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={commit}
-        onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => {
-          event.stopPropagation();
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            commit();
-          }
-          if (event.key === "Escape") {
-            setDraft(value);
-            setEditing(false);
-          }
-        }}
-        className={cn(
-          "w-full min-w-0 resize-none rounded-sm border-0 bg-transparent p-0 outline-none ring-0",
-          className,
-        )}
-      />
-    );
-  }
-
-  return (
-    <span
-      role="textbox"
-      tabIndex={0}
-      onClick={(event) => {
-        event.stopPropagation();
-        setEditing(true);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          event.stopPropagation();
-          setEditing(true);
-        }
-      }}
-      className={cn(
-        "block cursor-text rounded-sm whitespace-pre-wrap break-words transition-colors hover:bg-muted/60",
-        muted ? "text-muted-foreground" : "text-foreground",
-        className,
-      )}
-    >
-      {value}
-    </span>
-  );
-}
-
 export function FlashcardsView({
   initialFlashcards,
   initialStats,
@@ -149,7 +57,7 @@ export function FlashcardsView({
   const [viewMode, setViewMode] = useState<ViewMode>("library");
   const [search, setSearch] = useState("");
   const [cardLanguageView, setCardLanguageView] =
-    useState<CardLanguageView>("native");
+    useState<CardLanguageView>("translation");
   const [hasMounted, setHasMounted] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -396,10 +304,10 @@ export function FlashcardsView({
           <div className="min-h-[280px] rounded-2xl border border-border bg-card p-8 shadow-sm">
             <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
               <p className="text-3xl font-semibold tracking-[-0.02em] text-foreground">
-                {current.translation}
+                {current.word}
               </p>
               <p className="text-xl font-medium text-muted-foreground">
-                {current.word}
+                {current.translation}
               </p>
             </div>
           </div>
@@ -509,25 +417,37 @@ export function FlashcardsView({
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-[1.875rem]">
-            Flashcards
-          </h1>
-          <p className="text-[13px] text-muted-foreground">
-            {itemCountLabel(displayedItemCount)}
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className={journalPageTitleClassName}>Practice</h1>
+            <span className="inline-flex items-center rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {itemCountLabel(displayedItemCount)}
+            </span>
+          </div>
+          <p className="max-w-lg text-[13px] leading-relaxed text-muted-foreground">
+            Review words saved from your journal and keep what you&apos;re learning
+            fresh.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="default"
-          size="sm"
-          onClick={startPractice}
-          disabled={flashcards.length === 0}
-          className={primaryPillButtonClassName}
-        >
-          Practice
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={startPractice}
+            disabled={flashcards.length === 0}
+            className={primaryPillButtonClassName}
+          >
+            Practice
+          </Button>
+          {nativeLanguage && targetLanguage ? (
+            <CardLanguageViewSelector
+              value={cardLanguageView}
+              onChange={setCardLanguageView}
+            />
+          ) : null}
+        </div>
       </header>
 
       {flashcards.length === 0 ? (
@@ -540,25 +460,16 @@ export function FlashcardsView({
       ) : (
         <>
           <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <div className="relative min-w-0 flex-1 max-w-md">
-                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  id="flashcards-search"
-                  type="search"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search items…"
-                  className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent py-1 pr-2.5 pl-9 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
-                />
-              </div>
-
-              {nativeLanguage && targetLanguage ? (
-                <CardLanguageViewSelector
-                  value={cardLanguageView}
-                  onChange={setCardLanguageView}
-                />
-              ) : null}
+            <div className="relative min-w-0 max-w-md">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                id="flashcards-search"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search items…"
+                className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent py-1 pr-2.5 pl-9 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+              />
             </div>
           </div>
 
@@ -567,152 +478,65 @@ export function FlashcardsView({
               No items match your filters.
             </p>
           ) : (
-            <div className="flex max-w-2xl flex-col gap-2">
-              {filteredCards.map((card) => {
+            <FlashcardLibraryGrid
+              items={filteredCards}
+              getItemKey={(card) => card.id}
+              renderItem={(card) => {
                 const expanded = expandedId === card.id;
-                const showBoth = cardLanguageView === "both";
                 const showTranslationOnly = cardLanguageView === "translation";
-                const showSecondary = showBoth || expanded;
 
                 return (
-                  <div
-                    key={card.id}
-                    className={cn(
-                      "rounded-xl border border-border bg-card shadow-sm transition-colors",
-                      expanded && "ring-2 ring-ring/30",
-                    )}
-                  >
-                    <div className="flex items-start gap-3 p-4">
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <InlineEditableText
-                          value={
-                            showTranslationOnly ? card.word : card.translation
-                          }
-                          onChange={(value) => {
-                            const patch = showTranslationOnly
-                              ? { word: value }
-                              : { translation: value };
-                            scheduleAutosave(
-                              card.id,
-                              patch,
-                              (prev) =>
-                                prev.map((item) =>
-                                  item.id === card.id ? { ...item, ...patch } : item,
-                                ),
-                            );
-                          }}
-                          className="text-[15px] font-medium"
-                        />
-                        {showSecondary ? (
-                          <InlineEditableText
-                            value={
-                              showTranslationOnly ? card.translation : card.word
-                            }
-                            onChange={(value) => {
-                              const patch = showTranslationOnly
-                                ? { translation: value }
-                                : { word: value };
-                              scheduleAutosave(
-                                card.id,
-                                patch,
-                                (prev) =>
-                                  prev.map((item) =>
-                                    item.id === card.id ? { ...item, ...patch } : item,
-                                  ),
-                              );
-                            }}
-                            className="text-[13px]"
-                            muted
-                          />
-                        ) : null}
-                      </div>
-                      <button
-                        type="button"
-                        aria-expanded={expanded}
-                        aria-label={expanded ? "Collapse card" : "Expand card"}
-                        className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                        onClick={() =>
-                          setExpandedId((current) =>
-                            current === card.id ? null : card.id,
-                          )
-                        }
-                      >
-                        <ChevronDown
-                          className={cn(
-                            "size-4 transition-transform",
-                            expanded && "rotate-180",
-                          )}
-                        />
-                      </button>
-                    </div>
-
-                    {expanded ? (
-                      <div className="space-y-4 border-t border-border px-4 pt-3 pb-4">
-                        <div className="space-y-2">
-                          <FlashcardAudioControls
-                            flashcardId={card.id}
-                            hasAudio={card.hasAudio}
-                            disabled={previewMode}
-                            onAudioChange={(hasAudio) => {
-                              setFlashcards((prev) =>
-                                prev.map((item) =>
-                                  item.id === card.id ? { ...item, hasAudio } : item,
-                                ),
-                              );
-                            }}
-                          />
-                        </div>
-
-                        {card.entryId ? (
-                          <Link
-                            href={`/app/entry/${card.entryId}`}
-                            className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
-                          >
-                            <ExternalLink className="size-3.5" />
-                            {card.entryTitle?.trim() || "View journal entry"}
-                          </Link>
-                        ) : null}
-
-                        {deleteConfirmId === card.id ? (
-                          <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2">
-                            <p className="text-[13px]">Delete this flashcard?</p>
-                            <div className="flex gap-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setDeleteConfirmId(null)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => void deleteFlashcard(card.id)}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => setDeleteConfirmId(card.id)}
-                          >
-                            <Trash2 className="size-3.5" />
-                            Delete card
-                          </Button>
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
+                  <FlashcardLibraryCard
+                    card={card}
+                    cardLanguageView={cardLanguageView}
+                    expanded={expanded}
+                    deleteConfirming={deleteConfirmId === card.id}
+                    previewMode={previewMode}
+                    onToggleExpand={() =>
+                      setExpandedId((current) =>
+                        current === card.id ? null : card.id,
+                      )
+                    }
+                    onPrimaryChange={(value) => {
+                      const patch = showTranslationOnly
+                        ? { word: value }
+                        : { translation: value };
+                      scheduleAutosave(
+                        card.id,
+                        patch,
+                        (prev) =>
+                          prev.map((item) =>
+                            item.id === card.id ? { ...item, ...patch } : item,
+                          ),
+                      );
+                    }}
+                    onSecondaryChange={(value) => {
+                      const patch = showTranslationOnly
+                        ? { translation: value }
+                        : { word: value };
+                      scheduleAutosave(
+                        card.id,
+                        patch,
+                        (prev) =>
+                          prev.map((item) =>
+                            item.id === card.id ? { ...item, ...patch } : item,
+                          ),
+                      );
+                    }}
+                    onDeleteRequest={() => setDeleteConfirmId(card.id)}
+                    onDeleteCancel={() => setDeleteConfirmId(null)}
+                    onDeleteConfirm={() => void deleteFlashcard(card.id)}
+                    onAudioChange={(hasAudio) => {
+                      setFlashcards((prev) =>
+                        prev.map((item) =>
+                          item.id === card.id ? { ...item, hasAudio } : item,
+                        ),
+                      );
+                    }}
+                  />
                 );
-              })}
-            </div>
+              }}
+            />
           )}
         </>
       )}
