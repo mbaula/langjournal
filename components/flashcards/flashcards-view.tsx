@@ -12,7 +12,10 @@ import {
   type CardLanguageView,
 } from "@/components/flashcards/card-language-view-selector";
 import { FlashcardLibraryCard } from "@/components/flashcards/flashcard-library-card";
-import { FlashcardLibraryGrid } from "@/components/flashcards/flashcard-library-grid";
+import {
+  FlashcardLibraryGrid,
+  FlashcardLibraryGridSkeleton,
+} from "@/components/flashcards/flashcard-library-grid";
 import { Button } from "@/components/ui/button";
 import {
   journalPageTitleClassName,
@@ -477,6 +480,8 @@ export function FlashcardsView({
             <p className="text-[13px] text-muted-foreground">
               No items match your filters.
             </p>
+          ) : !hasMounted ? (
+            <FlashcardLibraryGridSkeleton itemCount={filteredCards.length} />
           ) : (
             <FlashcardLibraryGrid
               items={filteredCards}

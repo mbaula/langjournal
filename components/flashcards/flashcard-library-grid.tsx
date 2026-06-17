@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -28,6 +34,35 @@ type FlashcardLibraryGridProps<T> = {
   renderItem: (item: T) => ReactNode;
   className?: string;
 };
+
+type FlashcardLibraryGridSkeletonProps = {
+  itemCount: number;
+  className?: string;
+};
+
+/** Static SSR placeholder — avoids hydrating client-only card markup. */
+export function FlashcardLibraryGridSkeleton({
+  itemCount,
+  className,
+}: FlashcardLibraryGridSkeletonProps) {
+  const placeholders = Math.min(Math.max(itemCount, 1), 6);
+
+  return (
+    <div
+      className={cn("flex w-full gap-4", className)}
+      aria-hidden="true"
+    >
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        {Array.from({ length: placeholders }, (_, index) => (
+          <div
+            key={index}
+            className="min-h-[5.75rem] rounded-2xl border border-border bg-card"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function FlashcardLibraryGrid<T>({
   items,

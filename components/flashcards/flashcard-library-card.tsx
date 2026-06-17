@@ -173,10 +173,10 @@ export function FlashcardLibraryCard({
   const primaryText = showTranslationOnly ? card.word : card.translation;
   const secondaryText = showTranslationOnly ? card.translation : card.word;
 
-  const collapsedMinHeight = showBoth ? "min-h-[7.5rem]" : "min-h-[6.5rem]";
+  const collapsedMinHeight = showBoth ? "min-h-[6.75rem]" : "min-h-[5.75rem]";
 
   const phraseContent = (
-    <>
+    <div className="flex flex-col items-center gap-[5px]">
       <InlineEditableText
         value={primaryText}
         onChange={onPrimaryChange}
@@ -188,11 +188,11 @@ export function FlashcardLibraryCard({
           value={secondaryText}
           onChange={onSecondaryChange}
           editable={expanded}
-          className="text-[13px] leading-relaxed"
+          className="text-[13px] leading-snug"
           muted
         />
       ) : null}
-    </>
+    </div>
   );
 
   return (
@@ -222,7 +222,7 @@ export function FlashcardLibraryCard({
         <button
           type="button"
           aria-label="Collapse card"
-          className="absolute top-3 right-3 z-10 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="absolute top-2 right-2 z-10 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={(event) => {
             event.stopPropagation();
             onToggleExpand();
@@ -235,25 +235,25 @@ export function FlashcardLibraryCard({
       {!expanded ? (
         <div
           className={cn(
-            "flex flex-1 items-center justify-center px-4 py-4 text-center",
+            "relative flex flex-col items-center justify-center px-3 py-3 text-center",
             collapsedMinHeight,
           )}
         >
-          <div className="flex w-full flex-col items-center justify-center">
-            <div className="flex flex-col items-center gap-0.5">{phraseContent}</div>
-            <p className="pointer-events-none mt-2 text-[11px] text-muted-foreground opacity-0 transition-opacity duration-75 group-hover:opacity-100">
-              click to view
-            </p>
+          <div className="flex flex-col items-center transition-transform duration-100 ease-out group-hover:-translate-y-2">
+            {phraseContent}
           </div>
+          <p className="pointer-events-none absolute inset-x-3 bottom-2.5 text-[11px] text-muted-foreground opacity-0 transition-opacity duration-75 group-hover:opacity-100">
+            click to view
+          </p>
         </div>
       ) : (
         <>
-          <div className="flex flex-col items-center gap-0.5 px-4 pt-5 pb-3 text-center">
+          <div className="flex flex-col items-center px-3 py-3 text-center">
             {phraseContent}
           </div>
 
           <div
-            className="border-t border-border px-4 pt-4 pb-4"
+            className="border-t border-border px-3 py-3"
             onClick={(event) => event.stopPropagation()}
           >
             {deleteConfirming ? (
