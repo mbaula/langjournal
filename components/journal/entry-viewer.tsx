@@ -69,10 +69,20 @@ function entryLoadErrorCopy(kind: EntryLoadError["kind"]): {
 }
 
 export function EntryViewer({
-  sourceLanguage,
-  targetLanguage,
+  sourceLanguage: initialSourceLanguage,
+  targetLanguage: initialTargetLanguage,
   translateTrigger,
 }: EntryViewerProps) {
+  const [sourceLanguage, setSourceLanguage] = useState(initialSourceLanguage);
+  const [targetLanguage, setTargetLanguage] = useState(initialTargetLanguage);
+  const handleLanguagesSaved = useCallback(
+    (source: string, target: string) => {
+      setSourceLanguage(source);
+      setTargetLanguage(target);
+    },
+    [],
+  );
+
   const { currentEntry, isLoading, loadError, removeEntryFromCache } = useEntry();
   const [deleteConfirming, setDeleteConfirming] = useState(false);
   const [deletePending, setDeletePending] = useState(false);
@@ -231,6 +241,7 @@ export function EntryViewer({
             source={sourceLanguage}
             target={targetLanguage}
             translateTrigger={translateTrigger}
+            onLanguagesSaved={handleLanguagesSaved}
           />
           <EntryActionsMenu
             entryId={currentEntry.id}

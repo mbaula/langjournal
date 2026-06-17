@@ -21,6 +21,8 @@ type LanguageBarProps = {
   source: string;
   target: string;
   translateTrigger?: TranslateTrigger;
+  /** Called after a successful save so parents (e.g. the editor) can use the new pair. */
+  onLanguagesSaved?: (source: string, target: string) => void;
 };
 
 const popoverPanelClass =
@@ -82,6 +84,7 @@ export function LanguageBar({
   source: initialSource,
   target: initialTarget,
   translateTrigger = "enter",
+  onLanguagesSaved,
 }: LanguageBarProps) {
   const triggerKeyLabel = translateTrigger === "tab" ? "Tab" : "Enter";
   const [source, setSource] = useState(initialSource);
@@ -240,8 +243,11 @@ export function LanguageBar({
         setError(data.error ?? "Save failed");
         return;
       }
-      if (data.nativeLanguage) setSource(data.nativeLanguage);
-      if (data.targetLanguage) setTarget(data.targetLanguage);
+      const nextSource = data.nativeLanguage ?? draftSource;
+      const nextTarget = data.targetLanguage ?? draftTarget;
+      setSource(nextSource);
+      setTarget(nextTarget);
+      onLanguagesSaved?.(nextSource, nextTarget);
       setSavedPulse(true);
       await new Promise((resolve) => window.setTimeout(resolve, SAVE_SUCCESS_MS));
       setSavedPulse(false);
@@ -251,7 +257,7 @@ export function LanguageBar({
     } finally {
       setSaving(false);
     }
-  }, [draftSource, draftTarget]);
+  }, [draftSource, draftTarget, onLanguagesSaved]);
 
   const pickerDisabled = loadingList || saving;
   const hasChanges = draftSource !== source || draftTarget !== target;
