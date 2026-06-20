@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, Home, LogOut, Plus, Settings, User } from "lucide-react";
+import { ChevronDown, ChevronsLeft, Home, Layers, LogOut, Plus, Settings, User } from "lucide-react";
 
 import { CustomizeMenu } from "@/components/app/customize-menu";
+import { FeedbackButton } from "@/components/feedback/feedback-button";
 import { SidebarBrandFooter } from "@/components/app/sidebar-brand-footer";
+import { useSidebarShell } from "@/components/app/sidebar-shell-context";
 import { sidebarNavItemClass } from "@/components/app/sidebar-nav-styles";
 import { SidebarRecentEntryItem } from "@/components/app/sidebar-recent-entry-item";
 import type { RecentEntry } from "@/components/app/recent-entry";
@@ -29,14 +31,6 @@ function formatDefaultTitle(): string {
   });
 }
 
-function isSameUtcDay(a: Date, b: Date): boolean {
-  return (
-    a.getUTCFullYear() === b.getUTCFullYear() &&
-    a.getUTCMonth() === b.getUTCMonth() &&
-    a.getUTCDate() === b.getUTCDate()
-  );
-}
-
 function profilePlaceholderInitials(label: string): string | null {
   const trimmed = label.trim();
   if (!trimmed || trimmed === "Account") return null;
@@ -55,6 +49,7 @@ export function AppSidebarClient({
 }: AppSidebarClientProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const sidebarShell = useSidebarShell();
   const { currentEntryId, switchEntry, prefetchEntry } = useEntry();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [newEntryPending, setNewEntryPending] = useState(false);
@@ -67,6 +62,11 @@ export function AppSidebarClient({
   const [renameValue, setRenameValue] = useState("");
   const [renamePending, setRenamePending] = useState(false);
   const renameInputRef = useRef<HTMLInputElement>(null);
+  const [shellReady, setShellReady] = useState(false);
+
+  useEffect(() => {
+    setShellReady(true);
+  }, []);
 
   useEffect(() => {
     setRecents(initialRecents);
@@ -89,19 +89,11 @@ export function AppSidebarClient({
     }
   }, [renameEntryId]);
 
-  const openTodayEntry = useCallback(async () => {
+  const createNewEntry = useCallback(async () => {
     if (newEntryPending) return;
 
     if (previewMode) {
       router.push("/app/journal");
-      return;
-    }
-
-    const todayEntry = recents.find((entry) =>
-      isSameUtcDay(new Date(entry.entryDate), new Date()),
-    );
-    if (todayEntry) {
-      void switchEntry(todayEntry.id);
       return;
     }
 
@@ -135,7 +127,7 @@ export function AppSidebarClient({
     } finally {
       setNewEntryPending(false);
     }
-  }, [newEntryPending, previewMode, recents, router, switchEntry]);
+  }, [newEntryPending, previewMode, router, switchEntry]);
 
   const handleRenameStart = useCallback((entryId: string) => {
     const entry = initialRecents.find((e) => e.id === entryId);
@@ -235,53 +227,51 @@ export function AppSidebarClient({
   );
 
   const journalActive = pathname === "/app/journal";
+  const flashcardsActive = pathname.startsWith("/app/flashcards");
   const displayUser = userLabel.trim() || "Account";
   const profileInitials = profilePlaceholderInitials(displayUser);
-  const hasTodayEntry = recents.some((entry) =>
-    isSameUtcDay(new Date(entry.entryDate), new Date()),
-  );
   const pathnameEntryId = pathname.match(/^\/app\/entry\/([^/]+)$/)?.[1] ?? null;
   const activeEntryId = currentEntryId ?? pathnameEntryId;
 
   return (
     <aside className="flex h-full min-h-0 w-[240px] shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[background-color,color] duration-300 ease-out">
-      <div
-        className="relative border-sidebar-border border-b px-2 py-2"
-        ref={userMenuRef}
-      >
-        <button
-          type="button"
-          onClick={() => setUserMenuOpen((o) => !o)}
-          className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-sidebar-accent"
-          aria-expanded={userMenuOpen}
-          aria-haspopup="menu"
-        >
-          <div
-            className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-sidebar-border/80 bg-sidebar-accent text-[11px] font-medium text-sidebar-foreground/85"
-            aria-hidden
+      <div className="flex items-center justify-between gap-3 border-sidebar-border border-b px-2 py-2">
+        <div className="relative min-w-0" ref={userMenuRef}>
+          <button
+            type="button"
+            onClick={() => setUserMenuOpen((o) => !o)}
+            className="inline-flex max-w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-sidebar-accent"
+            aria-expanded={userMenuOpen}
+            aria-haspopup="menu"
           >
-            {profileInitials ? (
-              <span>{profileInitials}</span>
-            ) : (
-              <User className="size-4 opacity-70" strokeWidth={1.75} />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium">{displayUser}</p>
-          </div>
-          <ChevronDown
-            className={cn(
-              "size-4 shrink-0 opacity-60 transition-transform",
-              userMenuOpen && "rotate-180",
-            )}
-            strokeWidth={1.75}
-          />
-        </button>
-        {userMenuOpen ? (
-          <div
-            className="absolute top-full right-2 left-2 z-50 mt-1 rounded-lg border border-border bg-popover py-1 text-popover-foreground shadow-lg"
-            role="menu"
-          >
+            <span className="inline-flex min-w-0 items-center gap-2.5">
+              <div
+                className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-sidebar-border/80 bg-sidebar-accent text-[11px] font-medium text-sidebar-foreground/85"
+                aria-hidden
+              >
+                {profileInitials ? (
+                  <span>{profileInitials}</span>
+                ) : (
+                  <User className="size-4 opacity-70" strokeWidth={1.75} />
+                )}
+              </div>
+              <span className="max-w-[7.5rem] truncate text-[13px] font-medium">
+                {displayUser}
+              </span>
+            </span>
+            <ChevronDown
+              className={cn(
+                "size-4 shrink-0 opacity-60 transition-transform",
+                userMenuOpen && "rotate-180",
+              )}
+              strokeWidth={1.75}
+            />
+          </button>
+          {userMenuOpen ? (
+            <div
+              className="absolute top-full left-0 z-50 mt-1 min-w-[12rem] rounded-lg border border-border bg-popover py-1 text-popover-foreground shadow-lg"
+              role="menu"
+            >
             <Link
               href="/app/settings"
               role="menuitem"
@@ -306,6 +296,22 @@ export function AppSidebarClient({
             </Link>
           </div>
         ) : null}
+        </div>
+
+        {shellReady &&
+        sidebarShell &&
+        !sidebarShell.isMobile &&
+        sidebarShell.sidebarExpanded ? (
+          <button
+            type="button"
+            onClick={sidebarShell.toggleSidebar}
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <ChevronsLeft className="size-4" strokeWidth={1.75} />
+          </button>
+        ) : null}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-2 py-2">
@@ -319,12 +325,21 @@ export function AppSidebarClient({
             Home
           </Link>
 
+          <Link
+            href="/app/flashcards"
+            suppressHydrationWarning
+            className={sidebarNavItemClass(flashcardsActive)}
+          >
+            <Layers className="size-4 shrink-0" strokeWidth={1.75} />
+            Practice
+          </Link>
+
           <CustomizeMenu />
 
           <button
             type="button"
             disabled={newEntryPending}
-            onClick={() => void openTodayEntry()}
+            onClick={() => void createNewEntry()}
             className={cn(
               "flex w-full items-center gap-2 rounded-md px-2 py-2.5 text-[13px] transition-colors sm:py-1.5",
               "text-sidebar-foreground hover:bg-sidebar-accent/80",
@@ -332,11 +347,7 @@ export function AppSidebarClient({
             )}
           >
             <Plus className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
-            {newEntryPending
-              ? "Opening…"
-              : hasTodayEntry
-                ? "Open today's entry"
-                : "New entry"}
+            {newEntryPending ? "Creating…" : "New entry"}
           </button>
         </div>
 
@@ -426,6 +437,7 @@ export function AppSidebarClient({
               })}
             </ul>
           )}
+          <FeedbackButton variant="sidebar" className="mt-3 shrink-0" />
         </div>
       </div>
 

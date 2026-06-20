@@ -3,10 +3,12 @@ import { SidebarBrandFooter } from "@/components/app/sidebar-brand-footer";
 export function AppSidebarSkeleton() {
   return (
     <aside className="flex h-full min-h-0 w-[240px] shrink-0 flex-col bg-sidebar text-sidebar-foreground">
-      <div className="border-sidebar-border border-b px-2 py-2">
-        <div className="flex w-full items-center gap-2 rounded-md px-2 py-2">
-          <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+      <div className="flex items-center justify-between gap-3 border-sidebar-border border-b px-2 py-2">
+        <div className="inline-flex items-center gap-2.5 rounded-md px-2 py-2">
+          <div className="size-8 animate-pulse rounded-full bg-muted" />
+          <div className="h-4 w-24 animate-pulse rounded bg-muted" />
         </div>
+        <div className="size-8 animate-pulse rounded-md bg-muted" />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-2 py-2">

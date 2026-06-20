@@ -60,11 +60,16 @@ const RESET_MS = 200;
 type DemoPhase = "prefix" | "slash" | "enter" | "done";
 
 type SlashTranslateDemoProps = {
-  variant?: "default" | "hero";
+  variant?: "default" | "hero" | "compact";
+  translateTriggerKey?: string;
 };
 
-export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoProps) {
+export function SlashTranslateDemo({
+  variant = "default",
+  translateTriggerKey = "Enter",
+}: SlashTranslateDemoProps) {
   const isHero = variant === "hero";
+  const isCompact = variant === "compact";
   const [scenarioIndex, setScenarioIndex] = useState(0);
   const [phase, setPhase] = useState<DemoPhase>("prefix");
   const [prefixLen, setPrefixLen] = useState(0);
@@ -138,11 +143,12 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
   const showCursor = !reducedMotion && phase !== "done";
 
   return (
-    <div className={cn("flex flex-col", isHero && "w-full")}>
+    <div className={cn("flex flex-col", (isHero || isCompact) && "w-full")}>
       <div
         className={cn(
           "mb-3 flex flex-wrap gap-1.5",
           isHero && "mb-4 gap-2",
+          isCompact && "mb-2.5 gap-1",
         )}
         aria-label="Languages shown in demo"
       >
@@ -152,6 +158,7 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
             className={cn(
               "rounded-full border px-2.5 py-0.5 text-[10px] font-medium transition-colors sm:text-[11px]",
               isHero && "px-3 py-1 text-[11px] sm:text-[12px]",
+              isCompact && "px-2 py-0.5 text-[10px]",
               index === scenarioIndex
                 ? "border-sidebar-primary/30 bg-sidebar-primary text-sidebar-primary-foreground"
                 : "border-border/80 bg-background/80 text-muted-foreground",
@@ -160,23 +167,26 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
             {item.targetLang}
           </span>
         ))}
-        <span
-          className={cn(
-            "rounded-full border border-dashed border-border/80 bg-background/60 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:text-[11px]",
-            isHero && "px-3 py-1 text-[11px] sm:text-[12px]",
-          )}
-        >
-          + {MORE_LANGUAGES_COUNT} more!
-        </span>
+        {!isCompact ? (
+          <span
+            className={cn(
+              "rounded-full border border-dashed border-border/80 bg-background/60 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:text-[11px]",
+              isHero && "px-3 py-1 text-[11px] sm:text-[12px]",
+            )}
+          >
+            + {MORE_LANGUAGES_COUNT} more!
+          </span>
+        ) : null}
       </div>
 
       <div
         className={cn(
           "overflow-hidden rounded-2xl border border-border/80 bg-background shadow-sm",
           isHero && "rounded-[1.25rem] shadow-md ring-1 ring-border/40",
+          isCompact && "rounded-xl shadow-none",
         )}
       >
-        {!isHero ? (
+        {!isHero && !isCompact ? (
           <div className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-4 py-2.5">
             <span className="size-2 rounded-full bg-sidebar-primary/40" />
             <span className="size-2 rounded-full bg-sidebar-primary/25" />
@@ -187,12 +197,19 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
           </div>
         ) : null}
 
-        <div className={cn("space-y-3", isHero ? "space-y-4 p-4 sm:p-5 lg:p-6" : "space-y-4 p-4 sm:p-5")}>
+        <div
+          className={cn(
+            "space-y-3",
+            isHero ? "space-y-4 p-4 sm:p-5 lg:p-6" : "space-y-4 p-4 sm:p-5",
+            isCompact && "space-y-2.5 p-3",
+          )}
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p
               className={cn(
                 "text-[11px] text-muted-foreground sm:text-[12px]",
                 isHero && "text-[12px] sm:text-[13px]",
+                isCompact && "text-[10px]",
               )}
             >
               Journal <span className="text-muted-foreground/50">/</span> Saturday
@@ -201,6 +218,7 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
               className={cn(
                 "flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/40 px-2.5 py-1 text-[10px] text-muted-foreground sm:text-[11px]",
                 isHero && "px-3 py-1.5 text-[11px] sm:text-[12px]",
+                isCompact && "px-2 py-0.5 text-[10px]",
               )}
             >
               <span>{scenario.sourceLang}</span>
@@ -213,6 +231,7 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
             className={cn(
               "font-[family-name:var(--font-folio)] font-semibold tracking-[-0.02em] text-foreground",
               isHero ? "text-lg sm:text-xl" : "text-lg",
+              isCompact && "text-base",
             )}
           >
             {scenario.title}
@@ -224,6 +243,7 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
               isHero
                 ? "min-h-[6.5rem] px-4 py-3.5 sm:min-h-[7.25rem] sm:px-5 sm:py-4 lg:min-h-[7.75rem]"
                 : "min-h-[5.5rem] px-3 py-3 sm:min-h-[6rem] sm:px-4 sm:py-4",
+              isCompact && "min-h-[5rem] px-3 py-2.5",
             )}
           >
             <p
@@ -231,6 +251,7 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
               className={cn(
                 "whitespace-pre-wrap font-sans leading-[1.65] text-foreground",
                 isHero ? "text-[15px] sm:text-base" : "text-[14px] sm:text-[15px]",
+                isCompact && "text-[13px]",
               )}
             >
               {phase === "done" ? (
@@ -266,15 +287,17 @@ export function SlashTranslateDemo({ variant = "default" }: SlashTranslateDemoPr
                 className={cn(
                   "absolute bottom-2.5 right-2.5 flex items-center gap-1.5 rounded-full border border-border/80 bg-background/95 px-2 py-1 text-[10px] font-medium text-foreground shadow-sm backdrop-blur-sm sm:text-[11px]",
                   isHero && "bottom-3 right-3 px-2.5 py-1.5 text-[11px] sm:text-[12px]",
+                  isCompact && "bottom-2 right-2 px-2 py-0.5 text-[10px]",
                 )}
               >
                 <kbd
                   className={cn(
                     "rounded border border-border bg-muted px-1.5 py-0.5 font-sans text-[9px] sm:text-[10px]",
                     isHero && "px-2 text-[10px] sm:text-[11px]",
+                    isCompact && "px-1.5 text-[9px]",
                   )}
                 >
-                  Enter
+                  {translateTriggerKey}
                 </kbd>
                 <span className="text-muted-foreground">to translate</span>
               </div>

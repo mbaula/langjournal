@@ -123,7 +123,7 @@ export function LanguageProfileForm({
             >
               {options.map((l) => (
                 <option key={l.code} value={l.code}>
-                  {l.name} ({l.code})
+                  {l.name}
                 </option>
               ))}
             </select>
@@ -139,7 +139,7 @@ export function LanguageProfileForm({
             >
               {options.map((l) => (
                 <option key={`t-${l.code}`} value={l.code}>
-                  {l.name} ({l.code})
+                  {l.name}
                 </option>
               ))}
             </select>

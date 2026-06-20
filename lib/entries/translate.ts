@@ -2,6 +2,7 @@ import {
   normalizeTranslationSource,
   translationMemoryCacheKey,
 } from "@/lib/text/translation-cache-key";
+import { matchTranslationCapitalization } from "@/lib/text/translation-capitalization";
 import { clientTranslationMatchesServerCache } from "@/lib/translate/realtime";
 import { translatePlainText } from "@/lib/translate/google";
 import { memoryCacheGet, memoryCacheSet } from "@/lib/translate/memory-cache";
@@ -51,7 +52,10 @@ export async function resolveTranslationText(
     return {
       ok: true,
       sourceText: fromExisting.sourceText,
-      translatedText: fromExisting.translatedText,
+      translatedText: matchTranslationCapitalization(
+        trimmed,
+        fromExisting.translatedText,
+      ),
       fromExisting,
       fromServerMemory: false,
     };
@@ -67,7 +71,7 @@ export async function resolveTranslationText(
     return {
       ok: true,
       sourceText: trimmed,
-      translatedText: cached,
+      translatedText: matchTranslationCapitalization(trimmed, cached),
       fromExisting: null,
       fromServerMemory: true,
     };
@@ -92,7 +96,7 @@ export async function resolveTranslationText(
   return {
     ok: true,
     sourceText: trimmed,
-    translatedText,
+    translatedText: matchTranslationCapitalization(trimmed, translatedText),
     fromExisting: null,
     fromServerMemory: false,
   };
@@ -121,7 +125,10 @@ export async function resolveCommitTranslation(
     return {
       ok: true,
       sourceText: fromExisting.sourceText,
-      translatedText: fromExisting.translatedText,
+      translatedText: matchTranslationCapitalization(
+        trimmed,
+        fromExisting.translatedText,
+      ),
       fromExisting,
       fromServerMemory: false,
     };

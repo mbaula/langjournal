@@ -2,6 +2,7 @@ import {
   normalizeTranslationSource,
   translationMemoryCacheKey,
 } from "@/lib/text/translation-cache-key";
+import { matchTranslationCapitalization } from "@/lib/text/translation-capitalization";
 import { translatePlainText } from "@/lib/translate/google";
 import { memoryCacheGet, memoryCacheSet } from "@/lib/translate/memory-cache";
 
@@ -35,7 +36,7 @@ export async function resolveRealtimeTranslation(
     return {
       ok: true,
       sourceText: trimmed,
-      translatedText: cached,
+      translatedText: matchTranslationCapitalization(trimmed, cached),
       fromServerMemory: true,
     };
   }
@@ -50,7 +51,7 @@ export async function resolveRealtimeTranslation(
     return {
       ok: true,
       sourceText: trimmed,
-      translatedText,
+      translatedText: matchTranslationCapitalization(trimmed, translatedText),
       fromServerMemory: false,
     };
   } catch (e) {
@@ -75,7 +76,12 @@ export function clientTranslationMatchesServerCache(
     targetLanguage,
     trimmed,
   );
-  return memoryCacheGet(key) === translatedText;
+  const cached = memoryCacheGet(key);
+  if (cached === undefined) return false;
+  return (
+    cached === translatedText ||
+    matchTranslationCapitalization(trimmed, cached) === translatedText
+  );
 }
 
 export { normalizeTranslationSource };

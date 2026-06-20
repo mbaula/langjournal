@@ -23,6 +23,7 @@ import {
   normalizeTranslationSource,
   translationMemoryCacheKey,
 } from "@/lib/text/translation-cache-key";
+import { matchTranslationCapitalization } from "@/lib/text/translation-capitalization";
 import { cn } from "@/lib/utils";
 
 export type { InlineTranslation };
@@ -118,13 +119,15 @@ function tryApplySlashTranslation(
   absSegmentEnd: number,
   expectedNorm: string,
   translatedText: string,
-): { next: string; cursor: number } | null {
+): { next: string; cursor: number; appliedText: string } | null {
   if (absSegmentEnd <= absStart + 2) return null;
   const rawAfter = body.slice(absStart + 2, absSegmentEnd);
   if (normalizeTranslationSource(rawAfter.trim()) !== expectedNorm) return null;
+  const appliedText = matchTranslationCapitalization(rawAfter, translatedText);
   return {
-    next: body.slice(0, absStart) + translatedText + body.slice(absSegmentEnd),
-    cursor: absStart + translatedText.length,
+    next: body.slice(0, absStart) + appliedText + body.slice(absSegmentEnd),
+    cursor: absStart + appliedText.length,
+    appliedText,
   };
 }
 
@@ -295,6 +298,20 @@ export function JournalEditor({
     [body, textareaSelection.start, textareaSelection.end],
   );
 
+  const slashTranslateHint = useMemo(() => {
+    if (translationLoading?.showSpinner) return null;
+    if (!slashHighlight) return null;
+    if (textareaSelection.start < slashHighlight.start + 2) return null;
+    return translateTrigger === "tab"
+      ? "Press Tab to translate"
+      : "Press Enter to translate";
+  }, [
+    slashHighlight,
+    textareaSelection.start,
+    translationLoading?.showSpinner,
+    translateTrigger,
+  ]);
+
   const editingBackdrop = useMemo(
     () => (
       <JournalEditingBackdropContent
@@ -302,9 +319,10 @@ export function JournalEditor({
         translations={translations}
         slashHighlight={slashHighlight}
         translationLoading={translationLoading}
+        slashTranslateHint={slashTranslateHint}
       />
     ),
-    [body, translations, slashHighlight, translationLoading],
+    [body, translations, slashHighlight, translationLoading, slashTranslateHint],
   );
 
   const syncCaretFromTextarea = useCallback((ta: HTMLTextAreaElement) => {
@@ -653,16 +671,17 @@ export function JournalEditor({
           cachedInSession.translatedText,
         );
         if (applied) {
+          const { appliedText } = applied;
           const span = {
             start: absStart,
-            end: absStart + cachedInSession.translatedText.length,
+            end: absStart + appliedText.length,
           };
           pendingCursorRef.current = applied.cursor;
           setBody(applied.next);
           const optimistic: InlineTranslation = {
             id: `opt-${crypto.randomUUID()}`,
             sourceText: cachedInSession.sourceText,
-            translatedText: cachedInSession.translatedText,
+            translatedText: appliedText,
             spans: [span],
           };
           setTranslations((prev) => mergeTranslationState(prev, optimistic));
@@ -671,7 +690,7 @@ export function JournalEditor({
             trimmed,
             applied.next,
             span,
-            cachedInSession.translatedText,
+            appliedText,
           ).then((t) => {
             if (t) {
               setTranslations((prev) => mergeTranslationState(prev, t));
@@ -711,14 +730,15 @@ export function JournalEditor({
         );
         if (!applied) return;
 
+        const { appliedText } = applied;
         const span = {
           start: absStart,
-          end: absStart + fetched.translatedText.length,
+          end: absStart + appliedText.length,
         };
         const optimistic: InlineTranslation = {
           id: `opt-${crypto.randomUUID()}`,
           sourceText: fetched.sourceText,
-          translatedText: fetched.translatedText,
+          translatedText: appliedText,
           spans: [span],
         };
 
@@ -729,13 +749,16 @@ export function JournalEditor({
         );
         void saveBody(applied.next);
 
-        clientSessionCacheRef.current.set(cacheKey, fetched);
+        clientSessionCacheRef.current.set(cacheKey, {
+          ...fetched,
+          translatedText: appliedText,
+        });
 
         void fetchCommitTranslation(
           trimmed,
           applied.next,
           span,
-          fetched.translatedText,
+          appliedText,
         ).then((t) => {
           if (!t) return;
           setTranslations((prev) => mergeTranslationState(prev, t));
@@ -743,7 +766,7 @@ export function JournalEditor({
             sourceText: t.sourceText,
             translatedText: t.translatedText,
           });
-          if (t.translatedText !== fetched.translatedText) {
+          if (t.translatedText !== appliedText) {
             const fix = tryApplySlashTranslation(
               bodyRef.current,
               absStart,
@@ -806,10 +829,10 @@ export function JournalEditor({
     >
       <div className={cn("relative w-full flex-1", ENTRY_BODY_MIN_HEIGHT_CLASS)}>
         <div
-          className="pointer-events-none absolute inset-0 z-0"
+          className="pointer-events-none absolute inset-0 z-0 overflow-visible"
           aria-hidden="true"
         >
-          <pre className="font-sans m-0 min-h-full whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased">
+          <pre className="font-sans m-0 min-h-full overflow-visible whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased">
             {editingBackdrop}
           </pre>
         </div>
@@ -854,13 +877,18 @@ export function JournalEditor({
           onKeyDown={onKeyDown}
           onBlur={handleBlur}
           autoFocus
-          placeholder="Start writing…"
+          placeholder="If you're stuck, use // to translate, let's write something..."
           className={journalEntryBodyClassName(
             "relative z-10 text-transparent",
             ENTRY_BODY_MIN_HEIGHT_CLASS,
           )}
         />
       </div>
+      {slashTranslateHint ? (
+        <p className="sr-only" aria-live="polite">
+          {slashTranslateHint}
+        </p>
+      ) : null}
       <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
         {wordCountLabel(wordCount)}
       </p>

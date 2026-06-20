@@ -1,3 +1,5 @@
+import { getLanguageDisplayName } from "@/lib/languages/display-name";
+
 export type LanguageOption = { code: string; name: string };
 
 /** Ensure the user’s current codes always appear in the dropdown list. */
@@ -9,7 +11,7 @@ export function mergeProfileCodes(
   const byCode = new Map(list.map((l) => [l.code, l]));
   for (const code of [nativeCode, targetCode]) {
     if (!byCode.has(code)) {
-      byCode.set(code, { code, name: code });
+      byCode.set(code, { code, name: getLanguageDisplayName(code) });
     }
   }
   return [...byCode.values()].sort((a, b) =>

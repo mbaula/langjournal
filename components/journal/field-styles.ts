@@ -31,9 +31,28 @@ export function journalEntryBodyClassName(...extra: (string | undefined)[]) {
   );
 }
 
-/** Journal home + entry pages — shared outer spacing. */
-export const journalPageShellClassName =
+/** Shared shell for journal, entry, settings, and other app pages. */
+export const appPageShellClassName =
   "flex w-full flex-col gap-8 pt-2 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] lg:gap-10";
+
+/** @deprecated Use appPageShellClassName */
+export const journalPageShellClassName = appPageShellClassName;
+
+/** Primary pill action used in toolbars (New entry, Practice, etc.). */
+export const primaryPillButtonClassName =
+  "h-10 shrink-0 gap-1.5 rounded-full px-4 text-[13px] whitespace-nowrap shadow-sm";
+
+/** Segmented icon toggle group matching primary pill controls. */
+export const pillToggleGroupClassName =
+  "inline-flex shrink-0 flex-nowrap items-center gap-2";
+
+/** Secondary pill control matching the journal language bar. */
+export const secondaryPillButtonClassName =
+  "size-10 shrink-0 rounded-full border border-border bg-muted/80 text-muted-foreground shadow-none hover:bg-muted hover:text-foreground";
+
+/** Primary icon-only pill control. */
+export const primaryPillIconButtonClassName =
+  "size-10 shrink-0 rounded-full shadow-sm";
 
 /** Primary page title (home greeting, entry title). */
 export const journalPageTitleClassName =

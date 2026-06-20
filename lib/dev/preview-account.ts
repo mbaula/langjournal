@@ -4,6 +4,10 @@ import type {
   ContributionDay,
   JournalStats,
 } from "@/lib/entries/service";
+import type {
+  FlashcardPracticeStats,
+  FlashcardRecord,
+} from "@/lib/flashcards/types";
 import { isDevEnvironment } from "@/lib/dev/preview";
 
 export const DEV_ACCOUNT_PREVIEW_COOKIE = "dev-preview-account";
@@ -117,4 +121,62 @@ export function getDevPreviewSidebarRecents() {
         : (e.body?.slice(0, 80) ?? ""),
     };
   });
+}
+
+export function getDevPreviewFlashcards(): FlashcardRecord[] {
+  const now = new Date().toISOString();
+  return [
+    {
+      id: "00000000-0000-0000-0000-000000000101",
+      word: "ensoleillé",
+      translation: "sunny",
+      exampleSentence:
+        "Aujourd'hui j'ai marché le long de la rivière. Le temps était ensoleillé et j'ai pris un café en terrasse.",
+      hasAudio: false,
+      audioMimeType: null,
+      languageCode: "fr",
+      proficiency: "NEW",
+      entryId: DEV_PREVIEW_ENTRY_ID,
+      entryTitle: "A walk along the Seine",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000102",
+      word: "progrès",
+      translation: "progress",
+      exampleSentence:
+        "J'ai révisé le subjonctif pendant une heure. C'est difficile mais progrès.",
+      hasAudio: false,
+      audioMimeType: null,
+      languageCode: "fr",
+      proficiency: "LEARNING",
+      entryId: "00000000-0000-0000-0000-000000000002",
+      entryTitle: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000103",
+      word: "chapitre",
+      translation: "chapter",
+      exampleSentence:
+        "Ce week-end j'ai lu un chapitre de mon livre préféré en français.",
+      hasAudio: false,
+      audioMimeType: null,
+      languageCode: "fr",
+      proficiency: "FAMILIAR",
+      entryId: "00000000-0000-0000-0000-000000000003",
+      entryTitle: "Weekend notes",
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+}
+
+export function getDevPreviewFlashcardStats(): FlashcardPracticeStats {
+  return {
+    currentStreak: 3,
+    lastPracticeDate: new Date().toISOString().slice(0, 10),
+  };
 }

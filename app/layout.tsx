@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist_Mono, Inter } from "next/font/google";
 
 import { AccentProvider } from "@/components/accent-provider";
+import { ThemeBootScript } from "@/components/theme-boot-script";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ACCENT_IDS, LEGACY_ACCENT_IDS } from "@/lib/theme/accent";
 import {
@@ -54,10 +55,8 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${geistMono.variable} ${folioDisplay.variable} h-full antialiased`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
-      </head>
       <body className="relative flex min-h-full flex-col">
+        <ThemeBootScript script={themeBootScript} />
         <div className="app-grain" aria-hidden />
         <ThemeProvider>
           <AccentProvider>{children}</AccentProvider>
