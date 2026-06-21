@@ -15,6 +15,7 @@ import {
   JournalEditor,
   type TranslateTrigger,
 } from "@/components/journal/journal-editor";
+import { DailyPromptBanner } from "@/components/journal/daily-prompt-banner";
 import { LanguageBar } from "@/components/journal/language-bar";
 import { Button } from "@/components/ui/button";
 import {
@@ -207,6 +208,9 @@ export function EntryViewer({
   }
 
   const dayLabel = formatEntryDay(currentEntry.entryDate);
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  const entryDateKey = currentEntry.entryDate.slice(0, 10);
+  const isTodayEntry = entryDateKey === todayUtc;
 
   return (
     <div className={appPageShellClassName}>
@@ -276,6 +280,10 @@ export function EntryViewer({
         </div>
 
         <div className="min-w-0 lg:col-span-2">
+          <DailyPromptBanner
+            entryId={currentEntry.id}
+            isToday={isTodayEntry}
+          />
           <JournalEditor
             key={currentEntry.id}
             entryId={currentEntry.id}

@@ -67,6 +67,7 @@ async function syncUserLanguagesInTransaction(
         languageCode: lang.languageCode,
         level: lang.level,
         estimatedCefrLevel: mapDeclaredLevelToCefr(lang.level),
+        currentPromptLevel: mapDeclaredLevelToCefr(lang.level),
         levelConfidence: LevelConfidence.LOW,
         estimatedLevelUpdatedAt: now,
       })),

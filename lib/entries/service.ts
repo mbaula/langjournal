@@ -9,6 +9,10 @@ export function utcCalendarDate(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
+export function isUtcDateToday(entryDate: Date): boolean {
+  return utcCalendarDate(entryDate).getTime() === utcCalendarDate(new Date()).getTime();
+}
+
 export async function listJournalEntries(userId: string) {
   return prisma.journalEntry.findMany({
     where: { userId },
