@@ -56,3 +56,25 @@ export const patchJournalEntryBodySchema = z
       message: "Provide title, body, or translations",
     },
   );
+
+const inlineTranslationSchema = z.object({
+  id: z.string(),
+  sourceText: z.string(),
+  translatedText: z.string(),
+  spans: z
+    .array(
+      z.object({
+        start: z.number().int().min(0),
+        end: z.number().int().min(0),
+      }),
+    )
+    .optional(),
+});
+
+export const finishJournalEntryBodySchema = z
+  .object({
+    title: z.string().max(500).optional(),
+    body: z.string().max(200_000).optional(),
+    translations: z.array(inlineTranslationSchema).optional(),
+  })
+  .strict();

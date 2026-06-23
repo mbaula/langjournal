@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowDown, ArrowUp, RefreshCw } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, Check, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   dailyPromptActionButtonClassName,
@@ -16,6 +16,10 @@ type DailyPromptCardProps = {
   entryId: string;
   initialPrompt: DailyPromptState;
   isToday: boolean;
+  isPromptAdopted?: boolean;
+  onUsePrompt?: (promptText: string) => void;
+  usePromptPending?: boolean;
+  onPromptChange?: (promptText: string) => void;
 };
 
 type PromptActionBody =
@@ -26,6 +30,10 @@ export function DailyPromptCard({
   entryId,
   initialPrompt,
   isToday,
+  isPromptAdopted = false,
+  onUsePrompt,
+  usePromptPending = false,
+  onPromptChange,
 }: DailyPromptCardProps) {
   const [activePrompt, setActivePrompt] = useState<DailyPromptState | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -34,6 +42,17 @@ export function DailyPromptCard({
 
   const prompt = activePrompt ?? initialPrompt;
   latestPromptRef.current = prompt;
+
+  useEffect(() => {
+    setActivePrompt(null);
+    latestPromptRef.current = initialPrompt;
+    revertRef.current = null;
+    setActionError(null);
+  }, [entryId, initialPrompt]);
+
+  useEffect(() => {
+    onPromptChange?.(prompt.text);
+  }, [onPromptChange, prompt.text]);
 
   const runAction = useCallback(
     (body: PromptActionBody) => {
@@ -87,6 +106,25 @@ export function DailyPromptCard({
 
         {isToday ? (
           <div className="flex w-full flex-col items-center gap-2">
+            {onUsePrompt ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                className={dailyPromptActionButtonClassName}
+                disabled={isPromptAdopted || usePromptPending}
+                onClick={() => onUsePrompt(prompt.text)}
+              >
+                {isPromptAdopted ? (
+                  <>
+                    <Check aria-hidden />
+                    Added to entry
+                  </>
+                ) : (
+                  "Use this prompt"
+                )}
+              </Button>
+            ) : null}
             <div className="flex flex-wrap items-center justify-center gap-1.5">
               {showEasier ? (
                 <Button

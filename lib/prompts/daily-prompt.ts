@@ -299,6 +299,52 @@ export async function getDailyPromptForEntry(
   return assignPromptToEntry(entry.id, userLanguage);
 }
 
+export async function assignDailyPromptForNewDraft(
+  userId: string,
+  newEntryId: string,
+  excludePrompt?: { level: CefrLevel; index: number } | null,
+): Promise<DailyPromptState | null> {
+  const context = await loadPromptContext(userId, newEntryId);
+
+  if (!context || !isUtcDateToday(context.entry.entryDate)) {
+    return null;
+  }
+
+  const { userLanguage } = context;
+  const level = getEffectivePromptLevel(
+    userLanguage.estimatedCefrLevel,
+    userLanguage.currentPromptLevel,
+  ) as PromptCefrLevel;
+  const seen = parseSeenIndexes(userLanguage.seenPromptIndexes);
+
+  const currentEntry =
+    excludePrompt != null
+      ? {
+          promptLevel: excludePrompt.level,
+          promptIndex: excludePrompt.index,
+        }
+      : null;
+
+  const { index, nextSeen } = selectNextPromptForLevel(
+    seen,
+    level,
+    currentEntry,
+  );
+
+  return persistDailyPrompt(
+    newEntryId,
+    userLanguage.id,
+    level,
+    index,
+    nextSeen,
+    {
+      currentPromptLevel: level,
+      tooEasyStreak: userLanguage.tooEasyStreak,
+      tooHardStreak: userLanguage.tooHardStreak,
+    },
+  );
+}
+
 async function advanceDailyPrompt(
   userId: string,
   entryId: string,

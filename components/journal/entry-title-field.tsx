@@ -12,6 +12,7 @@ type EntryTitleFieldProps = {
   initialTitle: string | null;
   inputId?: string;
   className?: string;
+  onTitleChange?: (title: string) => void;
 };
 
 export function EntryTitleField({
@@ -19,6 +20,7 @@ export function EntryTitleField({
   initialTitle,
   inputId,
   className,
+  onTitleChange,
 }: EntryTitleFieldProps) {
   const router = useRouter();
   const [value, setValue] = useState(initialTitle?.trim() ?? "");
@@ -64,7 +66,10 @@ export function EntryTitleField({
       id={inputId}
       type="text"
       value={value}
-      onChange={(e) => setValue(e.target.value)}
+      onChange={(e) => {
+        setValue(e.target.value);
+        onTitleChange?.(e.target.value);
+      }}
       placeholder="Entry title"
       aria-label="Entry title"
       className={cn(

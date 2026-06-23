@@ -19,16 +19,31 @@ export function isPastJournalEntry(entryDate: Date | string): boolean {
   return !isUtcDateToday(date);
 }
 
+export function isSavedJournalEntry(
+  entry: {
+    id: string;
+    entryDate: Date | string;
+    completedAt: Date | null;
+  },
+  activeDraftId: string,
+): boolean {
+  if (entry.id === activeDraftId) {
+    return false;
+  }
+  return entry.completedAt != null || isPastJournalEntry(entry.entryDate);
+}
+
 export async function listJournalEntries(userId: string) {
   return prisma.journalEntry.findMany({
     where: { userId },
-    orderBy: { entryDate: "desc" },
+    orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }],
     select: {
       id: true,
       title: true,
       body: true,
       translations: true,
       entryDate: true,
+      completedAt: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -59,6 +74,7 @@ const getCachedEntry = unstable_cache(
         body: true,
         translations: true,
         entryDate: true,
+        completedAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -79,10 +95,13 @@ export async function getOrCreateJournalEntryForDate(
 ) {
   const day = utcCalendarDate(entryDate);
 
-  const existing = await prisma.journalEntry.findUnique({
+  const existing = await prisma.journalEntry.findFirst({
     where: {
-      userId_entryDate: { userId, entryDate: day },
+      userId,
+      entryDate: day,
+      completedAt: null,
     },
+    orderBy: { createdAt: "desc" },
   });
 
   if (existing) {
@@ -173,6 +192,112 @@ export async function updateJournalEntryTranslations(
 
   revalidateTag("journal-entry", { expire: 0 });
   return { ok: true as const };
+}
+
+export async function finishJournalEntryForToday(
+  entryId: string,
+  userId: string,
+  snapshot?: {
+    title?: string;
+    body?: string;
+    translations?: InlineTranslation[];
+  },
+) {
+  const entry = await prisma.journalEntry.findFirst({
+    where: { id: entryId, userId, completedAt: null },
+    select: {
+      id: true,
+      title: true,
+      body: true,
+      translations: true,
+      entryDate: true,
+      promptIndex: true,
+      promptLevel: true,
+    },
+  });
+
+  if (!entry) {
+    return { ok: false as const, error: "not_found" as const };
+  }
+
+  const title =
+    snapshot?.title !== undefined
+      ? snapshot.title.trim()
+        ? snapshot.title.trim()
+        : null
+      : entry.title;
+  const body =
+    snapshot?.body !== undefined
+      ? snapshot.body.replace(/\r\n/g, "\n")
+      : (entry.body ?? "");
+  const filteredTranslations =
+    snapshot?.translations !== undefined
+      ? snapshot.translations.filter(
+          (translation) => !translation.id.startsWith("opt-"),
+        )
+      : undefined;
+
+  const hasContent = Boolean(title?.trim() || body.trim());
+  if (!hasContent) {
+    return { ok: false as const, error: "empty" as const };
+  }
+
+  const completedAt = new Date();
+
+  const { completedEntry, newEntry } = await prisma.$transaction(async (tx) => {
+    const completedEntry = await tx.journalEntry.update({
+      where: { id: entryId },
+      data: {
+        title,
+        body,
+        ...(filteredTranslations !== undefined
+          ? { translations: filteredTranslations }
+          : {}),
+        completedAt,
+      },
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        translations: true,
+        entryDate: true,
+        completedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    const newEntry = await tx.journalEntry.create({
+      data: {
+        userId,
+        entryDate: entry.entryDate,
+      },
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        translations: true,
+        entryDate: true,
+        completedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return { completedEntry, newEntry };
+  });
+
+  revalidateTag("journal-entry", { expire: 0 });
+
+  return {
+    ok: true as const,
+    completedEntry,
+    newEntry,
+    previousPrompt:
+      entry.promptLevel != null && entry.promptIndex != null
+        ? { level: entry.promptLevel, index: entry.promptIndex }
+        : null,
+  };
 }
 
 export async function deleteJournalEntryForUser(

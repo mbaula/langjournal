@@ -1,6 +1,5 @@
-import { DailyPromptSection } from "@/components/journal/daily-prompt-section";
 import { type TranslateTrigger } from "@/components/journal/journal-editor";
-import { JournalWriteBody } from "@/components/journal/journal-write-body";
+import { JournalWriteBodyLoader } from "@/components/journal/journal-write-body-loader";
 import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
 import {
   DEV_PREVIEW_ENTRY_ID,
@@ -14,9 +13,10 @@ import {
   journalGreetingName,
   pickEncouragingSubtitle,
 } from "@/lib/journal/greeting";
+import { getDailyPromptForEntry } from "@/lib/prompts/daily-prompt";
 import {
   getOrCreateJournalEntryForDate,
-  isPastJournalEntry,
+  isSavedJournalEntry,
   listJournalEntries,
 } from "@/lib/entries/service";
 
@@ -38,7 +38,7 @@ export default async function JournalPage() {
         (entry) => entry.id === DEV_PREVIEW_ENTRY_ID,
       ) ?? getDevPreviewJournalEntries()[0]!;
     const pastEntries = getDevPreviewJournalEntries().filter((entry) =>
-      isPastJournalEntry(entry.entryDate),
+      entry.id !== todayEntry.id,
     );
     const greetingName = journalGreetingName(
       onboarding.displayName,
@@ -47,13 +47,14 @@ export default async function JournalPage() {
     const encouragingSubtitle = pickEncouragingSubtitle();
 
     return (
-      <JournalWriteBody
+      <JournalWriteBodyLoader
         greetingName={greetingName}
         subtitle={encouragingSubtitle}
         sourceLanguage={source}
         targetLanguage={target}
         translateTrigger={translateTrigger}
         entryId={todayEntry.id}
+        initialTitle={todayEntry.title}
         initialBody={todayEntry.body ?? ""}
         initialTranslations={normalizeTranslations(todayEntry.translations)}
         pastEntries={pastEntries}
@@ -70,31 +71,28 @@ export default async function JournalPage() {
       getOnboardingState(user.id),
     ]);
 
+  const dailyPrompt = await getDailyPromptForEntry(user.id, todayEntry.id);
+
   const pastEntries = entries.filter((entry) =>
-    isPastJournalEntry(entry.entryDate),
+    isSavedJournalEntry(entry, todayEntry.id),
   );
 
   const greetingName = journalGreetingName(onboarding.displayName, user.email);
   const encouragingSubtitle = pickEncouragingSubtitle();
 
   return (
-    <JournalWriteBody
+    <JournalWriteBodyLoader
       greetingName={greetingName}
       subtitle={encouragingSubtitle}
       sourceLanguage={source}
       targetLanguage={target}
       translateTrigger={translateTrigger}
       entryId={todayEntry.id}
+      initialTitle={todayEntry.title}
       initialBody={todayEntry.body ?? ""}
       initialTranslations={normalizeTranslations(todayEntry.translations)}
       pastEntries={pastEntries}
-      prompt={
-        <DailyPromptSection
-          entryId={todayEntry.id}
-          userId={user.id}
-          isToday
-        />
-      }
+      dailyPrompt={dailyPrompt}
     />
   );
 }

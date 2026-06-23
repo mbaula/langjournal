@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -45,6 +47,15 @@ type JournalEditorProps = {
   sourceLanguage: string;
   targetLanguage: string;
   translateTrigger?: TranslateTrigger;
+  onBodyChange?: (body: string) => void;
+};
+
+export type JournalEditorHandle = {
+  flushSave: () => Promise<void>;
+  getDraftContent: () => {
+    body: string;
+    translations: InlineTranslation[];
+  };
 };
 
 /* ------------------------------------------------------------------ */
@@ -159,14 +170,19 @@ function mergeTranslationState(
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function JournalEditor({
-  entryId,
-  initialBody,
-  initialTranslations,
-  sourceLanguage,
-  targetLanguage,
-  translateTrigger = "enter",
-}: JournalEditorProps) {
+export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>(
+  function JournalEditor(
+    {
+      entryId,
+      initialBody,
+      initialTranslations,
+      sourceLanguage,
+      targetLanguage,
+      translateTrigger = "enter",
+      onBodyChange,
+    },
+    ref,
+  ) {
   const [body, setBody] = useState(initialBody);
   const [translations, setTranslations] =
     useState<InlineTranslation[]>(initialTranslations);
@@ -379,6 +395,21 @@ export function JournalEditor({
   );
   const saveTranslationsRef = useRef(saveTranslations);
   saveTranslationsRef.current = saveTranslations;
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      flushSave: async () => {
+        await saveBodyRef.current(bodyRef.current);
+        await saveTranslationsRef.current(translationsRef.current);
+      },
+      getDraftContent: () => ({
+        body: bodyRef.current,
+        translations: translationsRef.current,
+      }),
+    }),
+    [],
+  );
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -812,12 +843,13 @@ export function JournalEditor({
     [saveBody],
   );
 
-  const onBodyChange = useCallback(
+  const onBodyChangeHandler = useCallback(
     (next: string) => {
       setBody(next);
+      onBodyChange?.(next);
       schedulePrefetch();
     },
-    [schedulePrefetch],
+    [onBodyChange, schedulePrefetch],
   );
 
   const wordCount = useMemo(() => countWords(body), [body]);
@@ -866,7 +898,7 @@ export function JournalEditor({
               );
             }
             syncCaretFromTextarea(e.currentTarget);
-            onBodyChange(next);
+            onBodyChangeHandler(next);
           }}
           onSelect={(e) => {
             syncCaretFromTextarea(e.currentTarget);
@@ -899,4 +931,5 @@ export function JournalEditor({
       ) : null}
     </div>
   );
-}
+},
+);

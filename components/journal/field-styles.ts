@@ -58,6 +58,10 @@ export const primaryPillIconButtonClassName =
 export const journalPageTitleClassName =
   "text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-[1.875rem]";
 
+/** Write page entry title — slightly smaller than the full entry page title. */
+export const journalWriteTitleClassName =
+  "text-xl font-semibold tracking-[-0.02em] text-foreground sm:text-[1.375rem]";
+
 export function journalBlockShellClassName(extra?: string) {
   return cn(
     "rounded-md border border-border/80 bg-transparent p-0 shadow-none",

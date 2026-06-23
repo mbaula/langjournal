@@ -140,13 +140,15 @@ model JournalEntry {
   /// Index into the static prompt list for the assigned CEFR level.
   promptIndex  Int?
   promptLevel  CefrLevel?
+  /// Set when the user marks today's entry as done for the day.
+  completedAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   flashcards Flashcard[]
 
-  @@unique([userId, entryDate])
+  @@index([userId, entryDate])
   @@index([userId])
 }
 
