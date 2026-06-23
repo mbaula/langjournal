@@ -55,7 +55,7 @@ export function AppTopNavClient({
   }, [userMenuOpen]);
 
   const writeActive =
-    pathname === "/app/journal" || pathname.startsWith("/app/entry/");
+    pathname === "/app/journal" || pathname.startsWith("/app/journal?");
   const progressActive = pathname.startsWith("/app/progress");
   const flashcardsActive = pathname.startsWith("/app/flashcards");
   const displayUser = userLabel.trim() || "Account";

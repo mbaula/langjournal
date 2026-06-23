@@ -27,7 +27,12 @@ function normalizeTranslations(translations: unknown) {
   return Array.isArray(translations) ? translations : [];
 }
 
-export default async function JournalPage() {
+export default async function JournalPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ edit?: string }>;
+}) {
+  const { edit: initialEditEntryId } = await searchParams;
   const preview = await isAccountPreviewMode();
 
   if (preview) {
@@ -58,6 +63,7 @@ export default async function JournalPage() {
         initialBody={todayEntry.body ?? ""}
         initialTranslations={normalizeTranslations(todayEntry.translations)}
         pastEntries={pastEntries}
+        initialEditEntryId={initialEditEntryId ?? null}
       />
     );
   }
@@ -94,6 +100,7 @@ export default async function JournalPage() {
       initialTranslations={normalizeTranslations(todayEntry.translations)}
       pastEntries={pastEntries}
       dailyPrompt={dailyPrompt}
+      initialEditEntryId={initialEditEntryId ?? null}
     />
   );
 }

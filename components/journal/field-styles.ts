@@ -39,6 +39,10 @@ export const journalWriteWorkspaceClassName =
 export const journalWriteEditorMinHeightClassName =
   "min-h-[calc(100dvh-19rem)] sm:min-h-[calc(100dvh-20rem)]";
 
+/** Bordered shell for today's write area and expanded past-entry editors. */
+export const journalWriteAreaShellClassName =
+  "flex min-w-0 flex-col rounded-2xl border border-border bg-muted/20 p-4 sm:p-5";
+
 /** Shared shell for journal, entry, settings, and other app pages. */
 export const appPageShellClassName =
   "flex w-full flex-col gap-8 pt-2 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] lg:gap-10";

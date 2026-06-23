@@ -2,16 +2,16 @@
 
 import { ArrowDown } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-
-import { appPageShellClassName, journalWriteEditorMinHeightClassName, journalWriteTitleClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
+import { appPageShellClassName, journalWriteAreaShellClassName, journalWriteEditorMinHeightClassName, journalWriteTitleClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
 import { DailyPromptCard } from "@/components/journal/daily-prompt-card";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import { type EntryRow } from "@/components/journal/entry-list";
 import { PastEntriesSection } from "@/components/journal/past-entries-section";
 import { JournalHomeHeader } from "@/components/journal/journal-home-header";
 import { LanguageBar } from "@/components/journal/language-bar";
+import { SaveEntryBar } from "@/components/journal/save-entry-bar";
 import {
   JournalEditor,
   type InlineTranslation,
@@ -32,6 +32,7 @@ type JournalWriteBodyProps = {
   initialTranslations: InlineTranslation[];
   pastEntries: EntryRow[];
   dailyPrompt?: DailyPromptState | null;
+  initialEditEntryId?: string | null;
 };
 
 export type { JournalWriteBodyProps };
@@ -91,105 +92,6 @@ function PastEntriesScrollHint({
   );
 }
 
-function SaveEntryBar({
-  anchorRef,
-  canFinish,
-  finishPending,
-  successMessage,
-  finishError,
-  onFinish,
-}: {
-  anchorRef: React.RefObject<HTMLDivElement | null>;
-  canFinish: boolean;
-  finishPending: boolean;
-  successMessage: string | null;
-  finishError: string | null;
-  onFinish: () => void;
-}) {
-  const [mounted, setMounted] = useState(false);
-  const [alignLeft, setAlignLeft] = useState(0);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
-    const column = anchorRef.current;
-    if (!column) {
-      return;
-    }
-
-    const syncAlignLeft = () => {
-      setAlignLeft(column.getBoundingClientRect().left);
-    };
-
-    syncAlignLeft();
-
-    const resizeObserver = new ResizeObserver(syncAlignLeft);
-    resizeObserver.observe(column);
-
-    window.addEventListener("resize", syncAlignLeft);
-    window.addEventListener("scroll", syncAlignLeft, { passive: true });
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", syncAlignLeft);
-      window.removeEventListener("scroll", syncAlignLeft);
-    };
-  }, [anchorRef, mounted]);
-
-  if (!mounted) {
-    return null;
-  }
-
-  if (!canFinish && !successMessage && !finishError) {
-    return null;
-  }
-
-  const pillClassName =
-    "h-10 rounded-full border border-border bg-white px-5 text-[13px] shadow-none hover:bg-white/90 dark:bg-background dark:hover:bg-background/90";
-
-  return (
-    <div
-      className="pointer-events-none fixed bottom-[max(30px,env(safe-area-inset-bottom))] z-30 flex flex-col items-start gap-2"
-      style={{ left: alignLeft }}
-    >
-      {successMessage ? (
-        <p
-          className="pointer-events-auto max-w-xs rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-[13px] leading-snug text-emerald-950 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100"
-          role="status"
-        >
-          {successMessage}
-        </p>
-      ) : null}
-      {finishError ? (
-        <p
-          className="pointer-events-auto max-w-xs rounded-full border border-destructive/30 bg-destructive/10 px-4 py-2 text-[13px] leading-snug text-destructive"
-          role="alert"
-        >
-          {finishError}
-        </p>
-      ) : null}
-      {canFinish ? (
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          disabled={finishPending}
-          className={`pointer-events-auto ${pillClassName}`}
-          onClick={() => void onFinish()}
-        >
-          Save entry
-        </Button>
-      ) : null}
-    </div>
-  );
-}
-
 function toEntryRow(entry: {
   id: string;
   title: string | null;
@@ -224,7 +126,9 @@ export function JournalWriteBody({
   initialTranslations,
   pastEntries,
   dailyPrompt: initialDailyPrompt,
+  initialEditEntryId,
 }: JournalWriteBodyProps) {
+  const router = useRouter();
   const [source, setSource] = useState(sourceLanguage);
   const [target, setTarget] = useState(targetLanguage);
   const [activeEntryId, setActiveEntryId] = useState(initialEntryId);
@@ -243,7 +147,6 @@ export function JournalWriteBody({
     initialDailyPrompt?.text ?? "",
   );
   const [usePromptPending, setUsePromptPending] = useState(false);
-  const entryColumnRef = useRef<HTMLDivElement>(null);
   const pastEntriesSectionRef = useRef<HTMLElement>(null);
   const editorRef = useRef<JournalEditorHandle>(null);
 
@@ -254,6 +157,14 @@ export function JournalWriteBody({
     const timer = window.setTimeout(() => setSuccessMessage(null), 8000);
     return () => window.clearTimeout(timer);
   }, [successMessage]);
+
+  useEffect(() => {
+    if (!initialEditEntryId) {
+      return;
+    }
+
+    router.replace("/app/journal", { scroll: false });
+  }, [initialEditEntryId, router]);
 
   const handlePromptChange = useCallback((promptText: string) => {
     setActivePromptText(promptText);
@@ -358,8 +269,18 @@ export function JournalWriteBody({
     [],
   );
 
+  const handlePastEntryUpdated = useCallback((entry: EntryRow) => {
+    setSavedEntries((current) =>
+      current.map((item) => (item.id === entry.id ? entry : item)),
+    );
+  }, []);
+
+  const handlePastEntryDeleted = useCallback((entryId: string) => {
+    setSavedEntries((current) => current.filter((item) => item.id !== entryId));
+  }, []);
+
   const entryEditorColumn = (
-    <div ref={entryColumnRef} className="flex min-w-0 flex-col">
+    <div className={journalWriteAreaShellClassName}>
       <LanguageBar
         source={source}
         target={target}
@@ -390,6 +311,14 @@ export function JournalWriteBody({
           bodyMinHeightClassName="min-h-0"
           containerMinHeightClassName={journalWriteEditorMinHeightClassName}
         />
+
+        <SaveEntryBar
+          canFinish={canFinish}
+          finishPending={finishPending}
+          successMessage={successMessage}
+          finishError={finishError}
+          onFinish={handleFinish}
+        />
       </div>
     </div>
   );
@@ -416,15 +345,6 @@ export function JournalWriteBody({
         entryEditorColumn
       )}
 
-      <SaveEntryBar
-        anchorRef={entryColumnRef}
-        canFinish={canFinish}
-        finishPending={finishPending}
-        successMessage={successMessage}
-        finishError={finishError}
-        onFinish={handleFinish}
-      />
-
       <PastEntriesScrollHint
         visible={savedEntries.length > 0}
         pastEntriesSectionRef={pastEntriesSectionRef}
@@ -434,6 +354,12 @@ export function JournalWriteBody({
         <PastEntriesSection
           entries={savedEntries}
           targetLanguage={target}
+          sourceLanguage={source}
+          translateTrigger={translateTrigger}
+          onLanguagesSaved={handleLanguagesSaved}
+          onEntryUpdated={handlePastEntryUpdated}
+          onEntryDeleted={handlePastEntryDeleted}
+          initialEditingEntryId={initialEditEntryId}
           sectionRef={pastEntriesSectionRef}
         />
       ) : null}

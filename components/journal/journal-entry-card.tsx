@@ -35,7 +35,8 @@ function coalesceTranslations(raw: unknown): InlineTranslation[] {
 
 export type JournalEntryCardProps = {
   entryId: string;
-  href: string;
+  href?: string;
+  onOpen?: () => void;
   title: string | null;
   dateLabel: string;
   languageLabel?: string | null;
@@ -44,6 +45,7 @@ export type JournalEntryCardProps = {
   translations: unknown;
   onRenameTitle?: (entryId: string) => void;
   onDelete?: (entryId: string) => void;
+  onDeleted?: (entryId: string) => void;
 };
 
 function formatEntryMetaLabel(
@@ -57,6 +59,7 @@ function formatEntryMetaLabel(
 export function JournalEntryCard({
   entryId,
   href,
+  onOpen,
   title,
   dateLabel,
   languageLabel,
@@ -65,6 +68,7 @@ export function JournalEntryCard({
   translations,
   onRenameTitle,
   onDelete,
+  onDeleted,
 }: JournalEntryCardProps) {
   const router = useRouter();
   const { removeEntryFromCache, updateEntryInCache } = useEntry();
@@ -138,13 +142,14 @@ export function JournalEntryCard({
       const result = await deleteJournalEntryRequest(entryId);
       if (result.ok) {
         removeEntryFromCache(entryId);
+        onDeleted?.(entryId);
         router.refresh();
       }
     } finally {
       setDeletePending(false);
       setDeleteConfirming(false);
     }
-  }, [deletePending, entryId, removeEntryFromCache, router]);
+  }, [deletePending, entryId, onDeleted, removeEntryFromCache, router]);
 
   const text = body ?? "";
   const lines = text.split("\n");
@@ -287,9 +292,23 @@ export function JournalEntryCard({
             </div>
             <div className="mt-3">{entryBody}</div>
           </div>
+        ) : onOpen ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="min-w-0 flex-1 cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label={
+              subtitle
+                ? `Edit entry: ${displayTitle}, ${subtitle}`
+                : `Edit entry: ${displayTitle}`
+            }
+          >
+            {entryHeader}
+            {entryBody}
+          </button>
         ) : (
           <Link
-            href={href}
+            href={href ?? `/app/journal?edit=${entryId}`}
             className="min-w-0 flex-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={
               subtitle

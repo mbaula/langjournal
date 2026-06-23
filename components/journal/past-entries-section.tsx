@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   EntryList,
@@ -11,10 +11,17 @@ import {
 } from "@/components/journal/entry-list";
 import { getLanguageDisplayName } from "@/lib/languages/display-name";
 import { cn } from "@/lib/utils";
+import type { TranslateTrigger } from "@/components/journal/journal-editor";
 
 type PastEntriesSectionProps = {
   entries: EntryRow[];
   targetLanguage?: string;
+  sourceLanguage?: string;
+  translateTrigger?: TranslateTrigger;
+  onLanguagesSaved?: (source: string, target: string) => void;
+  onEntryUpdated?: (entry: EntryRow) => void;
+  onEntryDeleted?: (entryId: string) => void;
+  initialEditingEntryId?: string | null;
   sectionRef?: React.RefObject<HTMLElement | null>;
 };
 
@@ -43,6 +50,12 @@ function entryTocTitle(entry: EntryRow, dateLabel: string) {
 export function PastEntriesSection({
   entries,
   targetLanguage,
+  sourceLanguage,
+  translateTrigger,
+  onLanguagesSaved,
+  onEntryUpdated,
+  onEntryDeleted,
+  initialEditingEntryId,
   sectionRef,
 }: PastEntriesSectionProps) {
   const languageLabel = targetLanguage
@@ -52,6 +65,8 @@ export function PastEntriesSection({
   const [activeEntryId, setActiveEntryId] = useState<string | null>(
     entries[0]?.id ?? null,
   );
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const initialEditHandledRef = useRef(false);
 
   const tocItems = useMemo(
     () =>
@@ -109,6 +124,24 @@ export function PastEntriesSection({
     return () => observer.disconnect();
   }, [entries]);
 
+  useEffect(() => {
+    if (
+      initialEditHandledRef.current ||
+      !initialEditingEntryId ||
+      !entries.some((entry) => entry.id === initialEditingEntryId)
+    ) {
+      return;
+    }
+
+    initialEditHandledRef.current = true;
+    setEditingEntryId(initialEditingEntryId);
+    requestAnimationFrame(() => {
+      document
+        .getElementById(pastEntryAnchorId(initialEditingEntryId))
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [entries, initialEditingEntryId]);
+
   const scrollToEntry = useCallback((entryId: string) => {
     document.getElementById(pastEntryAnchorId(entryId))?.scrollIntoView({
       behavior: "smooth",
@@ -116,6 +149,30 @@ export function PastEntriesSection({
     });
     setActiveEntryId(entryId);
   }, []);
+
+  const handleEditEntry = useCallback(
+    (entryId: string) => {
+      setEditingEntryId(entryId);
+      scrollToEntry(entryId);
+    },
+    [scrollToEntry],
+  );
+
+  const handleEntrySaved = useCallback(
+    (entry: EntryRow) => {
+      onEntryUpdated?.(entry);
+      setEditingEntryId(null);
+    },
+    [onEntryUpdated],
+  );
+
+  const handleEntryDeleted = useCallback(
+    (entryId: string) => {
+      onEntryDeleted?.(entryId);
+      setEditingEntryId((current) => (current === entryId ? null : current));
+    },
+    [onEntryDeleted],
+  );
 
   if (entries.length === 0) {
     return null;
@@ -176,7 +233,17 @@ export function PastEntriesSection({
         </nav>
 
         <div className="min-w-0 flex-1">
-          <EntryList entries={entries} targetLanguage={targetLanguage} />
+          <EntryList
+            entries={entries}
+            targetLanguage={targetLanguage}
+            sourceLanguage={sourceLanguage}
+            translateTrigger={translateTrigger}
+            onLanguagesSaved={onLanguagesSaved}
+            editingEntryId={editingEntryId}
+            onEditEntry={handleEditEntry}
+            onEntrySaved={handleEntrySaved}
+            onEntryDeleted={handleEntryDeleted}
+          />
         </div>
       </div>
     </section>

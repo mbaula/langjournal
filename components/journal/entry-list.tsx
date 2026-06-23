@@ -2,7 +2,14 @@ import {
   JournalEntryCard,
   type JournalEntryCardProps,
 } from "@/components/journal/journal-entry-card";
+import { PastEntryEditor } from "@/components/journal/past-entry-editor";
+import {
+  PAST_ENTRY_EXPAND_MS,
+  PastEntryExpandPanel,
+} from "@/components/journal/past-entry-expand-panel";
 import { getLanguageDisplayName } from "@/lib/languages/display-name";
+import type { TranslateTrigger } from "@/components/journal/journal-editor";
+import { cn } from "@/lib/utils";
 
 export type EntryRow = {
   id: string;
@@ -42,6 +49,13 @@ export function formatEntrySubtitle(
 type EntryListProps = {
   entries: EntryRow[];
   targetLanguage?: string;
+  sourceLanguage?: string;
+  translateTrigger?: TranslateTrigger;
+  onLanguagesSaved?: (source: string, target: string) => void;
+  editingEntryId?: string | null;
+  onEditEntry?: (entryId: string) => void;
+  onEntrySaved?: (entry: EntryRow) => void;
+  onEntryDeleted?: (entryId: string) => void;
   onRenameTitle?: JournalEntryCardProps["onRenameTitle"];
   onDelete?: JournalEntryCardProps["onDelete"];
 };
@@ -80,6 +94,13 @@ export function countEntryTranslations(translations: unknown): number {
 export function EntryList({
   entries,
   targetLanguage,
+  sourceLanguage,
+  translateTrigger,
+  onLanguagesSaved,
+  editingEntryId,
+  onEditEntry,
+  onEntrySaved,
+  onEntryDeleted,
   onRenameTitle,
   onDelete,
 }: EntryListProps) {
@@ -95,26 +116,58 @@ export function EntryList({
 
   return (
     <ul className="flex w-full flex-col gap-10">
-      {entries.map((entry) => (
-        <li
-          key={entry.id}
-          id={pastEntryAnchorId(entry.id)}
-          className="scroll-mt-28 list-none"
-        >
-          <JournalEntryCard
-            entryId={entry.id}
-            href={`/app/entry/${entry.id}`}
-            title={entry.title}
-            dateLabel={formatEntryDay(entry.entryDate)}
-            languageLabel={languageLabel}
-            flashcardCount={entry.flashcardCount}
-            body={entry.body}
-            translations={entry.translations}
-            onRenameTitle={onRenameTitle}
-            onDelete={onDelete}
-          />
-        </li>
-      ))}
+      {entries.map((entry) => {
+        const isExpanded = editingEntryId === entry.id;
+
+        return (
+          <li
+            key={entry.id}
+            id={pastEntryAnchorId(entry.id)}
+            className="scroll-mt-28 list-none"
+          >
+            <div className="grid">
+              <div
+                className={cn(
+                  "col-start-1 row-start-1 transition-[opacity,transform] ease-[cubic-bezier(0.22,1,0.36,1)]",
+                  isExpanded ? "pointer-events-none opacity-0" : "opacity-100",
+                )}
+                style={{ transitionDuration: `${PAST_ENTRY_EXPAND_MS}ms` }}
+                aria-hidden={isExpanded}
+              >
+                <JournalEntryCard
+                  entryId={entry.id}
+                  title={entry.title}
+                  dateLabel={formatEntryDay(entry.entryDate)}
+                  languageLabel={languageLabel}
+                  flashcardCount={entry.flashcardCount}
+                  body={entry.body}
+                  translations={entry.translations}
+                  onOpen={onEditEntry ? () => onEditEntry(entry.id) : undefined}
+                  onRenameTitle={onRenameTitle}
+                  onDelete={onDelete}
+                  onDeleted={onEntryDeleted}
+                />
+              </div>
+
+              <div className="col-start-1 row-start-1">
+                {sourceLanguage && onEntrySaved ? (
+                  <PastEntryExpandPanel open={isExpanded}>
+                    <PastEntryEditor
+                      entry={entry}
+                      sourceLanguage={sourceLanguage}
+                      targetLanguage={targetLanguage ?? sourceLanguage}
+                      translateTrigger={translateTrigger}
+                      onLanguagesSaved={onLanguagesSaved}
+                      onSaved={onEntrySaved}
+                      onDelete={onEntryDeleted}
+                    />
+                  </PastEntryExpandPanel>
+                ) : null}
+              </div>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

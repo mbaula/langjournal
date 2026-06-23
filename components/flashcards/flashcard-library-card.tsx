@@ -282,7 +282,7 @@ export function FlashcardLibraryCard({
                   {card.entryId ? (
                     <IconHoverLabel label="View entry">
                       <Link
-                        href={`/app/entry/${card.entryId}`}
+                        href={`/app/journal?edit=${card.entryId}`}
                         aria-label="View entry"
                         className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
