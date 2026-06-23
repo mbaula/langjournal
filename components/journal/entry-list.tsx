@@ -2,6 +2,7 @@ import {
   JournalEntryCard,
   type JournalEntryCardProps,
 } from "@/components/journal/journal-entry-card";
+import { getLanguageDisplayName } from "@/lib/languages/display-name";
 
 export type EntryRow = {
   id: string;
@@ -11,10 +12,36 @@ export type EntryRow = {
   updatedAt: Date | string;
   body: string | null;
   translations: unknown;
+  flashcardCount?: number;
 };
+
+export function formatFlashcardLabel(count: number): string {
+  return count === 1 ? "1 flashcard" : `${count} flashcards`;
+}
+
+export function formatEntrySubtitle(
+  dateLabel: string,
+  options?: {
+    languageLabel?: string | null;
+    flashcardCount?: number;
+  },
+): string {
+  const parts = [dateLabel];
+
+  if (options?.languageLabel) {
+    parts.push(options.languageLabel);
+  }
+
+  if (options?.flashcardCount && options.flashcardCount > 0) {
+    parts.push(formatFlashcardLabel(options.flashcardCount));
+  }
+
+  return parts.join(" | ");
+}
 
 type EntryListProps = {
   entries: EntryRow[];
+  targetLanguage?: string;
   onRenameTitle?: JournalEntryCardProps["onRenameTitle"];
   onDelete?: JournalEntryCardProps["onDelete"];
 };
@@ -52,6 +79,7 @@ export function countEntryTranslations(translations: unknown): number {
 
 export function EntryList({
   entries,
+  targetLanguage,
   onRenameTitle,
   onDelete,
 }: EntryListProps) {
@@ -60,6 +88,10 @@ export function EntryList({
       <p className="text-[13px] text-muted-foreground">No entries yet.</p>
     );
   }
+
+  const languageLabel = targetLanguage
+    ? getLanguageDisplayName(targetLanguage)
+    : null;
 
   return (
     <ul className="flex w-full flex-col gap-10">
@@ -74,6 +106,8 @@ export function EntryList({
             href={`/app/entry/${entry.id}`}
             title={entry.title}
             dateLabel={formatEntryDay(entry.entryDate)}
+            languageLabel={languageLabel}
+            flashcardCount={entry.flashcardCount}
             body={entry.body}
             translations={entry.translations}
             onRenameTitle={onRenameTitle}

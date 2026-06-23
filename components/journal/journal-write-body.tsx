@@ -5,12 +5,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { appPageShellClassName, journalWriteTitleClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
+import { appPageShellClassName, journalWriteEditorMinHeightClassName, journalWriteTitleClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
 import { DailyPromptCard } from "@/components/journal/daily-prompt-card";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import { type EntryRow } from "@/components/journal/entry-list";
 import { PastEntriesSection } from "@/components/journal/past-entries-section";
 import { JournalHomeHeader } from "@/components/journal/journal-home-header";
+import { LanguageBar } from "@/components/journal/language-bar";
 import {
   JournalEditor,
   type InlineTranslation,
@@ -197,6 +198,7 @@ function toEntryRow(entry: {
   entryDate: Date | string;
   createdAt: Date | string;
   updatedAt: Date | string;
+  flashcardCount?: number;
 }): EntryRow {
   return {
     id: entry.id,
@@ -206,6 +208,7 @@ function toEntryRow(entry: {
     entryDate: entry.entryDate,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
+    flashcardCount: entry.flashcardCount ?? 0,
   };
 }
 
@@ -356,40 +359,44 @@ export function JournalWriteBody({
   );
 
   const entryEditorColumn = (
-    <div ref={entryColumnRef} className="flex min-w-0 flex-col gap-3">
-      <EntryTitleField
-        key={activeEntryId}
-        entryId={activeEntryId}
-        initialTitle={entryTitle}
-        inputId={`entry-title-${activeEntryId}`}
-        className={journalWriteTitleClassName}
-        onTitleChange={setEntryTitle}
-      />
-
-      <JournalEditor
-        key={`${activeEntryId}-${editorSeed}`}
-        ref={editorRef}
-        entryId={activeEntryId}
-        initialBody={editorInitialBody}
-        initialTranslations={editorInitialTranslations}
-        sourceLanguage={source}
-        targetLanguage={target}
-        translateTrigger={translateTrigger}
-        onBodyChange={setDraftBody}
-      />
-    </div>
-  );
-
-  return (
-    <div className={appPageShellClassName}>
-      <JournalHomeHeader
-        greetingName={greetingName}
-        subtitle={subtitle}
+    <div ref={entryColumnRef} className="flex min-w-0 flex-col">
+      <LanguageBar
         source={source}
         target={target}
         translateTrigger={translateTrigger}
         onLanguagesSaved={handleLanguagesSaved}
       />
+
+      <div className="mt-6 flex flex-col gap-3">
+        <EntryTitleField
+          key={activeEntryId}
+          entryId={activeEntryId}
+          initialTitle={entryTitle}
+          inputId={`entry-title-${activeEntryId}`}
+          className={journalWriteTitleClassName}
+          onTitleChange={setEntryTitle}
+        />
+
+        <JournalEditor
+          key={`${activeEntryId}-${editorSeed}`}
+          ref={editorRef}
+          entryId={activeEntryId}
+          initialBody={editorInitialBody}
+          initialTranslations={editorInitialTranslations}
+          sourceLanguage={source}
+          targetLanguage={target}
+          translateTrigger={translateTrigger}
+          onBodyChange={setDraftBody}
+          bodyMinHeightClassName="min-h-0"
+          containerMinHeightClassName={journalWriteEditorMinHeightClassName}
+        />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={appPageShellClassName}>
+      <JournalHomeHeader greetingName={greetingName} subtitle={subtitle} />
 
       {dailyPrompt ? (
         <div className={journalWriteWorkspaceClassName}>
@@ -426,6 +433,7 @@ export function JournalWriteBody({
       {savedEntries.length > 0 ? (
         <PastEntriesSection
           entries={savedEntries}
+          targetLanguage={target}
           sectionRef={pastEntriesSectionRef}
         />
       ) : null}

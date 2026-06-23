@@ -5,13 +5,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   EntryList,
   countEntryTranslations,
+  formatEntrySubtitle,
   pastEntryAnchorId,
   type EntryRow,
 } from "@/components/journal/entry-list";
+import { getLanguageDisplayName } from "@/lib/languages/display-name";
 import { cn } from "@/lib/utils";
 
 type PastEntriesSectionProps = {
   entries: EntryRow[];
+  targetLanguage?: string;
   sectionRef?: React.RefObject<HTMLElement | null>;
 };
 
@@ -39,8 +42,13 @@ function entryTocTitle(entry: EntryRow, dateLabel: string) {
 
 export function PastEntriesSection({
   entries,
+  targetLanguage,
   sectionRef,
 }: PastEntriesSectionProps) {
+  const languageLabel = targetLanguage
+    ? getLanguageDisplayName(targetLanguage)
+    : null;
+
   const [activeEntryId, setActiveEntryId] = useState<string | null>(
     entries[0]?.id ?? null,
   );
@@ -52,11 +60,14 @@ export function PastEntriesSection({
         return {
           id: entry.id,
           title: entryTocTitle(entry, dateLabel),
-          dateLabel,
+          dateLabel: formatEntrySubtitle(dateLabel, {
+            languageLabel,
+            flashcardCount: entry.flashcardCount,
+          }),
           translationCount: countEntryTranslations(entry.translations),
         };
       }),
-    [entries],
+    [entries, languageLabel],
   );
 
   useEffect(() => {
@@ -165,7 +176,7 @@ export function PastEntriesSection({
         </nav>
 
         <div className="min-w-0 flex-1">
-          <EntryList entries={entries} />
+          <EntryList entries={entries} targetLanguage={targetLanguage} />
         </div>
       </div>
     </section>

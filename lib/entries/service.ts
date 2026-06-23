@@ -47,6 +47,7 @@ const getCachedJournalEntriesList = unstable_cache(
         completedAt: true,
         createdAt: true,
         updatedAt: true,
+        _count: { select: { flashcards: true } },
       },
     });
   },
@@ -55,7 +56,11 @@ const getCachedJournalEntriesList = unstable_cache(
 );
 
 export async function listJournalEntries(userId: string) {
-  return getCachedJournalEntriesList(userId);
+  const rows = await getCachedJournalEntriesList(userId);
+  return rows.map(({ _count, ...entry }) => ({
+    ...entry,
+    flashcardCount: _count.flashcards,
+  }));
 }
 
 /** Same order as the journal list; includes body for sidebar preview when title is empty. */
@@ -272,6 +277,7 @@ export async function finishJournalEntryForToday(
         completedAt: true,
         createdAt: true,
         updatedAt: true,
+        _count: { select: { flashcards: true } },
       },
     });
 
@@ -297,9 +303,14 @@ export async function finishJournalEntryForToday(
 
   revalidateTag("journal-entry", { expire: 0 });
 
+  const { _count, ...completedEntryRow } = completedEntry;
+
   return {
     ok: true as const,
-    completedEntry,
+    completedEntry: {
+      ...completedEntryRow,
+      flashcardCount: _count.flashcards,
+    },
     newEntry,
     previousPrompt:
       entry.promptLevel != null && entry.promptIndex != null

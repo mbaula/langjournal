@@ -10,8 +10,9 @@ export function JournalWriteBodySkeleton() {
       <div className={journalWriteWorkspaceClassName}>
         <div className="h-56 w-full animate-pulse rounded-xl bg-muted/60 lg:h-72" />
         <div className="flex min-w-0 flex-col gap-3">
+          <div className="h-10 w-48 max-w-full animate-pulse rounded-full bg-muted/60" />
           <div className="h-7 w-2/3 max-w-md animate-pulse rounded-md bg-muted/70" />
-          <div className="min-h-[calc(100dvh-16rem)] animate-pulse rounded-md bg-muted/40" />
+          <div className="min-h-[calc(100dvh-19rem)] animate-pulse rounded-md bg-muted/40" />
         </div>
       </div>
     </div>

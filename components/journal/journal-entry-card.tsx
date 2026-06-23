@@ -11,6 +11,7 @@ import {
 } from "@/components/journal/field-styles";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
 import { segmentTranslatedLineBySpans } from "@/lib/entries/entry-body-segments";
+import { formatEntrySubtitle } from "@/components/journal/entry-list";
 import { useEntry } from "@/lib/entries/entry-context";
 import type { InlineTranslation } from "@/lib/entries/translate";
 import { cn } from "@/lib/utils";
@@ -37,17 +38,29 @@ export type JournalEntryCardProps = {
   href: string;
   title: string | null;
   dateLabel: string;
+  languageLabel?: string | null;
+  flashcardCount?: number;
   body: string | null;
   translations: unknown;
   onRenameTitle?: (entryId: string) => void;
   onDelete?: (entryId: string) => void;
 };
 
+function formatEntryMetaLabel(
+  dateLabel: string,
+  languageLabel?: string | null,
+  flashcardCount?: number,
+) {
+  return formatEntrySubtitle(dateLabel, { languageLabel, flashcardCount });
+}
+
 export function JournalEntryCard({
   entryId,
   href,
   title,
   dateLabel,
+  languageLabel,
+  flashcardCount,
   body,
   translations,
   onRenameTitle,
@@ -66,8 +79,13 @@ export function JournalEntryCard({
   const [previewClamped, setPreviewClamped] = useState(false);
 
   const trimmedTitle = titleValue?.trim();
-  const displayTitle = trimmedTitle || dateLabel;
-  const subtitle = trimmedTitle ? dateLabel : null;
+  const entryMetaLabel = formatEntryMetaLabel(
+    dateLabel,
+    languageLabel,
+    flashcardCount,
+  );
+  const displayTitle = trimmedTitle || entryMetaLabel;
+  const subtitle = trimmedTitle ? entryMetaLabel : null;
 
   const startRename = useCallback(() => {
     setRenaming(true);

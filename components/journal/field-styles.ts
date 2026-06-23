@@ -33,7 +33,11 @@ export function journalEntryBodyClassName(...extra: (string | undefined)[]) {
 
 /** Write page: prompt column + entry editor column. */
 export const journalWriteWorkspaceClassName =
-  "grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)]";
+  "grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] xl:gap-12";
+
+/** Write page editor block: fills the viewport below page chrome (incl. word count). */
+export const journalWriteEditorMinHeightClassName =
+  "min-h-[calc(100dvh-19rem)] sm:min-h-[calc(100dvh-20rem)]";
 
 /** Shared shell for journal, entry, settings, and other app pages. */
 export const appPageShellClassName =

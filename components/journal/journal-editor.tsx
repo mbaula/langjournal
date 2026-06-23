@@ -13,6 +13,7 @@ import {
 
 import { journalEntryBodyClassName } from "@/components/journal/field-styles";
 import { JournalEditingBackdropContent } from "@/components/journal/journal-editing-backdrop-content";
+import { JournalWritePlaceholder } from "@/components/journal/journal-write-placeholder";
 import type { TranslationLoadingState } from "@/components/journal/journal-editing-backdrop-content";
 import type { InlineTranslation, TranslationSpan } from "@/lib/entries/translate";
 import {
@@ -48,6 +49,8 @@ type JournalEditorProps = {
   targetLanguage: string;
   translateTrigger?: TranslateTrigger;
   onBodyChange?: (body: string) => void;
+  bodyMinHeightClassName?: string;
+  containerMinHeightClassName?: string;
 };
 
 export type JournalEditorHandle = {
@@ -180,6 +183,8 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
       targetLanguage,
       translateTrigger = "enter",
       onBodyChange,
+      bodyMinHeightClassName = ENTRY_BODY_MIN_HEIGHT_CLASS,
+      containerMinHeightClassName,
     },
     ref,
   ) {
@@ -857,9 +862,12 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
   return (
     <div
       ref={containerRef}
-      className="flex w-full max-w-none flex-col gap-3"
+      className={cn(
+        "flex w-full max-w-none flex-col gap-3",
+        containerMinHeightClassName,
+      )}
     >
-      <div className={cn("relative w-full flex-1", ENTRY_BODY_MIN_HEIGHT_CLASS)}>
+      <div className={cn("relative w-full min-h-0 flex-1", bodyMinHeightClassName)}>
         <div
           className="pointer-events-none absolute inset-0 z-0 overflow-visible"
           aria-hidden="true"
@@ -909,12 +917,16 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           onKeyDown={onKeyDown}
           onBlur={handleBlur}
           autoFocus
-          placeholder="If you're stuck, use // to translate, let's write something..."
+          aria-label="Journal entry"
           className={journalEntryBodyClassName(
-            "relative z-10 text-transparent",
-            ENTRY_BODY_MIN_HEIGHT_CLASS,
+            "relative z-10 min-h-full text-transparent caret-foreground",
           )}
         />
+        {!body ? (
+          <div className="pointer-events-none absolute inset-0 z-[5] overflow-visible px-0 py-1">
+            <JournalWritePlaceholder />
+          </div>
+        ) : null}
       </div>
       {slashTranslateHint ? (
         <p className="sr-only" aria-live="polite">

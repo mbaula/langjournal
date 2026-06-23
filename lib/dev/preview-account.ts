@@ -77,6 +77,7 @@ export function getDevPreviewJournalEntries() {
       completedAt: null,
       createdAt: now,
       updatedAt: now,
+      flashcardCount: 1,
     },
     {
       id: "00000000-0000-0000-0000-000000000003",
@@ -87,6 +88,7 @@ export function getDevPreviewJournalEntries() {
       completedAt: null,
       createdAt: now,
       updatedAt: now,
+      flashcardCount: 3,
     },
   ];
 }
