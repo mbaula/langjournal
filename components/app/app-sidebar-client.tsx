@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronsLeft, Home, Layers, LogOut, Plus, Settings, User } from "lucide-react";
+import { ChevronDown, ChevronsLeft, Home, Layers, LogOut, Plus, Settings, TrendingUp, User } from "lucide-react";
 
 import { CustomizeMenu } from "@/components/app/customize-menu";
 import { FeedbackButton } from "@/components/feedback/feedback-button";
@@ -227,6 +227,7 @@ export function AppSidebarClient({
   );
 
   const journalActive = pathname === "/app/journal";
+  const progressActive = pathname.startsWith("/app/progress");
   const flashcardsActive = pathname.startsWith("/app/flashcards");
   const displayUser = userLabel.trim() || "Account";
   const profileInitials = profilePlaceholderInitials(displayUser);
@@ -235,6 +236,7 @@ export function AppSidebarClient({
 
   useEffect(() => {
     router.prefetch("/app/journal");
+    router.prefetch("/app/progress");
     router.prefetch("/app/flashcards");
   }, [router]);
 
@@ -328,6 +330,15 @@ export function AppSidebarClient({
           >
             <Home className="size-4 shrink-0" strokeWidth={1.75} />
             Home
+          </Link>
+
+          <Link
+            href="/app/progress"
+            suppressHydrationWarning
+            className={sidebarNavItemClass(progressActive)}
+          >
+            <TrendingUp className="size-4 shrink-0" strokeWidth={1.75} />
+            Progress
           </Link>
 
           <Link

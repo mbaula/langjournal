@@ -13,6 +13,12 @@ export function isUtcDateToday(entryDate: Date): boolean {
   return utcCalendarDate(entryDate).getTime() === utcCalendarDate(new Date()).getTime();
 }
 
+export function isPastJournalEntry(entryDate: Date | string): boolean {
+  const date =
+    typeof entryDate === "string" ? new Date(entryDate) : entryDate;
+  return !isUtcDateToday(date);
+}
+
 export async function listJournalEntries(userId: string) {
   return prisma.journalEntry.findMany({
     where: { userId },
