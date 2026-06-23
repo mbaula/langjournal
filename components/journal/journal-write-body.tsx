@@ -84,7 +84,7 @@ function PastEntriesScrollHint({
       className="pointer-events-none fixed right-[30px] bottom-[max(30px,env(safe-area-inset-bottom))] z-30"
       aria-hidden
     >
-      <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground sm:text-[12px]">
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
         <ArrowDown className="size-3.5 shrink-0 sm:size-4" />
         <span className="leading-snug">Scroll down for past entries</span>
       </p>
@@ -288,7 +288,7 @@ export function JournalWriteBody({
         onLanguagesSaved={handleLanguagesSaved}
       />
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6 flex min-h-0 flex-1 flex-col gap-3">
         <EntryTitleField
           key={activeEntryId}
           entryId={activeEntryId}
@@ -308,7 +308,7 @@ export function JournalWriteBody({
           targetLanguage={target}
           translateTrigger={translateTrigger}
           onBodyChange={setDraftBody}
-          bodyMinHeightClassName="min-h-0"
+          bodyMinHeightClassName={journalWriteEditorMinHeightClassName}
           containerMinHeightClassName={journalWriteEditorMinHeightClassName}
         />
 

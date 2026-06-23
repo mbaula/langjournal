@@ -25,13 +25,13 @@ type LanguageBarProps = {
 };
 
 const languageBarPopoverBaseClass =
-  "z-50 rounded-3xl border border-border bg-popover p-5 text-[13px] leading-relaxed text-popover-foreground shadow-lg sm:p-6";
+  "z-50 rounded-3xl border border-border bg-popover p-5 text-sm leading-relaxed text-popover-foreground shadow-lg sm:p-6";
 
 const languageBarPopoverTitleClassName =
-  "text-[15px] font-semibold tracking-tight text-foreground";
+  "text-base font-semibold tracking-tight text-foreground";
 
 const languageBarPopoverDescriptionClassName =
-  "mt-1 text-[12px] leading-relaxed text-foreground/80";
+  "mt-1 text-sm leading-relaxed text-foreground/80";
 
 const languageBarPopoverHeaderClassName = "pb-4";
 
@@ -50,19 +50,19 @@ const languagePickerDisplayWrapClassName =
   "group flex w-full cursor-pointer items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-muted/30";
 
 const languagePickerDisplayTextClassName =
-  "min-w-0 flex-1 truncate text-[13px] font-medium text-foreground";
+  "min-w-0 flex-1 truncate text-sm font-medium text-foreground";
 
 const languagePickerEditHintClassName =
-  "shrink-0 text-[13px] text-foreground/70 opacity-0 transition-opacity group-hover:opacity-100";
+  "shrink-0 text-sm text-foreground/70 opacity-0 transition-opacity group-hover:opacity-100";
 
 const languagePickerSearchInputClassName =
-  "min-w-0 flex-1 border-0 bg-transparent text-[13px] text-foreground outline-none placeholder:text-foreground/55";
+  "min-w-0 flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-foreground/55";
 
 const languagePickerListClassName =
   "mt-2 max-h-44 overflow-y-auto rounded-2xl border border-border bg-background p-1";
 
 const languagePickerOptionClassName =
-  "flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-[13px] transition-colors";
+  "flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-sm transition-colors";
 
 function filterLanguageOptions(options: Lang[], query: string) {
   const normalized = query.trim().toLowerCase();
@@ -120,7 +120,7 @@ function SearchableLanguagePicker({
     <section className="min-w-0 flex-1" aria-labelledby={`${id}-subtitle`}>
       <p
         id={`${id}-subtitle`}
-        className="mb-2 text-[13px] font-medium text-foreground"
+        className="mb-2 text-sm font-medium text-foreground"
       >
         {subtitle}
       </p>
@@ -192,7 +192,7 @@ function SearchableLanguagePicker({
                     <span className="min-w-0 flex-1 truncate">{language.name}</span>
                     <span
                       className={cn(
-                        "shrink-0 text-[10px] font-medium tracking-[0.06em] uppercase",
+                        "shrink-0 text-xs font-medium tracking-[0.06em] uppercase",
                         isSelected
                           ? "text-primary-foreground/80"
                           : "text-foreground/70",
@@ -256,7 +256,7 @@ const languageBarTriggerClassName =
   "inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-app-shell p-2 font-sans transition-opacity hover:opacity-95";
 
 const languageBarLabelClassName =
-  "flex h-9 min-w-0 items-center rounded-full bg-background px-4 text-[13px] font-medium tracking-[0.06em] whitespace-nowrap text-foreground uppercase";
+  "flex h-9 min-w-0 items-center rounded-full bg-background px-4 text-sm font-medium tracking-[0.06em] whitespace-nowrap text-foreground uppercase";
 
 const languageBarIconButtonClassName =
   "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground";
@@ -601,7 +601,7 @@ export function LanguageBar({
             setHelpOpen((h) => !h);
             setOpen(false);
           }}
-          className="inline-flex shrink-0 items-center gap-1.5 px-1 py-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex shrink-0 items-center gap-1.5 px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
           aria-expanded={helpOpen}
           aria-haspopup="dialog"
           aria-label="How to translate"
@@ -632,7 +632,7 @@ export function LanguageBar({
                       {"//"}
                     </code>{" "}
                     followed by the word or phrase you want, then press{" "}
-                    <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
+                    <kbd className="rounded border border-border bg-muted px-1 font-sans text-xs text-foreground">
                       {triggerKeyLabel}
                     </kbd>
                     .

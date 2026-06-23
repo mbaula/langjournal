@@ -15,7 +15,7 @@ export function JournalHomeHeader({
       <h1 className={cn(journalPageTitleClassName, "min-w-0 shrink")}>
         Hi, {greetingName} 👋
       </h1>
-      <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>
+      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
     </header>
   );
 }

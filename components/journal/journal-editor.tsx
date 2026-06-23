@@ -863,7 +863,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     <div
       ref={containerRef}
       className={cn(
-        "flex w-full max-w-none flex-col gap-3",
+        "flex w-full max-w-none min-h-0 flex-col gap-3",
         containerMinHeightClassName,
       )}
     >
@@ -872,7 +872,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           className="pointer-events-none absolute inset-0 z-0 overflow-visible"
           aria-hidden="true"
         >
-          <pre className="font-sans m-0 min-h-full overflow-visible whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased">
+          <pre className="font-sans m-0 min-h-full overflow-visible whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-base leading-[1.65] text-foreground antialiased">
             {editingBackdrop}
           </pre>
         </div>
@@ -933,7 +933,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           {slashTranslateHint}
         </p>
       ) : null}
-      <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
+      <p className="flex justify-end pb-1 text-sm text-muted-foreground tabular-nums">
         {wordCountLabel(wordCount)}
       </p>
       {error ? (

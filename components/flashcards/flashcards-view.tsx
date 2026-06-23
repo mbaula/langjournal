@@ -273,7 +273,7 @@ export function FlashcardsView({
     if (!current) {
       return (
         <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 text-center">
-          <p className="max-w-md text-[15px] text-muted-foreground">
+          <p className="max-w-md text-base text-muted-foreground">
             You&apos;re all caught up. Come back after your next journal entry.
           </p>
           <Button type="button" variant="outline" onClick={() => setViewMode("library")}>
@@ -297,7 +297,7 @@ export function FlashcardsView({
                 onChange={setCardLanguageView}
               />
             ) : null}
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {practiceIndex + 1} / {practiceQueue.length}
             </p>
           </div>
@@ -327,7 +327,7 @@ export function FlashcardsView({
                     ? current.translation
                     : current.word}
                 </p>
-                <p className="text-center text-[13px] text-muted-foreground">
+                <p className="text-center text-sm text-muted-foreground">
                   Tap to reveal
                 </p>
               </div>
@@ -379,7 +379,7 @@ export function FlashcardsView({
       <div className="mx-auto flex w-full max-w-lg flex-col gap-6 text-center">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold tracking-[-0.02em]">Session complete</h2>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Nice work — your progress is saved.
           </p>
         </div>
@@ -387,15 +387,15 @@ export function FlashcardsView({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-border p-4">
             <p className="text-2xl font-semibold">{sessionReviews.length}</p>
-            <p className="text-[12px] text-muted-foreground">Items reviewed</p>
+            <p className="text-sm text-muted-foreground">Items reviewed</p>
           </div>
           <div className="rounded-xl border border-border p-4">
             <p className="text-2xl font-semibold">{sessionMastered}</p>
-            <p className="text-[12px] text-muted-foreground">Marked mastered</p>
+            <p className="text-sm text-muted-foreground">Marked mastered</p>
           </div>
           <div className="rounded-xl border border-border p-4">
             <p className="text-2xl font-semibold">{stats.currentStreak}</p>
-            <p className="text-[12px] text-muted-foreground">Day streak</p>
+            <p className="text-sm text-muted-foreground">Day streak</p>
           </div>
         </div>
 
@@ -424,11 +424,11 @@ export function FlashcardsView({
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className={journalPageTitleClassName}>Practice</h1>
-            <span className="inline-flex items-center rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+            <span className="inline-flex items-center rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
               {itemCountLabel(displayedItemCount)}
             </span>
           </div>
-          <p className="max-w-lg text-[13px] leading-relaxed text-muted-foreground">
+          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
             Review words saved from your journal and keep what you&apos;re learning
             fresh.
           </p>
@@ -455,7 +455,7 @@ export function FlashcardsView({
 
       {flashcards.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
-          <p className="mx-auto max-w-md text-[15px] leading-relaxed text-muted-foreground">
+          <p className="mx-auto max-w-md text-base leading-relaxed text-muted-foreground">
             No words saved yet. Start journaling and use // to translate. Words you
             look up will show up here.
           </p>
@@ -477,7 +477,7 @@ export function FlashcardsView({
           </div>
 
           {filteredCards.length === 0 ? (
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               No items match your filters.
             </p>
           ) : !hasMounted ? (

@@ -63,7 +63,7 @@ export function OnboardingShell({
               </div>
             ) : null}
             {error ? (
-              <p className="mt-4 text-[13px] text-destructive" role="alert">
+              <p className="mt-4 text-sm text-destructive" role="alert">
                 {error}
               </p>
             ) : null}

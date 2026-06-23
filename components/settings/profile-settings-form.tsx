@@ -187,7 +187,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
 
           <div>
             <Label>Languages you are learning</Label>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               The first language is used as your default learning target in the
               journal.
             </p>
@@ -210,7 +210,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                           e.target.value as OnboardingLanguageLevel,
                         )
                       }
-                      className="h-8 shrink-0 cursor-pointer rounded-md border border-border bg-background px-2 text-[12px] text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35"
+                      className="h-8 shrink-0 cursor-pointer rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35"
                     >
                       {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
                         <option key={level} value={level}>

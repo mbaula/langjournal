@@ -63,7 +63,7 @@ function splitPlainWithSlash(
           {segText.slice(i, j)}
           {showSpinner ? <TranslationSpinner /> : null}
         </mark>
-        <span className="pointer-events-none absolute left-full top-full z-10 mt-1 ml-0 whitespace-nowrap rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-foreground shadow-sm">
+        <span className="pointer-events-none absolute left-full top-full z-10 mt-1 ml-0 whitespace-nowrap rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium text-foreground shadow-sm">
           {slashTranslateHint}
         </span>
       </span>,

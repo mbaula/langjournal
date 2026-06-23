@@ -41,7 +41,7 @@ export function JournalProgressView({
     <div className={appPageShellClassName}>
       <header className="space-y-1">
         <h1 className={journalPageTitleClassName}>Progress</h1>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Track your journaling streaks, vocabulary growth, and activity over
           time.
         </p>

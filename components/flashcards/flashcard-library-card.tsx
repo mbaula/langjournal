@@ -21,7 +21,7 @@ function IconHoverLabel({ label, children }: IconHoverLabelProps) {
       {children}
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-0.5 text-[11px] font-medium text-background opacity-0 transition-opacity duration-75 group-hover/icon-label:opacity-100"
+        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background opacity-0 transition-opacity duration-75 group-hover/icon-label:opacity-100"
       >
         {label}
       </span>
@@ -181,14 +181,14 @@ export function FlashcardLibraryCard({
         value={primaryText}
         onChange={onPrimaryChange}
         editable={expanded}
-        className="text-[15px] font-medium leading-snug"
+        className="text-base font-medium leading-snug"
       />
       {showSecondary ? (
         <InlineEditableText
           value={secondaryText}
           onChange={onSecondaryChange}
           editable={expanded}
-          className="text-[13px] leading-snug"
+          className="text-sm leading-snug"
           muted
         />
       ) : null}
@@ -242,7 +242,7 @@ export function FlashcardLibraryCard({
           <div className="flex flex-col items-center transition-transform duration-100 ease-out group-hover:-translate-y-2">
             {phraseContent}
           </div>
-          <p className="pointer-events-none absolute inset-x-3 bottom-2.5 text-[11px] text-muted-foreground opacity-0 transition-opacity duration-75 group-hover:opacity-100">
+          <p className="pointer-events-none absolute inset-x-3 bottom-2.5 text-xs text-muted-foreground opacity-0 transition-opacity duration-75 group-hover:opacity-100">
             click to view
           </p>
         </div>
@@ -258,7 +258,7 @@ export function FlashcardLibraryCard({
           >
             {deleteConfirming ? (
               <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-3">
-                <p className="text-[13px]">Delete this flashcard?</p>
+                <p className="text-sm">Delete this flashcard?</p>
                 <div className="flex gap-2">
                   <Button type="button" variant="ghost" size="sm" onClick={onDeleteCancel}>
                     Cancel

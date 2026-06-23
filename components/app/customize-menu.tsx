@@ -52,7 +52,7 @@ export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "
           variant === "toolbar"
             ? "inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
             : cn(
-                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors",
+                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
                 "hover:bg-sidebar-accent",
                 open && "bg-sidebar-accent",
               ),
@@ -76,7 +76,7 @@ export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "
           role="menu"
         >
           <div
-            className="flex items-center gap-2 px-2 py-1.5 text-[13px]"
+            className="flex items-center gap-2 px-2 py-1.5 text-sm"
             id="customize-accent-label"
           >
             <Palette className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
@@ -123,7 +123,7 @@ export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "
             type="button"
             role="menuitem"
             onClick={toggleTheme}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-muted"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted"
           >
             {mounted ? (
               resolvedTheme === "dark" ? (

@@ -133,7 +133,7 @@ export function PastEntryEditor({
               triggerClassName="text-muted-foreground"
             />
             {deleteConfirming ? (
-              <div className="absolute right-0 top-full z-40 mt-2 min-w-[10rem] rounded-md border border-border bg-popover px-2 py-1 text-[12px] shadow-sm">
+              <div className="absolute right-0 top-full z-40 mt-2 min-w-[10rem] rounded-md border border-border bg-popover px-2 py-1 text-sm shadow-sm">
                 <p className="text-muted-foreground">Delete this entry?</p>
                 <div className="mt-1 flex items-center justify-end gap-1">
                   <button

@@ -60,7 +60,7 @@ export function DeleteEntryControl({
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-2 rounded-md border border-border bg-popover px-2 py-1 text-[12px] shadow-sm",
+          "inline-flex items-center gap-2 rounded-md border border-border bg-popover px-2 py-1 text-sm shadow-sm",
           className,
         )}
       >

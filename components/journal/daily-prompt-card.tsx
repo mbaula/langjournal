@@ -9,6 +9,7 @@ import {
   dailyPromptContentClassName,
   dailyPromptDifficultyButtonClassName,
   dailyPromptDifficultyControlsClassName,
+  dailyPromptTextClassName,
 } from "@/components/journal/daily-prompt-styles";
 import { Button } from "@/components/ui/button";
 import type { DailyPromptState } from "@/lib/prompts/prompt-core";
@@ -95,26 +96,27 @@ export function DailyPromptCard({
         aria-label="Today's writing prompt"
       >
         <div className={dailyPromptContentClassName}>
-          <div className="flex w-full flex-col items-center text-center">
-            <p className="mb-2 text-[12px] font-medium text-primary-foreground/75">
-              Writing prompt
-            </p>
-            <p className="text-base leading-relaxed font-medium sm:text-[17px] sm:leading-snug">
+          <div className="flex w-full flex-col items-center gap-5 text-center">
+            <div className="flex w-full items-center justify-between gap-3">
+              <p className="text-sm font-medium text-primary-foreground/75">
+                Writing prompt
+              </p>
+              <span className="inline-flex shrink-0 items-center rounded-full border border-primary-foreground/25 bg-primary-foreground/15 px-2.5 py-0.5 text-xs font-medium tracking-wide text-primary-foreground">
+                {prompt.level}
+              </span>
+            </div>
+            <p className={dailyPromptTextClassName}>
               {prompt.text}
             </p>
-            <span className="mt-2.5 inline-flex items-center rounded-full border border-primary-foreground/25 bg-primary-foreground/15 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-primary-foreground">
-              {prompt.level}
-            </span>
           </div>
 
           {isToday ? (
-            <div className="flex w-full flex-col items-center gap-2">
-              <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <div className="flex w-full flex-col items-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
                 {onUsePrompt ? (
                   <Button
                     type="button"
                     variant="outline"
-                    size="xs"
                     className={dailyPromptActionButtonClassName}
                     disabled={isPromptAdopted || usePromptPending}
                     onClick={() => onUsePrompt(prompt.text)}
@@ -122,17 +124,16 @@ export function DailyPromptCard({
                     {isPromptAdopted ? (
                       <>
                         <Check aria-hidden />
-                        Added to entry
+                        Added
                       </>
                     ) : (
-                      "Use this prompt"
+                      "Use prompt"
                     )}
                   </Button>
                 ) : null}
                 <Button
                   type="button"
                   variant="outline"
-                  size="xs"
                   className={dailyPromptActionButtonClassName}
                   aria-label="Refresh prompt"
                   onClick={() => runAction({ action: "skip" })}
@@ -142,7 +143,7 @@ export function DailyPromptCard({
                 </Button>
               </div>
               {actionError ? (
-                <p className="text-center text-[12px] text-primary-foreground/90">
+                <p className="text-center text-sm text-primary-foreground/90">
                   {actionError}
                 </p>
               ) : null}

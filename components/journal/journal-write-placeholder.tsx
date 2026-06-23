@@ -6,7 +6,7 @@ import { journalEditorTranslationHighlightClassName } from "@/components/journal
 import { cn } from "@/lib/utils";
 
 const PLACEHOLDER_TEXT =
-  "if you're stuck, type // to start translating, let's write something";
+  "When you're stuck, type // to translate in-line";
 
 const HIGHLIGHT_START = PLACEHOLDER_TEXT.indexOf("//");
 
@@ -75,7 +75,7 @@ export function JournalWritePlaceholder({ className }: JournalWritePlaceholderPr
   return (
     <p
       className={cn(
-        "font-sans whitespace-pre-wrap text-[15px] leading-[1.65] text-muted-foreground/70 antialiased",
+        "font-sans whitespace-pre-wrap text-base leading-[1.65] text-muted-foreground/70 antialiased",
         className,
       )}
       aria-hidden

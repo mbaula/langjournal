@@ -184,9 +184,9 @@ export function FlashcardAudioControls({
       </div>
 
       {uploading ? (
-        <p className="mt-2 text-[12px] text-muted-foreground">Saving audio…</p>
+        <p className="mt-2 text-sm text-muted-foreground">Saving audio…</p>
       ) : null}
-      {error ? <p className="mt-2 text-[12px] text-destructive">{error}</p> : null}
+      {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

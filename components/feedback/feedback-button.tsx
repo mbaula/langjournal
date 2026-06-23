@@ -57,7 +57,7 @@ export function FeedbackButton({
         data-tally-open={formId}
         data-tally-layout="modal"
         className={cn(
-          "flex w-full items-center justify-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/25 px-2 py-2.5 text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/80",
+          "flex w-full items-center justify-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/25 px-2 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/80",
           className,
         )}
       >

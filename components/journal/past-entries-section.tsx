@@ -183,7 +183,7 @@ export function PastEntriesSection({
       ref={sectionRef}
       className="space-y-6 border-t border-border pt-8"
     >
-      <h2 className="text-lg font-semibold tracking-tight text-foreground">
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">
         Past entries
       </h2>
 
@@ -192,7 +192,7 @@ export function PastEntriesSection({
           aria-label="Past entries table of contents"
           className="lg:sticky lg:top-24 lg:w-44 lg:shrink-0 xl:w-52"
         >
-          <p className="mb-3 hidden text-[11px] font-semibold tracking-wide text-muted-foreground uppercase lg:block">
+          <p className="mb-3 hidden text-xs font-semibold tracking-wide text-muted-foreground uppercase lg:block">
             On this page
           </p>
           <ul className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0">
@@ -213,16 +213,16 @@ export function PastEntriesSection({
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="min-w-0 truncate text-[13px] leading-snug font-medium">
+                      <span className="min-w-0 truncate text-sm leading-snug font-medium">
                         {item.title}
                       </span>
                       {item.translationCount > 0 ? (
-                        <span className="shrink-0 rounded-full border border-border bg-background px-1.5 py-px text-[10px] font-medium tabular-nums text-muted-foreground">
+                        <span className="shrink-0 rounded-full border border-border bg-background px-1.5 py-px text-xs font-medium tabular-nums text-muted-foreground">
                           + {item.translationCount}
                         </span>
                       ) : null}
                     </div>
-                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground sm:text-sm">
                       {item.dateLabel}
                     </span>
                   </button>

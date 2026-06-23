@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const saveEntryButtonClassName =
-  "h-10 rounded-full border border-border bg-white px-5 text-[13px] shadow-none hover:bg-white/90 dark:bg-background dark:hover:bg-background/90";
+  "h-11 rounded-full border border-border bg-white px-5 text-sm shadow-none hover:bg-white/90 dark:bg-background dark:hover:bg-background/90";
 
 type SaveEntryBarProps = {
   canFinish: boolean;
@@ -36,7 +36,7 @@ export function SaveEntryBar({
     >
       {successMessage ? (
         <p
-          className="max-w-xs rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-[13px] leading-snug text-emerald-950 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100"
+          className="max-w-xs rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm leading-snug text-emerald-950 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100"
           role="status"
         >
           {successMessage}
@@ -44,7 +44,7 @@ export function SaveEntryBar({
       ) : null}
       {finishError ? (
         <p
-          className="max-w-xs rounded-full border border-destructive/30 bg-destructive/10 px-4 py-2 text-[13px] leading-snug text-destructive"
+          className="max-w-xs rounded-full border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm leading-snug text-destructive"
           role="alert"
         >
           {finishError}

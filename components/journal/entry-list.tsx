@@ -106,7 +106,7 @@ export function EntryList({
 }: EntryListProps) {
   if (entries.length === 0) {
     return (
-      <p className="text-[13px] text-muted-foreground">No entries yet.</p>
+      <p className="text-sm text-muted-foreground">No entries yet.</p>
     );
   }
 

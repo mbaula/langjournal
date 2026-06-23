@@ -137,7 +137,7 @@ export function AppTopNavClient({
               aria-haspopup="menu"
               aria-label="Account menu"
             >
-              <span className="flex size-7 items-center justify-center overflow-hidden rounded-full border border-border bg-muted/50 text-[10px] font-medium text-foreground/85">
+              <span className="flex size-7 items-center justify-center overflow-hidden rounded-full border border-border bg-muted/50 text-xs font-medium text-foreground/85">
                 {profileInitials ? (
                   <span>{profileInitials}</span>
                 ) : (
@@ -163,7 +163,7 @@ export function AppTopNavClient({
                 <Link
                   href="/app/settings"
                   role="menuitem"
-                  className="flex items-center gap-2 px-3 py-2 text-[13px] transition-colors hover:bg-muted"
+                  className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted"
                   onClick={() => setUserMenuOpen(false)}
                 >
                   <Settings className="size-4 opacity-70" strokeWidth={1.5} />
@@ -176,7 +176,7 @@ export function AppTopNavClient({
                       : "/auth/signout"
                   }
                   role="menuitem"
-                  className="flex items-center gap-2 px-3 py-2 text-[13px] transition-colors hover:bg-muted"
+                  className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted"
                   onClick={() => setUserMenuOpen(false)}
                 >
                   <LogOut className="size-4 opacity-70" strokeWidth={1.5} />
