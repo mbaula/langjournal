@@ -1,4 +1,4 @@
-import { isAccountPreviewMode, requireUser } from "@/lib/auth/session";
+import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
 import {
   getDevPreviewOnboardingState,
   getDevPreviewSidebarRecents,
@@ -23,7 +23,7 @@ export async function AppSidebar() {
     );
   }
 
-  const user = await requireUser();
+  const user = await requireAppSession();
   const [entries, onboarding] = await Promise.all([
     listJournalRecentsForSidebar(user.id),
     getOnboardingState(user.id),

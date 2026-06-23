@@ -233,6 +233,11 @@ export function AppSidebarClient({
   const pathnameEntryId = pathname.match(/^\/app\/entry\/([^/]+)$/)?.[1] ?? null;
   const activeEntryId = currentEntryId ?? pathnameEntryId;
 
+  useEffect(() => {
+    router.prefetch("/app/journal");
+    router.prefetch("/app/flashcards");
+  }, [router]);
+
   return (
     <aside className="flex h-full min-h-0 w-[240px] shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[background-color,color] duration-300 ease-out">
       <div className="flex items-center justify-between gap-3 border-sidebar-border border-b px-2 py-2">

@@ -1,9 +1,9 @@
 import { EntryList } from "@/components/journal/entry-list";
-import { DailyPromptBanner } from "@/components/journal/daily-prompt-banner";
+import { DailyPromptSection } from "@/components/journal/daily-prompt-section";
 import { appPageShellClassName } from "@/components/journal/field-styles";
 import { JournalHomeHeader } from "@/components/journal/journal-home-header";
 import { JournalProgressRail } from "@/components/journal/journal-progress-rail";
-import { isAccountPreviewMode, requireUser } from "@/lib/auth/session";
+import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
 import {
   DEV_PREVIEW_ENTRY_ID,
   getDevPreviewContributionData,
@@ -24,19 +24,18 @@ import {
   getOrCreateJournalEntryForDate,
   listJournalEntries,
 } from "@/lib/entries/service";
-import { getDailyPromptForEntry } from "@/lib/prompts/daily-prompt";
-import type { DailyPromptState } from "@/lib/prompts/daily-prompt";
 
 type JournalHomeBodyProps = {
   greetingName: string;
   encouragingSubtitle: string;
   source: string;
   target: string;
+  userId: string;
   todayEntryId: string;
-  todayPrompt: DailyPromptState | null;
   entries: Awaited<ReturnType<typeof listJournalEntries>>;
   stats: Awaited<ReturnType<typeof getJournalStats>>;
   contributions: Awaited<ReturnType<typeof getContributionData>>;
+  showDailyPrompt: boolean;
 };
 
 function JournalHomeBody({
@@ -44,11 +43,12 @@ function JournalHomeBody({
   encouragingSubtitle,
   source,
   target,
+  userId,
   todayEntryId,
-  todayPrompt,
   entries,
   stats,
   contributions,
+  showDailyPrompt,
 }: JournalHomeBodyProps) {
   return (
     <div className={appPageShellClassName}>
@@ -61,11 +61,13 @@ function JournalHomeBody({
 
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-x-10 lg:gap-y-8">
         <div className="order-3 min-w-0 lg:order-none">
-          <DailyPromptBanner
-            entryId={todayEntryId}
-            isToday
-            initialPrompt={todayPrompt}
-          />
+          {showDailyPrompt ? (
+            <DailyPromptSection
+              entryId={todayEntryId}
+              userId={userId}
+              isToday
+            />
+          ) : null}
           <EntryList entries={entries} />
         </div>
 
@@ -100,16 +102,17 @@ export default async function JournalPage() {
         encouragingSubtitle={encouragingSubtitle}
         source={source}
         target={target}
+        userId=""
         todayEntryId={DEV_PREVIEW_ENTRY_ID}
-        todayPrompt={null}
         entries={entries}
         stats={stats}
         contributions={contributions}
+        showDailyPrompt={false}
       />
     );
   }
 
-  const user = await requireUser();
+  const user = await requireAppSession();
   const [
     { entry: todayEntry, created: todayEntryCreated },
     entries,
@@ -144,11 +147,6 @@ export default async function JournalPage() {
 
   const greetingName = journalGreetingName(onboarding.displayName, user.email);
   const encouragingSubtitle = pickEncouragingSubtitle();
-  const todayPrompt = await getDailyPromptForEntry(
-    user.id,
-    todayEntry.id,
-    target,
-  );
 
   return (
     <JournalHomeBody
@@ -156,11 +154,12 @@ export default async function JournalPage() {
       encouragingSubtitle={encouragingSubtitle}
       source={source}
       target={target}
+      userId={user.id}
       todayEntryId={todayEntry.id}
-      todayPrompt={todayPrompt}
       entries={displayEntries}
       stats={stats}
       contributions={contributions}
+      showDailyPrompt
     />
   );
 }

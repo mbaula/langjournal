@@ -9,22 +9,50 @@ import {
   lowerCefrLevel,
 } from "@/lib/prompts/cefr";
 import {
+  buildPromptState,
+  FEEDBACK_STREAK_THRESHOLD,
+  pickRandomUnseenIndex,
+  type DailyPromptState,
+  type PromptFeedback,
+} from "@/lib/prompts/prompt-core";
+import {
   getPromptCount,
-  getPromptText,
   type PromptCefrLevel,
 } from "@/lib/prompts/prompts";
 
-export type SeenPromptIndexes = Partial<Record<PromptCefrLevel, number[]>>;
+export type {
+  DailyPromptState,
+  PromptFeedback,
+} from "@/lib/prompts/prompt-core";
+export {
+  FEEDBACK_STREAK_THRESHOLD,
+  pickRandomUnseenIndex,
+} from "@/lib/prompts/prompt-core";
 
-/** Consecutive same-direction feedback votes needed to change prompt level. */
-export const FEEDBACK_STREAK_THRESHOLD = 5;
-
-export type DailyPromptState = {
-  text: string;
+export type PromptTarget = {
   level: CefrLevel;
   index: number;
-  canVoteTooEasy: boolean;
-  canVoteTooHard: boolean;
+};
+
+export type SeenPromptIndexes = Partial<Record<PromptCefrLevel, number[]>>;
+
+type UserLanguageRow = {
+  id: string;
+  estimatedCefrLevel: CefrLevel;
+  currentPromptLevel: CefrLevel | null;
+  seenPromptIndexes: unknown;
+  tooEasyStreak: number;
+  tooHardStreak: number;
+};
+
+type PromptContext = {
+  entry: {
+    id: string;
+    entryDate: Date;
+    promptIndex: number | null;
+    promptLevel: CefrLevel | null;
+  };
+  userLanguage: UserLanguageRow;
 };
 
 function parseSeenIndexes(raw: unknown): SeenPromptIndexes {
@@ -55,38 +83,6 @@ function getEffectivePromptLevel(
   return current ?? estimated;
 }
 
-export function pickRandomUnseenIndex(
-  level: PromptCefrLevel,
-  seen: number[],
-  excludeIndex?: number,
-): { index: number; resetSeen: boolean } {
-  const total = getPromptCount(level);
-  if (total <= 1) {
-    return { index: 0, resetSeen: false };
-  }
-
-  const seenSet = new Set(seen);
-  if (excludeIndex != null) {
-    seenSet.add(excludeIndex);
-  }
-
-  const unseen = Array.from({ length: total }, (_, i) => i).filter(
-    (i) => !seenSet.has(i),
-  );
-
-  if (unseen.length === 0) {
-    const candidates = Array.from({ length: total }, (_, i) => i).filter(
-      (i) => i !== excludeIndex,
-    );
-    const index =
-      candidates[Math.floor(Math.random() * candidates.length)] ?? 0;
-    return { index, resetSeen: true };
-  }
-
-  const index = unseen[Math.floor(Math.random() * unseen.length)]!;
-  return { index, resetSeen: false };
-}
-
 export function markPromptSeen(
   seen: SeenPromptIndexes,
   level: PromptCefrLevel,
@@ -109,36 +105,59 @@ export function markPromptSeen(
   return { ...seen, [level]: levelSeen };
 }
 
-async function getOrEnsureUserLanguageForPrompt(
+async function loadPromptContext(
   userId: string,
-  targetLanguage: string,
-) {
-  const forTarget = await prisma.userLanguage.findUnique({
-    where: {
-      userId_languageCode: { userId, languageCode: targetLanguage },
+  entryId: string,
+): Promise<PromptContext | null> {
+  const entry = await prisma.journalEntry.findFirst({
+    where: { id: entryId, userId },
+    select: {
+      id: true,
+      entryDate: true,
+      promptIndex: true,
+      promptLevel: true,
+      user: {
+        select: {
+          languageProfile: { select: { targetLanguage: true } },
+          learningLanguages: {
+            orderBy: { createdAt: "asc" },
+            select: {
+              id: true,
+              languageCode: true,
+              estimatedCefrLevel: true,
+              currentPromptLevel: true,
+              seenPromptIndexes: true,
+              tooEasyStreak: true,
+              tooHardStreak: true,
+            },
+          },
+        },
+      },
     },
   });
 
-  if (forTarget) {
-    return forTarget;
+  if (!entry) {
+    return null;
   }
 
-  return prisma.userLanguage.findFirst({
-    where: { userId },
-    orderBy: { createdAt: "asc" },
-  });
-}
+  const targetLanguage = entry.user.languageProfile?.targetLanguage;
+  const userLanguage =
+    entry.user.learningLanguages.find(
+      (lang) => lang.languageCode === targetLanguage,
+    ) ?? entry.user.learningLanguages[0];
 
-function toDailyPromptState(
-  level: CefrLevel,
-  index: number,
-): DailyPromptState {
+  if (!userLanguage) {
+    return null;
+  }
+
   return {
-    text: getPromptText(level as PromptCefrLevel, index),
-    level,
-    index,
-    canVoteTooEasy: canBumpCefrLevel(level),
-    canVoteTooHard: canLowerCefrLevel(level),
+    entry: {
+      id: entry.id,
+      entryDate: entry.entryDate,
+      promptIndex: entry.promptIndex,
+      promptLevel: entry.promptLevel,
+    },
+    userLanguage,
   };
 }
 
@@ -147,10 +166,18 @@ type PromptAdvanceEntry = {
   promptLevel: CefrLevel;
 };
 
+function isValidPromptTarget(
+  level: PromptCefrLevel,
+  index: number,
+): boolean {
+  return Number.isInteger(index) && index >= 0 && index < getPromptCount(level);
+}
+
 function selectNextPromptForLevel(
   seen: SeenPromptIndexes,
   targetLevel: PromptCefrLevel,
   currentEntry?: PromptAdvanceEntry | null,
+  preferredIndex?: number,
 ): { index: number; nextSeen: SeenPromptIndexes } {
   let updatedSeen = seen;
 
@@ -167,6 +194,20 @@ function selectNextPromptForLevel(
     currentEntry?.promptLevel === targetLevel
       ? currentEntry.promptIndex
       : undefined;
+
+  if (
+    preferredIndex != null &&
+    isValidPromptTarget(targetLevel, preferredIndex) &&
+    preferredIndex !== excludeIndex
+  ) {
+    const nextSeen = markPromptSeen(
+      updatedSeen,
+      targetLevel,
+      preferredIndex,
+      false,
+    );
+    return { index: preferredIndex, nextSeen };
+  }
 
   const { index, resetSeen } = pickRandomUnseenIndex(
     targetLevel,
@@ -204,19 +245,17 @@ async function persistDailyPrompt(
     }),
   ]);
 
-  return toDailyPromptState(targetLevel, index);
+  return buildPromptState(
+    targetLevel,
+    index,
+    userLanguageUpdates.tooEasyStreak,
+    userLanguageUpdates.tooHardStreak,
+  );
 }
 
 async function assignPromptToEntry(
   entryId: string,
-  userLanguage: {
-    id: string;
-    estimatedCefrLevel: CefrLevel;
-    currentPromptLevel: CefrLevel | null;
-    seenPromptIndexes: unknown;
-    tooEasyStreak: number;
-    tooHardStreak: number;
-  },
+  userLanguage: UserLanguageRow,
 ) {
   const level = getEffectivePromptLevel(
     userLanguage.estimatedCefrLevel,
@@ -235,22 +274,26 @@ async function assignPromptToEntry(
 export async function getDailyPromptForEntry(
   userId: string,
   entryId: string,
-  targetLanguage: string,
 ): Promise<DailyPromptState | null> {
-  const [entry, userLanguage] = await Promise.all([
-    prisma.journalEntry.findFirst({
-      where: { id: entryId, userId },
-      select: { id: true, promptIndex: true, promptLevel: true },
-    }),
-    getOrEnsureUserLanguageForPrompt(userId, targetLanguage),
-  ]);
+  const context = await loadPromptContext(userId, entryId);
 
-  if (!entry || !userLanguage) {
+  if (!context) {
+    return null;
+  }
+
+  const { entry, userLanguage } = context;
+
+  if (!isUtcDateToday(entry.entryDate)) {
     return null;
   }
 
   if (entry.promptIndex != null && entry.promptLevel != null) {
-    return toDailyPromptState(entry.promptLevel, entry.promptIndex);
+    return buildPromptState(
+      entry.promptLevel,
+      entry.promptIndex,
+      userLanguage.tooEasyStreak,
+      userLanguage.tooHardStreak,
+    );
   }
 
   return assignPromptToEntry(entry.id, userLanguage);
@@ -259,25 +302,16 @@ export async function getDailyPromptForEntry(
 async function advanceDailyPrompt(
   userId: string,
   entryId: string,
-  targetLanguage: string,
   feedback?: PromptFeedback,
+  target?: PromptTarget,
 ): Promise<DailyPromptState | null> {
-  const [entry, userLanguage] = await Promise.all([
-    prisma.journalEntry.findFirst({
-      where: { id: entryId, userId },
-      select: {
-        id: true,
-        entryDate: true,
-        promptIndex: true,
-        promptLevel: true,
-      },
-    }),
-    getOrEnsureUserLanguageForPrompt(userId, targetLanguage),
-  ]);
+  const context = await loadPromptContext(userId, entryId);
 
-  if (!entry || !userLanguage || !isUtcDateToday(entry.entryDate)) {
+  if (!context || !isUtcDateToday(context.entry.entryDate)) {
     return null;
   }
+
+  const { entry, userLanguage } = context;
 
   const effectiveLevel = getEffectivePromptLevel(
     userLanguage.estimatedCefrLevel,
@@ -310,10 +344,17 @@ async function advanceDailyPrompt(
 
   const targetLevel = nextLevel as PromptCefrLevel;
   const seen = parseSeenIndexes(userLanguage.seenPromptIndexes);
-  const { index, nextSeen } = selectNextPromptForLevel(seen, targetLevel, {
-    promptIndex: entry.promptIndex,
-    promptLevel: entry.promptLevel,
-  });
+  const preferredIndex =
+    target?.level === targetLevel ? target.index : undefined;
+  const { index, nextSeen } = selectNextPromptForLevel(
+    seen,
+    targetLevel,
+    {
+      promptIndex: entry.promptIndex,
+      promptLevel: entry.promptLevel,
+    },
+    preferredIndex,
+  );
 
   return persistDailyPrompt(entryId, userLanguage.id, targetLevel, index, nextSeen, {
     currentPromptLevel: nextLevel,
@@ -325,25 +366,18 @@ async function advanceDailyPrompt(
 export async function skipDailyPrompt(
   userId: string,
   entryId: string,
-  targetLanguage: string,
+  target?: PromptTarget,
 ): Promise<DailyPromptState | null> {
-  return advanceDailyPrompt(userId, entryId, targetLanguage);
+  return advanceDailyPrompt(userId, entryId, undefined, target);
 }
-
-export type PromptFeedback = "too_easy" | "too_hard";
 
 export async function recordPromptFeedback(
   userId: string,
   entryId: string,
-  targetLanguage: string,
   feedback: PromptFeedback,
+  target?: PromptTarget,
 ): Promise<{ ok: true; prompt: DailyPromptState } | { ok: false; error: "not_found" }> {
-  const prompt = await advanceDailyPrompt(
-    userId,
-    entryId,
-    targetLanguage,
-    feedback,
-  );
+  const prompt = await advanceDailyPrompt(userId, entryId, feedback, target);
 
   if (!prompt) {
     return { ok: false, error: "not_found" };

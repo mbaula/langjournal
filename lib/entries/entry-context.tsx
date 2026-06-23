@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
@@ -113,14 +114,18 @@ export function EntryProvider({
         setIsLoading(false);
         setCurrentEntryId(id);
         setLoadError(null);
-        router.replace(`/app/entry/${id}`, { scroll: false });
+        startTransition(() => {
+          router.replace(`/app/entry/${id}`, { scroll: false });
+        });
         return;
       }
 
       setIsLoading(true);
       setLoadError(null);
       setCurrentEntryId(id);
-      router.replace(`/app/entry/${id}`, { scroll: false });
+      startTransition(() => {
+        router.replace(`/app/entry/${id}`, { scroll: false });
+      });
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
@@ -146,6 +151,7 @@ export function EntryProvider({
 
   const prefetchEntry = useCallback(
     async (id: string) => {
+      router.prefetch(`/app/entry/${id}`);
       if (entriesRef.current.has(id)) return;
       try {
         const entry = await fetchEntry(id);
@@ -157,7 +163,7 @@ export function EntryProvider({
         // Best-effort prefetch only.
       }
     },
-    [fetchEntry]
+    [fetchEntry, router],
   );
 
   const refreshEntry = useCallback(async () => {

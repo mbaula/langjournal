@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import {
   DEV_ACCOUNT_PREVIEW_COOKIE,
@@ -40,3 +41,24 @@ export async function requireUser(redirectTo = "/app/journal"): Promise<AppUser>
 
   return { id: user.id, email };
 }
+
+/** Session check for /app routes — middleware already redirects unauthenticated users. */
+export const requireAppSession = cache(async (
+  redirectTo = "/app/journal",
+): Promise<AppUser> => {
+  if (await isAccountPreviewMode()) {
+    return getDevPreviewUser();
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user?.id) {
+    redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
+  }
+
+  return { id: user.id, email: user.email ?? "" };
+});
