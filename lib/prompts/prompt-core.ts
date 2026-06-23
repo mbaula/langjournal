@@ -12,8 +12,8 @@ import {
   type PromptCefrLevel,
 } from "@/lib/prompts/prompts";
 
-/** Consecutive same-direction feedback votes needed to change prompt level. */
-export const FEEDBACK_STREAK_THRESHOLD = 5;
+/** @deprecated Streak counters are kept for compatibility; levels change immediately. */
+export const FEEDBACK_STREAK_THRESHOLD = 1;
 
 export type DailyPromptState = {
   text: string;
@@ -86,19 +86,13 @@ export function previewNextPrompt(
   let tooHardStreak = current.tooHardStreak;
 
   if (feedback === "too_easy" && canBumpCefrLevel(current.level)) {
-    tooEasyStreak += 1;
-    tooHardStreak = 0;
-    if (tooEasyStreak >= FEEDBACK_STREAK_THRESHOLD) {
-      nextLevel = bumpCefrLevel(current.level);
-      tooEasyStreak = 0;
-    }
-  } else if (feedback === "too_hard" && canLowerCefrLevel(current.level)) {
-    tooHardStreak += 1;
+    nextLevel = bumpCefrLevel(current.level);
     tooEasyStreak = 0;
-    if (tooHardStreak >= FEEDBACK_STREAK_THRESHOLD) {
-      nextLevel = lowerCefrLevel(current.level);
-      tooHardStreak = 0;
-    }
+    tooHardStreak = 0;
+  } else if (feedback === "too_hard" && canLowerCefrLevel(current.level)) {
+    nextLevel = lowerCefrLevel(current.level);
+    tooEasyStreak = 0;
+    tooHardStreak = 0;
   }
 
   const level = nextLevel as PromptCefrLevel;

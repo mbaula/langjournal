@@ -1,5 +1,6 @@
 import { journalPageTitleClassName } from "@/components/journal/field-styles";
 import { LanguageBar } from "@/components/journal/language-bar";
+import type { TranslateTrigger } from "@/components/journal/journal-editor";
 import { cn } from "@/lib/utils";
 
 type JournalHomeHeaderProps = {
@@ -7,6 +8,8 @@ type JournalHomeHeaderProps = {
   subtitle: string;
   source: string;
   target: string;
+  translateTrigger?: TranslateTrigger;
+  onLanguagesSaved?: (source: string, target: string) => void;
 };
 
 export function JournalHomeHeader({
@@ -14,6 +17,8 @@ export function JournalHomeHeader({
   subtitle,
   source,
   target,
+  translateTrigger,
+  onLanguagesSaved,
 }: JournalHomeHeaderProps) {
   return (
     <header className="w-full">
@@ -21,7 +26,12 @@ export function JournalHomeHeader({
         <h1 className={cn(journalPageTitleClassName, "min-w-0 shrink")}>
           Hi, {greetingName} 👋
         </h1>
-        <LanguageBar source={source} target={target} />
+        <LanguageBar
+          source={source}
+          target={target}
+          translateTrigger={translateTrigger}
+          onLanguagesSaved={onLanguagesSaved}
+        />
       </div>
       <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>
     </header>

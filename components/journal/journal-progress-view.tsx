@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import { ContributionChart } from "@/components/journal/contribution-chart";
-import { EntryList, type EntryRow } from "@/components/journal/entry-list";
 import { JournalProgressStats } from "@/components/journal/journal-progress-stats";
 import {
   appPageShellClassName,
@@ -13,7 +12,6 @@ import { cn } from "@/lib/utils";
 type JournalProgressViewProps = {
   stats: JournalStats;
   contributions: ContributionDay[];
-  entries: EntryRow[];
 };
 
 function ActivityWidget({
@@ -38,7 +36,6 @@ function ActivityWidget({
 export function JournalProgressView({
   stats,
   contributions,
-  entries,
 }: JournalProgressViewProps) {
   return (
     <div className={appPageShellClassName}>
@@ -60,13 +57,6 @@ export function JournalProgressView({
           />
         </ActivityWidget>
       </div>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">
-          Past entries
-        </h2>
-        <EntryList entries={entries} />
-      </section>
     </div>
   );
 }

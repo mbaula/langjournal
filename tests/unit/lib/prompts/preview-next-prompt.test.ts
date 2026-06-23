@@ -21,10 +21,15 @@ describe("previewNextPrompt", () => {
     expect(next.level).toBe("B1");
   });
 
-  it("increments too-hard streak without changing level on first feedback", () => {
+  it("moves up one level immediately when marked too easy", () => {
+    const next = previewNextPrompt(basePrompt, "too_easy");
+    expect(next.level).toBe("B2");
+    expect(next.index).not.toBe(basePrompt.index);
+  });
+
+  it("moves down one level immediately when marked too hard", () => {
     const next = previewNextPrompt(basePrompt, "too_hard");
-    expect(next.tooHardStreak).toBe(1);
-    expect(next.level).toBe("B1");
+    expect(next.level).toBe("A2");
     expect(next.index).not.toBe(basePrompt.index);
   });
 });

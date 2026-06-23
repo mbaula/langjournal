@@ -327,19 +327,13 @@ async function advanceDailyPrompt(
   let tooHardStreak = userLanguage.tooHardStreak;
 
   if (feedback === "too_easy" && canBumpCefrLevel(effectiveLevel)) {
-    tooEasyStreak += 1;
-    tooHardStreak = 0;
-    if (tooEasyStreak >= FEEDBACK_STREAK_THRESHOLD) {
-      nextLevel = bumpCefrLevel(effectiveLevel);
-      tooEasyStreak = 0;
-    }
-  } else if (feedback === "too_hard" && canLowerCefrLevel(effectiveLevel)) {
-    tooHardStreak += 1;
+    nextLevel = bumpCefrLevel(effectiveLevel);
     tooEasyStreak = 0;
-    if (tooHardStreak >= FEEDBACK_STREAK_THRESHOLD) {
-      nextLevel = lowerCefrLevel(effectiveLevel);
-      tooHardStreak = 0;
-    }
+    tooHardStreak = 0;
+  } else if (feedback === "too_hard" && canLowerCefrLevel(effectiveLevel)) {
+    nextLevel = lowerCefrLevel(effectiveLevel);
+    tooEasyStreak = 0;
+    tooHardStreak = 0;
   }
 
   const targetLevel = nextLevel as PromptCefrLevel;

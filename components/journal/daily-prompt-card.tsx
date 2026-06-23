@@ -6,6 +6,7 @@ import { useCallback, useRef, useState } from "react";
 import {
   dailyPromptActionButtonClassName,
   dailyPromptCardClassName,
+  dailyPromptContentClassName,
 } from "@/components/journal/daily-prompt-styles";
 import { Button } from "@/components/ui/button";
 import type { DailyPromptState } from "@/lib/prompts/prompt-core";
@@ -71,7 +72,7 @@ export function DailyPromptCard({
       className={dailyPromptCardClassName}
       aria-label="Today's writing prompt"
     >
-      <div className="flex flex-col items-center gap-4 px-5 py-5 text-center">
+      <div className={dailyPromptContentClassName}>
         <div className="flex w-full flex-col items-center text-center">
           <p className="mb-2 text-[12px] font-medium text-primary-foreground/75">
             Writing prompt

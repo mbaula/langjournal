@@ -31,9 +31,9 @@ describe("prompts data", () => {
   });
 });
 
-describe("prompt feedback threshold", () => {
-  it("requires five consecutive votes to change level", () => {
-    expect(FEEDBACK_STREAK_THRESHOLD).toBe(5);
+describe("prompt feedback", () => {
+  it("changes level immediately on harder or easier feedback", () => {
+    expect(FEEDBACK_STREAK_THRESHOLD).toBe(1);
   });
 });
 
