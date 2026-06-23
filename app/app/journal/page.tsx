@@ -1,5 +1,5 @@
 import { type TranslateTrigger } from "@/components/journal/journal-editor";
-import { JournalWriteBodyLoader } from "@/components/journal/journal-write-body-loader";
+import { JournalWriteBody } from "@/components/journal/journal-write-body";
 import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
 import {
   DEV_PREVIEW_ENTRY_ID,
@@ -47,7 +47,7 @@ export default async function JournalPage() {
     const encouragingSubtitle = pickEncouragingSubtitle();
 
     return (
-      <JournalWriteBodyLoader
+      <JournalWriteBody
         greetingName={greetingName}
         subtitle={encouragingSubtitle}
         sourceLanguage={source}
@@ -63,15 +63,16 @@ export default async function JournalPage() {
   }
 
   const user = await requireAppSession();
-  const [{ entry: todayEntry }, entries, { source, target }, onboarding] =
+  const [{ entry: todayEntry, dailyPrompt }, entries, { source, target }, onboarding] =
     await Promise.all([
-      getOrCreateJournalEntryForDate(user.id, new Date()),
+      getOrCreateJournalEntryForDate(user.id, new Date()).then(async (draft) => ({
+        entry: draft.entry,
+        dailyPrompt: await getDailyPromptForEntry(user.id, draft.entry.id),
+      })),
       listJournalEntries(user.id),
       getLanguagePair(user.id),
       getOnboardingState(user.id),
     ]);
-
-  const dailyPrompt = await getDailyPromptForEntry(user.id, todayEntry.id);
 
   const pastEntries = entries.filter((entry) =>
     isSavedJournalEntry(entry, todayEntry.id),
@@ -81,7 +82,7 @@ export default async function JournalPage() {
   const encouragingSubtitle = pickEncouragingSubtitle();
 
   return (
-    <JournalWriteBodyLoader
+    <JournalWriteBody
       greetingName={greetingName}
       subtitle={encouragingSubtitle}
       sourceLanguage={source}

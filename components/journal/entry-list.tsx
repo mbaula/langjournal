@@ -29,6 +29,27 @@ function formatEntryDay(d: Date | string) {
   });
 }
 
+export function pastEntryAnchorId(entryId: string) {
+  return `past-entry-${entryId}`;
+}
+
+export function countEntryTranslations(translations: unknown): number {
+  if (!Array.isArray(translations)) {
+    return 0;
+  }
+
+  return translations.filter((item) => {
+    if (!item || typeof item !== "object") {
+      return false;
+    }
+    const record = item as { id?: unknown };
+    if (typeof record.id === "string" && record.id.startsWith("opt-")) {
+      return false;
+    }
+    return "id" in item && "sourceText" in item && "translatedText" in item;
+  }).length;
+}
+
 export function EntryList({
   entries,
   onRenameTitle,
@@ -43,17 +64,22 @@ export function EntryList({
   return (
     <ul className="flex w-full flex-col gap-10">
       {entries.map((entry) => (
-        <JournalEntryCard
+        <li
           key={entry.id}
-          entryId={entry.id}
-          href={`/app/entry/${entry.id}`}
-          title={entry.title}
-          dateLabel={formatEntryDay(entry.entryDate)}
-          body={entry.body}
-          translations={entry.translations}
-          onRenameTitle={onRenameTitle}
-          onDelete={onDelete}
-        />
+          id={pastEntryAnchorId(entry.id)}
+          className="scroll-mt-28 list-none"
+        >
+          <JournalEntryCard
+            entryId={entry.id}
+            href={`/app/entry/${entry.id}`}
+            title={entry.title}
+            dateLabel={formatEntryDay(entry.entryDate)}
+            body={entry.body}
+            translations={entry.translations}
+            onRenameTitle={onRenameTitle}
+            onDelete={onDelete}
+          />
+        </li>
       ))}
     </ul>
   );

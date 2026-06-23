@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, CircleHelp } from "lucide-react";
 
 import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo";
-import { CreateEntryButton } from "@/components/journal/create-entry-button";
 import { Button } from "@/components/ui/button";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import { resolveLanguageLabel } from "@/lib/languages/display-name";
@@ -34,7 +33,7 @@ const barControlSurfaceClass =
   "rounded-full border border-border bg-muted/80 shadow-none";
 
 const selectClass =
-  "mt-2 w-full rounded-md border border-border/80 bg-background px-2.5 py-1.5 text-[13px] text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
+  "mt-2 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-[13px] text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
 
 function LanguagePicker({
   id,
@@ -267,8 +266,6 @@ export function LanguageBar({
       className="inline-flex max-w-full shrink-0 flex-nowrap items-center gap-2"
       ref={rootRef}
     >
-      <CreateEntryButton />
-
       <div className="relative min-w-0 shrink">
         <div
           className={cn(
@@ -316,7 +313,7 @@ export function LanguageBar({
             aria-labelledby="language-pair-title"
             aria-describedby="language-pair-instructions"
           >
-            <header className="border-b border-border/60 pb-4">
+            <header className="border-b border-border pb-4">
               <p
                 id="language-pair-title"
                 className="text-base font-medium text-foreground"
@@ -367,7 +364,7 @@ export function LanguageBar({
               <div className="min-h-0 overflow-hidden">
                 <div
                   className={cn(
-                    "flex justify-end gap-2 border-t border-border/60 pt-3 transition-[transform,opacity] duration-200 ease-out",
+                    "flex justify-end gap-2 border-t border-border pt-3 transition-[transform,opacity] duration-200 ease-out",
                     hasChanges
                       ? "translate-y-0 opacity-100"
                       : "translate-y-1 opacity-0",
@@ -419,7 +416,7 @@ export function LanguageBar({
           aria-haspopup="dialog"
           aria-label="How to translate"
         >
-          <CircleHelp className="size-5" strokeWidth={1.75} />
+          <CircleHelp className="size-5" strokeWidth={1.5} />
         </button>
 
         {helpOpen ? (

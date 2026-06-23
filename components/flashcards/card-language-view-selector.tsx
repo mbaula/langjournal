@@ -56,7 +56,7 @@ export function CardLanguageViewSelector({
             )}
             onClick={() => onChange(option.value)}
           >
-            <Icon className="size-3.5" strokeWidth={1.75} />
+            <Icon className="size-3.5" strokeWidth={1.5} />
           </Button>
         );
       })}

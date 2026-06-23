@@ -7,6 +7,8 @@ import {
   dailyPromptActionButtonClassName,
   dailyPromptCardClassName,
   dailyPromptContentClassName,
+  dailyPromptDifficultyButtonClassName,
+  dailyPromptDifficultyControlsClassName,
 } from "@/components/journal/daily-prompt-styles";
 import { Button } from "@/components/ui/button";
 import type { DailyPromptState } from "@/lib/prompts/prompt-core";
@@ -87,93 +89,96 @@ export function DailyPromptCard({
   const showHarder = isToday && prompt.canVoteTooEasy;
 
   return (
-    <section
-      className={dailyPromptCardClassName}
-      aria-label="Today's writing prompt"
-    >
-      <div className={dailyPromptContentClassName}>
-        <div className="flex w-full flex-col items-center text-center">
-          <p className="mb-2 text-[12px] font-medium text-primary-foreground/75">
-            Writing prompt
-          </p>
-          <p className="text-base leading-relaxed font-medium sm:text-[17px] sm:leading-snug">
-            {prompt.text}
-          </p>
-          <span className="mt-2.5 inline-flex items-center rounded-full border border-primary-foreground/25 bg-primary-foreground/15 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-primary-foreground">
-            {prompt.level}
-          </span>
-        </div>
-
-        {isToday ? (
-          <div className="flex w-full flex-col items-center gap-2">
-            {onUsePrompt ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
-                className={dailyPromptActionButtonClassName}
-                disabled={isPromptAdopted || usePromptPending}
-                onClick={() => onUsePrompt(prompt.text)}
-              >
-                {isPromptAdopted ? (
-                  <>
-                    <Check aria-hidden />
-                    Added to entry
-                  </>
-                ) : (
-                  "Use this prompt"
-                )}
-              </Button>
-            ) : null}
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
-              {showEasier ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  className={dailyPromptActionButtonClassName}
-                  onClick={() =>
-                    runAction({ action: "feedback", feedback: "too_hard" })
-                  }
-                >
-                  <ArrowDown aria-hidden />
-                  Easier
-                </Button>
-              ) : null}
-              {showHarder ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  className={dailyPromptActionButtonClassName}
-                  onClick={() =>
-                    runAction({ action: "feedback", feedback: "too_easy" })
-                  }
-                >
-                  <ArrowUp aria-hidden />
-                  Harder
-                </Button>
-              ) : null}
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
-                className={dailyPromptActionButtonClassName}
-                aria-label="Refresh prompt"
-                onClick={() => runAction({ action: "skip" })}
-              >
-                <RefreshCw aria-hidden />
-                Refresh
-              </Button>
-            </div>
-            {actionError ? (
-              <p className="text-center text-[12px] text-primary-foreground/90">
-                {actionError}
-              </p>
-            ) : null}
+    <div className="flex w-full flex-col gap-2">
+      <section
+        className={dailyPromptCardClassName}
+        aria-label="Today's writing prompt"
+      >
+        <div className={dailyPromptContentClassName}>
+          <div className="flex w-full flex-col items-center text-center">
+            <p className="mb-2 text-[12px] font-medium text-primary-foreground/75">
+              Writing prompt
+            </p>
+            <p className="text-base leading-relaxed font-medium sm:text-[17px] sm:leading-snug">
+              {prompt.text}
+            </p>
+            <span className="mt-2.5 inline-flex items-center rounded-full border border-primary-foreground/25 bg-primary-foreground/15 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-primary-foreground">
+              {prompt.level}
+            </span>
           </div>
-        ) : null}
-      </div>
-    </section>
+
+          {isToday ? (
+            <div className="flex w-full flex-col items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {onUsePrompt ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    className={dailyPromptActionButtonClassName}
+                    disabled={isPromptAdopted || usePromptPending}
+                    onClick={() => onUsePrompt(prompt.text)}
+                  >
+                    {isPromptAdopted ? (
+                      <>
+                        <Check aria-hidden />
+                        Added to entry
+                      </>
+                    ) : (
+                      "Use this prompt"
+                    )}
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  className={dailyPromptActionButtonClassName}
+                  aria-label="Refresh prompt"
+                  onClick={() => runAction({ action: "skip" })}
+                >
+                  <RefreshCw aria-hidden />
+                  Refresh
+                </Button>
+              </div>
+              {actionError ? (
+                <p className="text-center text-[12px] text-primary-foreground/90">
+                  {actionError}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      {isToday && (showEasier || showHarder) ? (
+        <div className={dailyPromptDifficultyControlsClassName}>
+          {showEasier ? (
+            <button
+              type="button"
+              className={dailyPromptDifficultyButtonClassName}
+              onClick={() =>
+                runAction({ action: "feedback", feedback: "too_hard" })
+              }
+            >
+              <ArrowDown className="size-3.5 shrink-0" strokeWidth={1.5} aria-hidden />
+              Easier
+            </button>
+          ) : null}
+          {showHarder ? (
+            <button
+              type="button"
+              className={dailyPromptDifficultyButtonClassName}
+              onClick={() =>
+                runAction({ action: "feedback", feedback: "too_easy" })
+              }
+            >
+              <ArrowUp className="size-3.5 shrink-0" strokeWidth={1.5} aria-hidden />
+              Harder
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 }

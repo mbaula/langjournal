@@ -46,7 +46,7 @@ function LearningLanguagesStat({
   return (
     <div className={cn(statCardClass, "flex w-full flex-col gap-1")}>
       <div className="flex min-w-0 items-center gap-1">
-        <Languages className={iconClass} strokeWidth={1.75} />
+        <Languages className={iconClass} strokeWidth={1.5} />
         <span className={labelClass}>Learning</span>
       </div>
       {languages.length > 0 ? (
@@ -82,12 +82,12 @@ export function JournalProgressStats({
         <StatCard
           label="Total entries"
           value={stats.total}
-          icon={<BookOpen className={iconClass} strokeWidth={1.75} />}
+          icon={<BookOpen className={iconClass} strokeWidth={1.5} />}
         />
         <StatCard
           label="New words"
           value={stats.translationCount}
-          icon={<Sparkles className={iconClass} strokeWidth={1.75} />}
+          icon={<Sparkles className={iconClass} strokeWidth={1.5} />}
         />
       </div>
       <LearningLanguagesStat languages={stats.learningLanguages} />
@@ -95,12 +95,12 @@ export function JournalProgressStats({
         <StatCard
           label="This week"
           value={stats.thisWeek}
-          icon={<CalendarDays className={iconClass} strokeWidth={1.75} />}
+          icon={<CalendarDays className={iconClass} strokeWidth={1.5} />}
         />
         <StatCard
           label="This month"
           value={stats.thisMonth}
-          icon={<CalendarDays className={iconClass} strokeWidth={1.75} />}
+          icon={<CalendarDays className={iconClass} strokeWidth={1.5} />}
         />
       </div>
     </div>

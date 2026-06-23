@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { invalidateLanguagePairCache } from "@/lib/db/language";
 import { LevelConfidence, type Prisma } from "@prisma/client";
 
@@ -20,7 +22,7 @@ export type OnboardingState = {
   isComplete: boolean;
 };
 
-export async function getOnboardingState(userId: string): Promise<OnboardingState> {
+export const getOnboardingState = cache(async (userId: string): Promise<OnboardingState> => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -48,7 +50,7 @@ export async function getOnboardingState(userId: string): Promise<OnboardingStat
     languages,
     isComplete: Boolean(user?.onboardingCompletedAt) && hasRequired,
   };
-}
+});
 
 async function syncUserLanguagesInTransaction(
   tx: Prisma.TransactionClient,

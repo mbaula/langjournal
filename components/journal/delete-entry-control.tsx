@@ -95,7 +95,7 @@ export function DeleteEntryControl({
       aria-label="Delete entry"
       onClick={() => setConfirming(true)}
     >
-      <Trash2 className="size-3.5" strokeWidth={1.75} />
+      <Trash2 className="size-3.5" strokeWidth={1.5} />
     </button>
   );
 }

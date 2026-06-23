@@ -5,10 +5,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { appPageShellClassName, journalWriteTitleClassName } from "@/components/journal/field-styles";
+import { appPageShellClassName, journalWriteTitleClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
 import { DailyPromptCard } from "@/components/journal/daily-prompt-card";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
-import { EntryList, type EntryRow } from "@/components/journal/entry-list";
+import { type EntryRow } from "@/components/journal/entry-list";
+import { PastEntriesSection } from "@/components/journal/past-entries-section";
 import { JournalHomeHeader } from "@/components/journal/journal-home-header";
 import {
   JournalEditor,
@@ -354,6 +355,31 @@ export function JournalWriteBody({
     [],
   );
 
+  const entryEditorColumn = (
+    <div ref={entryColumnRef} className="flex min-w-0 flex-col gap-3">
+      <EntryTitleField
+        key={activeEntryId}
+        entryId={activeEntryId}
+        initialTitle={entryTitle}
+        inputId={`entry-title-${activeEntryId}`}
+        className={journalWriteTitleClassName}
+        onTitleChange={setEntryTitle}
+      />
+
+      <JournalEditor
+        key={`${activeEntryId}-${editorSeed}`}
+        ref={editorRef}
+        entryId={activeEntryId}
+        initialBody={editorInitialBody}
+        initialTranslations={editorInitialTranslations}
+        sourceLanguage={source}
+        targetLanguage={target}
+        translateTrigger={translateTrigger}
+        onBodyChange={setDraftBody}
+      />
+    </div>
+  );
+
   return (
     <div className={appPageShellClassName}>
       <JournalHomeHeader
@@ -366,40 +392,22 @@ export function JournalWriteBody({
       />
 
       {dailyPrompt ? (
-        <DailyPromptCard
-          key={activeEntryId}
-          entryId={activeEntryId}
-          initialPrompt={dailyPrompt}
-          isToday
-          isPromptAdopted={isPromptAdopted}
-          onUsePrompt={(promptText) => void handleUsePrompt(promptText)}
-          usePromptPending={usePromptPending}
-          onPromptChange={handlePromptChange}
-        />
-      ) : null}
-
-      <div ref={entryColumnRef} className="flex flex-col gap-3">
-        <EntryTitleField
-          key={activeEntryId}
-          entryId={activeEntryId}
-          initialTitle={entryTitle}
-          inputId={`entry-title-${activeEntryId}`}
-          className={journalWriteTitleClassName}
-          onTitleChange={setEntryTitle}
-        />
-
-        <JournalEditor
-          key={`${activeEntryId}-${editorSeed}`}
-          ref={editorRef}
-          entryId={activeEntryId}
-          initialBody={editorInitialBody}
-          initialTranslations={editorInitialTranslations}
-          sourceLanguage={source}
-          targetLanguage={target}
-          translateTrigger={translateTrigger}
-          onBodyChange={setDraftBody}
-        />
-      </div>
+        <div className={journalWriteWorkspaceClassName}>
+          <DailyPromptCard
+            key={activeEntryId}
+            entryId={activeEntryId}
+            initialPrompt={dailyPrompt}
+            isToday
+            isPromptAdopted={isPromptAdopted}
+            onUsePrompt={(promptText) => void handleUsePrompt(promptText)}
+            usePromptPending={usePromptPending}
+            onPromptChange={handlePromptChange}
+          />
+          {entryEditorColumn}
+        </div>
+      ) : (
+        entryEditorColumn
+      )}
 
       <SaveEntryBar
         anchorRef={entryColumnRef}
@@ -416,15 +424,10 @@ export function JournalWriteBody({
       />
 
       {savedEntries.length > 0 ? (
-        <section
-          ref={pastEntriesSectionRef}
-          className="space-y-4 border-t border-border/80 pt-8"
-        >
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-            Past entries
-          </h2>
-          <EntryList entries={savedEntries} />
-        </section>
+        <PastEntriesSection
+          entries={savedEntries}
+          sectionRef={pastEntriesSectionRef}
+        />
       ) : null}
     </div>
   );

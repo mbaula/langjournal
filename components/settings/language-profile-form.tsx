@@ -104,13 +104,13 @@ export function LanguageProfileForm({
   }, [nativeLanguage, targetLanguage]);
 
   const selectClass =
-    "mt-1.5 w-full max-w-md rounded-lg border border-border/80 bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
+    "mt-1.5 w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
 
   return (
     <section className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold text-foreground">Translation</h2>
 
-      <div className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm">
+      <div className="rounded-2xl border border-border bg-background/80 p-5 shadow-sm">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
             <Label htmlFor="native-language">Native (source)</Label>

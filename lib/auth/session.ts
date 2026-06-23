@@ -13,13 +13,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AppUser = { id: string; email: string };
 
-export async function isAccountPreviewMode(): Promise<boolean> {
+export const isAccountPreviewMode = cache(async (): Promise<boolean> => {
   if (!isDevEnvironment()) return false;
   const cookieStore = await cookies();
   return isDevAccountPreviewCookie(
     cookieStore.get(DEV_ACCOUNT_PREVIEW_COOKIE)?.value,
   );
-}
+});
 
 export async function requireUser(redirectTo = "/app/journal"): Promise<AppUser> {
   if (await isAccountPreviewMode()) {

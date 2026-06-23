@@ -92,7 +92,7 @@ function OnboardingNextButton({
       className="h-10 gap-1.5 rounded-full px-5 text-[13px] shadow-sm"
     >
       {loading ? "Saving…" : "Next"}
-      {!loading ? <ArrowRight className="size-4" strokeWidth={2} /> : null}
+      {!loading ? <ArrowRight className="size-4" strokeWidth={1.5} /> : null}
     </Button>
   );
 }
@@ -351,7 +351,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth={2}
+              strokeWidth={1.5}
               aria-hidden
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -428,7 +428,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     aria-hidden
                   >
                     <path
@@ -478,7 +478,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   aria-hidden
                 >
                   <path
@@ -511,7 +511,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   aria-hidden
                 >
                   <path

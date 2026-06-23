@@ -1,0 +1,173 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import {
+  EntryList,
+  countEntryTranslations,
+  pastEntryAnchorId,
+  type EntryRow,
+} from "@/components/journal/entry-list";
+import { cn } from "@/lib/utils";
+
+type PastEntriesSectionProps = {
+  entries: EntryRow[];
+  sectionRef?: React.RefObject<HTMLElement | null>;
+};
+
+function formatEntryDay(d: Date | string) {
+  const date = typeof d === "string" ? new Date(d) : d;
+  return date.toLocaleDateString(undefined, {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function entryTocTitle(entry: EntryRow, dateLabel: string) {
+  const title = entry.title?.trim();
+  if (title) {
+    return title;
+  }
+  const preview = entry.body?.replace(/\s+/g, " ").trim();
+  if (preview) {
+    return preview.length > 48 ? `${preview.slice(0, 48)}…` : preview;
+  }
+  return dateLabel;
+}
+
+export function PastEntriesSection({
+  entries,
+  sectionRef,
+}: PastEntriesSectionProps) {
+  const [activeEntryId, setActiveEntryId] = useState<string | null>(
+    entries[0]?.id ?? null,
+  );
+
+  const tocItems = useMemo(
+    () =>
+      entries.map((entry) => {
+        const dateLabel = formatEntryDay(entry.entryDate);
+        return {
+          id: entry.id,
+          title: entryTocTitle(entry, dateLabel),
+          dateLabel,
+          translationCount: countEntryTranslations(entry.translations),
+        };
+      }),
+    [entries],
+  );
+
+  useEffect(() => {
+    if (entries.length === 0) {
+      return;
+    }
+
+    const targets = entries
+      .map((entry) => document.getElementById(pastEntryAnchorId(entry.id)))
+      .filter((node): node is HTMLElement => node != null);
+
+    if (targets.length === 0) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (records) => {
+        const visible = records
+          .filter((record) => record.isIntersecting)
+          .sort(
+            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+          );
+
+        const topmost = visible[0];
+        if (topmost?.target.id) {
+          setActiveEntryId(topmost.target.id.replace(/^past-entry-/, ""));
+        }
+      },
+      {
+        rootMargin: "-20% 0px -55% 0px",
+        threshold: 0,
+      },
+    );
+
+    for (const target of targets) {
+      observer.observe(target);
+    }
+
+    return () => observer.disconnect();
+  }, [entries]);
+
+  const scrollToEntry = useCallback((entryId: string) => {
+    document.getElementById(pastEntryAnchorId(entryId))?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    setActiveEntryId(entryId);
+  }, []);
+
+  if (entries.length === 0) {
+    return null;
+  }
+
+  return (
+    <section
+      ref={sectionRef}
+      className="space-y-6 border-t border-border pt-8"
+    >
+      <h2 className="text-lg font-semibold tracking-tight text-foreground">
+        Past entries
+      </h2>
+
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12 xl:gap-16">
+        <nav
+          aria-label="Past entries table of contents"
+          className="lg:sticky lg:top-24 lg:w-44 lg:shrink-0 xl:w-52"
+        >
+          <p className="mb-3 hidden text-[11px] font-semibold tracking-wide text-muted-foreground uppercase lg:block">
+            On this page
+          </p>
+          <ul className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0">
+            {tocItems.map((item) => {
+              const isActive = activeEntryId === item.id;
+              return (
+                <li key={item.id} className="shrink-0 lg:shrink">
+                  <button
+                    type="button"
+                    onClick={() => scrollToEntry(item.id)}
+                    aria-current={isActive ? "true" : undefined}
+                    className={cn(
+                      "w-full rounded-lg px-3 py-2 text-left transition-colors lg:rounded-md lg:px-2 lg:py-1.5",
+                      "border border-border bg-muted/30 lg:border-transparent lg:bg-transparent",
+                      isActive
+                        ? "border-border bg-muted/70 text-foreground lg:bg-muted/50"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="min-w-0 truncate text-[13px] leading-snug font-medium">
+                        {item.title}
+                      </span>
+                      {item.translationCount > 0 ? (
+                        <span className="shrink-0 rounded-full border border-border bg-background px-1.5 py-px text-[10px] font-medium tabular-nums text-muted-foreground">
+                          + {item.translationCount}
+                        </span>
+                      ) : null}
+                    </div>
+                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                      {item.dateLabel}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className="min-w-0 flex-1">
+          <EntryList entries={entries} />
+        </div>
+      </div>
+    </section>
+  );
+}

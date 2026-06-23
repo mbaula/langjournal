@@ -201,7 +201,7 @@ export function FlashcardLibraryCard({
         "relative flex flex-col rounded-2xl border border-border bg-card shadow-sm transition-[box-shadow,ring-color]",
         expanded
           ? "ring-2 ring-ring/30"
-          : cn("group cursor-pointer hover:border-border/90 hover:shadow-md", collapsedMinHeight),
+          : cn("group cursor-pointer hover:border-border hover:shadow-md", collapsedMinHeight),
       )}
       onClick={!expanded ? onToggleExpand : undefined}
       onKeyDown={
@@ -286,7 +286,7 @@ export function FlashcardLibraryCard({
                         aria-label="View entry"
                         className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
-                        <ExternalLink className="size-4" strokeWidth={1.75} />
+                        <ExternalLink className="size-4" strokeWidth={1.5} />
                       </Link>
                     </IconHoverLabel>
                   ) : null}
@@ -300,7 +300,7 @@ export function FlashcardLibraryCard({
                       className="size-9 shrink-0 text-destructive hover:bg-muted hover:text-destructive"
                       onClick={onDeleteRequest}
                     >
-                      <Trash2 className="size-4" strokeWidth={1.75} />
+                      <Trash2 className="size-4" strokeWidth={1.5} />
                     </Button>
                   </IconHoverLabel>
                 </div>

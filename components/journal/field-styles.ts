@@ -31,6 +31,10 @@ export function journalEntryBodyClassName(...extra: (string | undefined)[]) {
   );
 }
 
+/** Write page: prompt column + entry editor column. */
+export const journalWriteWorkspaceClassName =
+  "grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)]";
+
 /** Shared shell for journal, entry, settings, and other app pages. */
 export const appPageShellClassName =
   "flex w-full flex-col gap-8 pt-2 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] lg:gap-10";
@@ -64,7 +68,7 @@ export const journalWriteTitleClassName =
 
 export function journalBlockShellClassName(extra?: string) {
   return cn(
-    "rounded-md border border-border/80 bg-transparent p-0 shadow-none",
+    "rounded-md border border-border bg-transparent p-0 shadow-none",
     extra,
   );
 }

@@ -3,7 +3,7 @@
 import { MessageSquare } from "lucide-react";
 import { useEffect } from "react";
 
-import { buttonVariants } from "@/components/ui/button";
+import { appNavUtilityButtonClass } from "@/components/app/app-nav-styles";
 import { getTallyFeedbackFormId } from "@/lib/feedback/tally";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +61,7 @@ export function FeedbackButton({
           className,
         )}
       >
-        <MessageSquare className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+        <MessageSquare className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
         Send feedback
       </button>
     );
@@ -72,13 +72,9 @@ export function FeedbackButton({
       type="button"
       data-tally-open={formId}
       data-tally-layout="modal"
-      className={cn(
-        buttonVariants({ variant: "outline", size: "sm" }),
-        "h-9 rounded-full px-4 text-[13px]",
-        className,
-      )}
+      className={cn(appNavUtilityButtonClass, className)}
     >
-      <MessageSquare data-icon="inline-start" strokeWidth={1.75} />
+      <MessageSquare className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
       Feedback
     </button>
   );

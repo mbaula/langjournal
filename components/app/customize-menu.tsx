@@ -14,7 +14,7 @@ import {
 } from "@/lib/theme/accent";
 import { cn } from "@/lib/utils";
 
-export function CustomizeMenu() {
+export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "toolbar" }) {
   const { resolvedTheme, setTheme } = useTheme();
   const { accent, setAccent } = useAccent();
   const [open, setOpen] = useState(false);
@@ -49,27 +49,37 @@ export function CustomizeMenu() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors",
-          "hover:bg-sidebar-accent",
-          open && "bg-sidebar-accent",
+          variant === "toolbar"
+            ? "inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+            : cn(
+                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors",
+                "hover:bg-sidebar-accent",
+                open && "bg-sidebar-accent",
+              ),
         )}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label="Customize appearance"
       >
-        <Palette className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
-        Customize
+        <Palette className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
+        {variant === "sidebar" ? "Customize" : null}
       </button>
 
       {open ? (
         <div
-          className="absolute top-full right-0 left-0 z-50 mt-1 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg"
+          className={cn(
+            "absolute top-full z-50 mt-1 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg",
+            variant === "toolbar"
+              ? "right-0 w-56"
+              : "right-0 left-0",
+          )}
           role="menu"
         >
           <div
             className="flex items-center gap-2 px-2 py-1.5 text-[13px]"
             id="customize-accent-label"
           >
-            <Palette className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+            <Palette className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
             Color
           </div>
           <div
@@ -93,7 +103,7 @@ export function CustomizeMenu() {
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                     selected
                       ? "scale-105 border-foreground/30 shadow-sm"
-                      : "border-border/80 hover:scale-105 hover:border-border",
+                      : "border-border hover:scale-105 hover:border-border",
                   )}
                 >
                   <span
@@ -107,7 +117,7 @@ export function CustomizeMenu() {
             })}
           </div>
 
-          <div className="my-3 border-t border-border/60" />
+          <div className="my-3 border-t border-border" />
 
           <button
             type="button"
@@ -118,18 +128,18 @@ export function CustomizeMenu() {
             {mounted ? (
               resolvedTheme === "dark" ? (
                 <>
-                  <Sun className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+                  <Sun className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
                   Light mode
                 </>
               ) : (
                 <>
-                  <Moon className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+                  <Moon className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
                   Dark mode
                 </>
               )
             ) : (
               <>
-                <Moon className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+                <Moon className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
                 Theme
               </>
             )}

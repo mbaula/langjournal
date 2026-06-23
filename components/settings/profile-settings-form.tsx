@@ -22,7 +22,7 @@ type ProfileSettingsFormProps = {
 };
 
 const fieldClass =
-  "mt-1.5 w-full rounded-lg border border-border/80 bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
+  "mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
 
 const selectClass = `${fieldClass} cursor-pointer`;
 
@@ -153,7 +153,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm">
+      <div className="rounded-2xl border border-border bg-background/80 p-5 shadow-sm">
         <div className="flex flex-col gap-5">
           <div>
             <Label htmlFor="profile-display-name">Name</Label>
@@ -197,7 +197,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                 {userLanguages.map((lang) => (
                   <li
                     key={lang.languageCode}
-                    className="flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 sm:flex-row sm:items-center"
+                    className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 sm:flex-row sm:items-center"
                   >
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                       {getLanguageName(lang.languageCode)}
@@ -210,7 +210,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                           e.target.value as OnboardingLanguageLevel,
                         )
                       }
-                      className="h-8 shrink-0 cursor-pointer rounded-md border border-border/80 bg-background px-2 text-[12px] text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35"
+                      className="h-8 shrink-0 cursor-pointer rounded-md border border-border bg-background px-2 text-[12px] text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35"
                     >
                       {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
                         <option key={level} value={level}>
@@ -224,7 +224,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
                       aria-label={`Remove ${getLanguageName(lang.languageCode)}`}
                     >
-                      <X className="size-4" strokeWidth={1.75} />
+                      <X className="size-4" strokeWidth={1.5} />
                     </button>
                   </li>
                 ))}
@@ -236,7 +236,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
             )}
 
             {addingLanguage ? (
-              <div className="mt-3 space-y-3 rounded-lg border border-dashed border-border/60 p-3">
+              <div className="mt-3 space-y-3 rounded-lg border border-dashed border-border p-3">
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <select
                     value={newLangCode}
@@ -300,7 +300,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                 disabled={loadingLanguages || unusedLanguages.length === 0}
                 onClick={() => setAddingLanguage(true)}
               >
-                <Plus className="size-4" strokeWidth={1.75} />
+                <Plus className="size-4" strokeWidth={1.5} />
                 Add language
               </Button>
             )}

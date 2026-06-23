@@ -86,7 +86,7 @@ export function EntryActionsMenu({
           setOpen(!menuOpen);
         }}
       >
-        <MoreVertical className="size-4" strokeWidth={1.75} />
+        <MoreVertical className="size-4" strokeWidth={1.5} />
       </button>
       {menuOpen ? (
         <div
@@ -102,7 +102,7 @@ export function EntryActionsMenu({
               closeMenu();
             }}
           >
-            <Pencil className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+            <Pencil className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
             Rename title
           </button>
           <button
@@ -114,7 +114,7 @@ export function EntryActionsMenu({
               closeMenu();
             }}
           >
-            <Trash2 className="size-4 shrink-0 opacity-70" strokeWidth={1.75} />
+            <Trash2 className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
             Delete entry
           </button>
         </div>

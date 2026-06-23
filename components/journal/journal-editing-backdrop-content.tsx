@@ -19,7 +19,7 @@ function TranslationSpinner() {
       className="journal-translation-spinner ml-0.5 inline-flex translate-y-[0.06em] align-baseline"
       aria-hidden
     >
-      <Loader2 className="size-3.5 animate-spin text-sidebar-primary" strokeWidth={2.25} />
+      <Loader2 className="size-3.5 animate-spin text-sidebar-primary" strokeWidth={1.5} />
     </span>
   );
 }

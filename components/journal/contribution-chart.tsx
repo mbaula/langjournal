@@ -216,7 +216,7 @@ export function ContributionChart({
               disabled={!canGoOlder}
               onClick={() => setPageIndex((p) => Math.min(maxPage, p + 1))}
             >
-              <ChevronLeft className="size-3.5" strokeWidth={2} />
+              <ChevronLeft className="size-3.5" strokeWidth={1.5} />
             </button>
             <button
               type="button"
@@ -225,7 +225,7 @@ export function ContributionChart({
               disabled={!canGoNewer}
               onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
             >
-              <ChevronRight className="size-3.5" strokeWidth={2} />
+              <ChevronRight className="size-3.5" strokeWidth={1.5} />
             </button>
           </div>
         </div>

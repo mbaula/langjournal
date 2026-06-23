@@ -53,7 +53,7 @@ export function CreateEntryButton({ className }: CreateEntryButtonProps) {
       onClick={() => void createNewEntry()}
       className={cn(primaryPillButtonClassName, className)}
     >
-      <Plus className="size-4 shrink-0" strokeWidth={1.75} />
+      <Plus className="size-4 shrink-0" strokeWidth={1.5} />
       {pending ? "Creating…" : "New entry"}
     </Button>
   );

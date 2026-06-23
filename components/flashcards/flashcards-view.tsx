@@ -407,7 +407,7 @@ export function FlashcardsView({
             onClick={startPractice}
             className={primaryPillButtonClassName}
           >
-            <RotateCcw className="size-4 shrink-0" strokeWidth={1.75} />
+            <RotateCcw className="size-4 shrink-0" strokeWidth={1.5} />
             Practice again
           </Button>
           <Button type="button" variant="outline" onClick={() => setViewMode("library")}>

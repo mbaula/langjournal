@@ -33,21 +33,29 @@ export function isSavedJournalEntry(
   return entry.completedAt != null || isPastJournalEntry(entry.entryDate);
 }
 
+const getCachedJournalEntriesList = unstable_cache(
+  async (userId: string) => {
+    return prisma.journalEntry.findMany({
+      where: { userId },
+      orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        translations: true,
+        entryDate: true,
+        completedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  },
+  ["journal-entries-list"],
+  { revalidate: 30, tags: ["journal-entry"] },
+);
+
 export async function listJournalEntries(userId: string) {
-  return prisma.journalEntry.findMany({
-    where: { userId },
-    orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }],
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      translations: true,
-      entryDate: true,
-      completedAt: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  return getCachedJournalEntriesList(userId);
 }
 
 /** Same order as the journal list; includes body for sidebar preview when title is empty. */
@@ -350,43 +358,51 @@ function getUtcMonthStart(d: Date): Date {
 }
 
 export async function getJournalStats(userId: string): Promise<JournalStats> {
-  const now = new Date();
-  const weekStart = getUtcIsoWeekStart(now);
-  const monthStart = getUtcMonthStart(now);
-
-  const [total, thisWeek, thisMonth, entries, learningLanguages] =
-    await Promise.all([
-      prisma.journalEntry.count({ where: { userId } }),
-      prisma.journalEntry.count({
-        where: { userId, entryDate: { gte: weekStart } },
-      }),
-      prisma.journalEntry.count({
-        where: { userId, entryDate: { gte: monthStart } },
-      }),
-      prisma.journalEntry.findMany({
-        where: { userId },
-        select: { translations: true },
-      }),
-      prisma.userLanguage.findMany({
-        where: { userId },
-        orderBy: { createdAt: "asc" },
-        select: { languageCode: true, level: true },
-      }),
-    ]);
-
-  const translationCount = entries.reduce(
-    (sum, entry) => sum + countStoredTranslations(entry.translations),
-    0,
-  );
-
-  return {
-    total,
-    translationCount,
-    thisWeek,
-    thisMonth,
-    learningLanguages,
-  };
+  return getCachedJournalStats(userId);
 }
+
+const getCachedJournalStats = unstable_cache(
+  async (userId: string): Promise<JournalStats> => {
+    const now = new Date();
+    const weekStart = getUtcIsoWeekStart(now);
+    const monthStart = getUtcMonthStart(now);
+
+    const [total, thisWeek, thisMonth, entries, learningLanguages] =
+      await Promise.all([
+        prisma.journalEntry.count({ where: { userId } }),
+        prisma.journalEntry.count({
+          where: { userId, entryDate: { gte: weekStart } },
+        }),
+        prisma.journalEntry.count({
+          where: { userId, entryDate: { gte: monthStart } },
+        }),
+        prisma.journalEntry.findMany({
+          where: { userId },
+          select: { translations: true },
+        }),
+        prisma.userLanguage.findMany({
+          where: { userId },
+          orderBy: { createdAt: "asc" },
+          select: { languageCode: true, level: true },
+        }),
+      ]);
+
+    const translationCount = entries.reduce(
+      (sum, entry) => sum + countStoredTranslations(entry.translations),
+      0,
+    );
+
+    return {
+      total,
+      translationCount,
+      thisWeek,
+      thisMonth,
+      learningLanguages,
+    };
+  },
+  ["journal-stats"],
+  { revalidate: 30, tags: ["journal-entry"] },
+);
 
 export type ContributionDay = {
   date: string;
@@ -397,42 +413,50 @@ export async function getContributionData(
   userId: string,
   days: number = 365,
 ): Promise<ContributionDay[]> {
-  const now = new Date();
-  const todayUtc = utcCalendarDate(now);
-  const startDate = new Date(
-    Date.UTC(
-      todayUtc.getUTCFullYear(),
-      todayUtc.getUTCMonth(),
-      todayUtc.getUTCDate() - days + 1,
-    ),
-  );
+  return getCachedContributionData(userId, days);
+}
 
-  const entries = await prisma.journalEntry.findMany({
-    where: {
-      userId,
-      entryDate: { gte: startDate },
-    },
-    select: { entryDate: true },
-  });
-
-  const countByDate = new Map<string, number>();
-  for (const entry of entries) {
-    const key = entry.entryDate.toISOString().slice(0, 10);
-    countByDate.set(key, (countByDate.get(key) ?? 0) + 1);
-  }
-
-  const result: ContributionDay[] = [];
-  for (let i = 0; i < days; i++) {
-    const d = new Date(
+const getCachedContributionData = unstable_cache(
+  async (userId: string, days: number): Promise<ContributionDay[]> => {
+    const now = new Date();
+    const todayUtc = utcCalendarDate(now);
+    const startDate = new Date(
       Date.UTC(
-        startDate.getUTCFullYear(),
-        startDate.getUTCMonth(),
-        startDate.getUTCDate() + i,
+        todayUtc.getUTCFullYear(),
+        todayUtc.getUTCMonth(),
+        todayUtc.getUTCDate() - days + 1,
       ),
     );
-    const key = d.toISOString().slice(0, 10);
-    result.push({ date: key, count: countByDate.get(key) ?? 0 });
-  }
 
-  return result;
-}
+    const entries = await prisma.journalEntry.findMany({
+      where: {
+        userId,
+        entryDate: { gte: startDate },
+      },
+      select: { entryDate: true },
+    });
+
+    const countByDate = new Map<string, number>();
+    for (const entry of entries) {
+      const key = entry.entryDate.toISOString().slice(0, 10);
+      countByDate.set(key, (countByDate.get(key) ?? 0) + 1);
+    }
+
+    const result: ContributionDay[] = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(
+        Date.UTC(
+          startDate.getUTCFullYear(),
+          startDate.getUTCMonth(),
+          startDate.getUTCDate() + i,
+        ),
+      );
+      const key = d.toISOString().slice(0, 10);
+      result.push({ date: key, count: countByDate.get(key) ?? 0 });
+    }
+
+    return result;
+  },
+  ["journal-contributions"],
+  { revalidate: 30, tags: ["journal-entry"] },
+);
