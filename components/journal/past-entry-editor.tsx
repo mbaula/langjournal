@@ -109,7 +109,7 @@ export function PastEntryEditor({
   }, [deletePending, entry.id, onDelete]);
 
   return (
-    <div className={cn("group/row", journalWriteAreaShellClassName)}>
+    <div className={cn("group/entry", journalWriteAreaShellClassName)}>
       <div className="flex items-start justify-between gap-3">
         <LanguageBar
           source={sourceLanguage}

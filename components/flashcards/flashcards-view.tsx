@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Layers,
   RotateCcw,
   Search,
   X,
@@ -12,10 +13,18 @@ import {
   type CardLanguageView,
 } from "@/components/flashcards/card-language-view-selector";
 import { FlashcardLibraryCard } from "@/components/flashcards/flashcard-library-card";
+import { FlashcardLibraryEntrySections } from "@/components/flashcards/flashcard-library-entry-sections";
 import {
   FlashcardLibraryGrid,
   FlashcardLibraryGridSkeleton,
 } from "@/components/flashcards/flashcard-library-grid";
+import { FlashcardSortSelector } from "@/components/flashcards/flashcard-sort-selector";
+import {
+  flashcardToolbarFiltersGroupClassName,
+  flashcardToolbarRowClassName,
+  flashcardToolbarSearchClassName,
+  flashcardToolbarSearchWrapClassName,
+} from "@/components/flashcards/flashcard-toolbar-styles";
 import { Button } from "@/components/ui/button";
 import {
   journalPageTitleClassName,
@@ -26,6 +35,11 @@ import {
   type FlashcardRecord,
   type PracticeResponse,
 } from "@/lib/flashcards/types";
+import {
+  groupFlashcardsByEntry,
+  sortFlashcardsForLibrary,
+  type FlashcardLibrarySort,
+} from "@/lib/flashcards/library-sort";
 import { proficiencyAfterPracticeResponse } from "@/lib/flashcards/proficiency";
 import { sortFlashcardsForPractice } from "@/lib/flashcards/practice";
 import { cn } from "@/lib/utils";
@@ -59,6 +73,7 @@ export function FlashcardsView({
   const [stats, setStats] = useState(initialStats);
   const [viewMode, setViewMode] = useState<ViewMode>("library");
   const [search, setSearch] = useState("");
+  const [librarySort, setLibrarySort] = useState<FlashcardLibrarySort>("entry");
   const [cardLanguageView, setCardLanguageView] =
     useState<CardLanguageView>("translation");
   const [hasMounted, setHasMounted] = useState(false);
@@ -111,6 +126,16 @@ export function FlashcardsView({
       );
     });
   }, [flashcards, search, targetLanguage]);
+
+  const entryGroups = useMemo(
+    () => groupFlashcardsByEntry(filteredCards),
+    [filteredCards],
+  );
+
+  const recentSortedCards = useMemo(
+    () => sortFlashcardsForLibrary(filteredCards, "recent"),
+    [filteredCards],
+  );
 
   const displayedItemCount = hasMounted
     ? filteredCards.length
@@ -267,6 +292,60 @@ export function FlashcardsView({
     [practiceIndex, practiceQueue, previewMode, sessionMastered, sessionReviews],
   );
 
+  const renderLibraryCard = (card: FlashcardRecord) => {
+    const expanded = expandedId === card.id;
+    const showTranslationOnly = cardLanguageView === "translation";
+
+    return (
+      <FlashcardLibraryCard
+        card={card}
+        cardLanguageView={cardLanguageView}
+        expanded={expanded}
+        deleteConfirming={deleteConfirmId === card.id}
+        previewMode={previewMode}
+        onToggleExpand={() =>
+          setExpandedId((current) => (current === card.id ? null : card.id))
+        }
+        onPrimaryChange={(value) => {
+          const patch = showTranslationOnly
+            ? { word: value }
+            : { translation: value };
+          scheduleAutosave(
+            card.id,
+            patch,
+            (prev) =>
+              prev.map((item) =>
+                item.id === card.id ? { ...item, ...patch } : item,
+              ),
+          );
+        }}
+        onSecondaryChange={(value) => {
+          const patch = showTranslationOnly
+            ? { translation: value }
+            : { word: value };
+          scheduleAutosave(
+            card.id,
+            patch,
+            (prev) =>
+              prev.map((item) =>
+                item.id === card.id ? { ...item, ...patch } : item,
+              ),
+          );
+        }}
+        onDeleteRequest={() => setDeleteConfirmId(card.id)}
+        onDeleteCancel={() => setDeleteConfirmId(null)}
+        onDeleteConfirm={() => void deleteFlashcard(card.id)}
+        onAudioChange={(hasAudio) => {
+          setFlashcards((prev) =>
+            prev.map((item) =>
+              item.id === card.id ? { ...item, hasAudio } : item,
+            ),
+          );
+        }}
+      />
+    );
+  };
+
   if (viewMode === "practice") {
     const current = practiceQueue[practiceIndex];
 
@@ -407,7 +486,11 @@ export function FlashcardsView({
             onClick={startPractice}
             className={primaryPillButtonClassName}
           >
-            <RotateCcw className="size-4 shrink-0" strokeWidth={1.5} />
+            {hasMounted ? (
+              <RotateCcw className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+            ) : (
+              <span className="inline-block size-4 shrink-0" aria-hidden />
+            )}
             Practice again
           </Button>
           <Button type="button" variant="outline" onClick={() => setViewMode("library")}>
@@ -442,14 +525,13 @@ export function FlashcardsView({
             disabled={flashcards.length === 0}
             className={primaryPillButtonClassName}
           >
+            {hasMounted ? (
+              <Layers className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+            ) : (
+              <span className="inline-block size-4 shrink-0" aria-hidden />
+            )}
             Practice
           </Button>
-          {nativeLanguage && targetLanguage ? (
-            <CardLanguageViewSelector
-              value={cardLanguageView}
-              onChange={setCardLanguageView}
-            />
-          ) : null}
         </div>
       </header>
 
@@ -462,16 +544,29 @@ export function FlashcardsView({
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-3">
-            <div className="relative min-w-0 max-w-md">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <div className={flashcardToolbarRowClassName}>
+            <div className={flashcardToolbarFiltersGroupClassName}>
+              <FlashcardSortSelector
+                value={librarySort}
+                onChange={setLibrarySort}
+              />
+              {nativeLanguage && targetLanguage ? (
+                <CardLanguageViewSelector
+                  variant="toolbar"
+                  value={cardLanguageView}
+                  onChange={setCardLanguageView}
+                />
+              ) : null}
+            </div>
+            <div className={flashcardToolbarSearchWrapClassName}>
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
                 id="flashcards-search"
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search items…"
-                className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent py-1 pr-2.5 pl-9 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+                className={flashcardToolbarSearchClassName}
               />
             </div>
           </div>
@@ -482,65 +577,17 @@ export function FlashcardsView({
             </p>
           ) : !hasMounted ? (
             <FlashcardLibraryGridSkeleton itemCount={filteredCards.length} />
+          ) : librarySort === "entry" ? (
+            <FlashcardLibraryEntrySections
+              groups={entryGroups}
+              getItemKey={(card) => card.id}
+              renderItem={renderLibraryCard}
+            />
           ) : (
             <FlashcardLibraryGrid
-              items={filteredCards}
+              items={recentSortedCards}
               getItemKey={(card) => card.id}
-              renderItem={(card) => {
-                const expanded = expandedId === card.id;
-                const showTranslationOnly = cardLanguageView === "translation";
-
-                return (
-                  <FlashcardLibraryCard
-                    card={card}
-                    cardLanguageView={cardLanguageView}
-                    expanded={expanded}
-                    deleteConfirming={deleteConfirmId === card.id}
-                    previewMode={previewMode}
-                    onToggleExpand={() =>
-                      setExpandedId((current) =>
-                        current === card.id ? null : card.id,
-                      )
-                    }
-                    onPrimaryChange={(value) => {
-                      const patch = showTranslationOnly
-                        ? { word: value }
-                        : { translation: value };
-                      scheduleAutosave(
-                        card.id,
-                        patch,
-                        (prev) =>
-                          prev.map((item) =>
-                            item.id === card.id ? { ...item, ...patch } : item,
-                          ),
-                      );
-                    }}
-                    onSecondaryChange={(value) => {
-                      const patch = showTranslationOnly
-                        ? { translation: value }
-                        : { word: value };
-                      scheduleAutosave(
-                        card.id,
-                        patch,
-                        (prev) =>
-                          prev.map((item) =>
-                            item.id === card.id ? { ...item, ...patch } : item,
-                          ),
-                      );
-                    }}
-                    onDeleteRequest={() => setDeleteConfirmId(card.id)}
-                    onDeleteCancel={() => setDeleteConfirmId(null)}
-                    onDeleteConfirm={() => void deleteFlashcard(card.id)}
-                    onAudioChange={(hasAudio) => {
-                      setFlashcards((prev) =>
-                        prev.map((item) =>
-                          item.id === card.id ? { ...item, hasAudio } : item,
-                        ),
-                      );
-                    }}
-                  />
-                );
-              }}
+              renderItem={renderLibraryCard}
             />
           )}
         </>

@@ -4,6 +4,11 @@ import type { LucideIcon } from "lucide-react";
 import { Languages, MessageSquare, Rows2 } from "lucide-react";
 
 import {
+  flashcardToolbarIconButtonActiveClassName,
+  flashcardToolbarIconButtonClassName,
+  flashcardToolbarToggleGroupClassName,
+} from "@/components/flashcards/flashcard-toolbar-styles";
+import {
   pillToggleGroupClassName,
   primaryPillIconButtonClassName,
   secondaryPillButtonClassName,
@@ -17,6 +22,7 @@ type CardLanguageViewSelectorProps = {
   value: CardLanguageView;
   onChange: (value: CardLanguageView) => void;
   className?: string;
+  variant?: "default" | "toolbar";
 };
 
 const OPTIONS: Array<{
@@ -33,10 +39,16 @@ export function CardLanguageViewSelector({
   value,
   onChange,
   className,
+  variant = "default",
 }: CardLanguageViewSelectorProps) {
+  const isToolbar = variant === "toolbar";
+
   return (
     <div
-      className={cn(pillToggleGroupClassName, className)}
+      className={cn(
+        isToolbar ? flashcardToolbarToggleGroupClassName : pillToggleGroupClassName,
+        className,
+      )}
       role="group"
       aria-label="Card language view"
     >
@@ -52,11 +64,17 @@ export function CardLanguageViewSelector({
             aria-label={option.label}
             aria-pressed={active}
             className={cn(
-              active ? primaryPillIconButtonClassName : secondaryPillButtonClassName,
+              isToolbar
+                ? active
+                  ? flashcardToolbarIconButtonActiveClassName
+                  : flashcardToolbarIconButtonClassName
+                : active
+                  ? cn(primaryPillIconButtonClassName, "border-0 shadow-none")
+                  : secondaryPillButtonClassName,
             )}
             onClick={() => onChange(option.value)}
           >
-            <Icon className="size-3.5" strokeWidth={1.5} />
+            <Icon className={cn(isToolbar ? "size-3" : "size-3.5")} strokeWidth={1.5} />
           </Button>
         );
       })}

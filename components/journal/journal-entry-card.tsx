@@ -250,8 +250,7 @@ export function JournalEntryCard({
   );
 
   return (
-    <div className="group/row-wrapper">
-      <div className="group/row flex gap-2 sm:gap-3">
+    <div className="group/entry flex w-full gap-2 sm:gap-3">
         {renaming ? (
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -353,7 +352,6 @@ export function JournalEntryCard({
             </div>
           ) : null}
         </div>
-      </div>
     </div>
   );
 }

@@ -59,7 +59,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inclusiveSans.variable} ${inclusiveSans.className} ${geistMono.variable} ${folioDisplay.variable} h-full antialiased`}
     >
-      <body className="relative flex min-h-full flex-col">
+      <body className="relative flex min-h-full flex-col bg-background text-foreground">
         <ThemeBootScript script={themeBootScript} />
         <div className="app-grain" aria-hidden />
         <ThemeProvider>

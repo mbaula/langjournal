@@ -77,7 +77,7 @@
 
   /* --- App chrome (default / data-accent="gray" uses :root below) --- */
   /* oklch(L C H): lightness 0–1, chroma, hue degrees. Tweak C/H together per palette. */
-  /* --app-shell: outer frame (layout bg-app-shell). --sidebar must match to avoid a lighter "box". */
+  /* --app-shell: accent-tinted control surfaces (language bar on Write). Page layout uses --background. */
   --app-shell: oklch(0.955 0 0);
   --sidebar: var(--app-shell);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -221,7 +221,8 @@ html.dark:not([data-force-light]) .app-grain {
  *   --contribution-fill  Contribution chart
  *   --sidebar-border, --sidebar-ring  Optional chrome
  *
- * Main journal content stays --background (white / dark card), not tinted here.
+ * Page layout uses --background (flat white / dark).
+ * --app-shell tints compact controls (Write page language bar), not the page frame.
  */
 /* Green — muted #C8D5CC */
 html[data-accent="green"],

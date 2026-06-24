@@ -123,7 +123,7 @@ export function EntryList({
           <li
             key={entry.id}
             id={pastEntryAnchorId(entry.id)}
-            className="scroll-mt-28 list-none"
+            className="group/entry scroll-mt-28 list-none w-full"
           >
             <div className="grid">
               <div

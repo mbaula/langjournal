@@ -61,8 +61,8 @@ export function EntryActionsMenu({
         "relative flex shrink-0 items-center pr-1 transition-opacity",
         "opacity-0 pointer-events-none",
         "max-lg:opacity-100 max-lg:pointer-events-auto",
-        "lg:group-hover/row:opacity-100 lg:group-hover/row:pointer-events-auto",
-        "lg:group-focus-within/row:opacity-100 lg:group-focus-within/row:pointer-events-auto",
+        "lg:group-hover/entry:opacity-100 lg:group-hover/entry:pointer-events-auto",
+        "lg:group-focus-within/entry:opacity-100 lg:group-focus-within/entry:pointer-events-auto",
         menuOpen && "opacity-100 pointer-events-auto",
         className,
       )}

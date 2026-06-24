@@ -35,6 +35,7 @@ type InlineEditableTextProps = {
   className?: string;
   muted?: boolean;
   editable?: boolean;
+  truncate?: boolean;
 };
 
 function InlineEditableText({
@@ -43,6 +44,7 @@ function InlineEditableText({
   className,
   muted = false,
   editable = false,
+  truncate = false,
 }: InlineEditableTextProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -72,8 +74,12 @@ function InlineEditableText({
   if (!editable) {
     return (
       <span
+        title={truncate ? value : undefined}
         className={cn(
-          "block whitespace-pre-wrap break-words",
+          "block min-w-0",
+          truncate
+            ? "w-full overflow-hidden text-ellipsis whitespace-nowrap"
+            : "max-w-full whitespace-pre-wrap break-words",
           muted ? "text-muted-foreground" : "text-foreground",
           className,
         )}
@@ -176,19 +182,21 @@ export function FlashcardLibraryCard({
   const collapsedMinHeight = showBoth ? "min-h-[6.75rem]" : "min-h-[5.75rem]";
 
   const phraseContent = (
-    <div className="flex flex-col items-center gap-[5px]">
+    <div className="flex w-full min-w-0 max-w-full flex-col items-center gap-[5px] px-1">
       <InlineEditableText
         value={primaryText}
         onChange={onPrimaryChange}
         editable={expanded}
-        className="text-base font-medium leading-snug"
+        truncate={!expanded}
+        className="w-full text-base font-medium leading-snug"
       />
       {showSecondary ? (
         <InlineEditableText
           value={secondaryText}
           onChange={onSecondaryChange}
           editable={expanded}
-          className="text-sm leading-snug"
+          truncate={!expanded}
+          className="w-full text-sm leading-snug"
           muted
         />
       ) : null}
@@ -198,7 +206,7 @@ export function FlashcardLibraryCard({
   return (
     <article
       className={cn(
-        "relative flex flex-col rounded-2xl border border-border bg-card shadow-sm transition-[box-shadow,ring-color]",
+        "relative flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-[box-shadow,ring-color]",
         expanded
           ? "ring-2 ring-ring/30"
           : cn("group cursor-pointer hover:border-border hover:shadow-md", collapsedMinHeight),
@@ -235,25 +243,25 @@ export function FlashcardLibraryCard({
       {!expanded ? (
         <div
           className={cn(
-            "relative flex flex-col items-center justify-center px-3 py-3 text-center",
+            "relative flex w-full min-w-0 flex-col items-center justify-center overflow-hidden px-5 py-4 text-center",
             collapsedMinHeight,
           )}
         >
-          <div className="flex flex-col items-center transition-transform duration-100 ease-out group-hover:-translate-y-2">
+          <div className="flex w-full min-w-0 flex-col items-center overflow-hidden transition-transform duration-100 ease-out group-hover:-translate-y-2">
             {phraseContent}
           </div>
-          <p className="pointer-events-none absolute inset-x-3 bottom-2.5 text-xs text-muted-foreground opacity-0 transition-opacity duration-75 group-hover:opacity-100">
+          <p className="pointer-events-none absolute inset-x-5 bottom-3 text-xs text-muted-foreground opacity-0 transition-opacity duration-75 group-hover:opacity-100">
             click to view
           </p>
         </div>
       ) : (
         <>
-          <div className="flex flex-col items-center px-3 py-3 text-center">
+          <div className="flex flex-col items-center px-5 py-4 text-center">
             {phraseContent}
           </div>
 
           <div
-            className="border-t border-border px-3 py-3"
+            className="border-t border-border px-5 py-4"
             onClick={(event) => event.stopPropagation()}
           >
             {deleteConfirming ? (
