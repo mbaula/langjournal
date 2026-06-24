@@ -182,13 +182,21 @@ export function FlashcardLibraryCard({
   const collapsedMinHeight = showBoth ? "min-h-[6.75rem]" : "min-h-[5.75rem]";
 
   const phraseContent = (
-    <div className="flex w-full min-w-0 max-w-full flex-col items-center gap-[5px] px-1">
+    <div
+      className={cn(
+        "flex w-full min-w-0 max-w-full flex-col items-center gap-[5px] px-1",
+        showBoth && "text-center",
+      )}
+    >
       <InlineEditableText
         value={primaryText}
         onChange={onPrimaryChange}
         editable={expanded}
         truncate={!expanded}
-        className="w-full text-base font-medium leading-snug"
+        className={cn(
+          "w-full text-base font-medium leading-snug",
+          showBoth && "text-center",
+        )}
       />
       {showSecondary ? (
         <InlineEditableText
@@ -196,7 +204,7 @@ export function FlashcardLibraryCard({
           onChange={onSecondaryChange}
           editable={expanded}
           truncate={!expanded}
-          className="w-full text-sm leading-snug"
+          className={cn("w-full text-sm leading-snug", showBoth && "text-center")}
           muted
         />
       ) : null}

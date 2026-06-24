@@ -62,9 +62,9 @@ export const appPageShellClassName =
 /** @deprecated Use appPageShellClassName */
 export const journalPageShellClassName = appPageShellClassName;
 
-/** Primary pill action used in toolbars (New entry, Practice, etc.). */
-export const primaryPillButtonClassName =
-  "h-10 shrink-0 gap-1.5 rounded-full px-4 text-sm whitespace-nowrap shadow-sm";
+/** Practice header pill — flat, no border or shadow. */
+export const practicePillButtonClassName =
+  "h-10 shrink-0 gap-1.5 rounded-full border-0 px-4 text-sm whitespace-nowrap shadow-none";
 
 /** Segmented icon toggle group matching primary pill controls. */
 export const pillToggleGroupClassName =
