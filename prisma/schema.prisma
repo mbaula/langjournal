@@ -72,6 +72,12 @@ model UserLanguage {
   estimatedCefrLevel CefrLevel @default(A1)
   levelConfidence    LevelConfidence @default(LOW)
   estimatedLevelUpdatedAt DateTime?
+  /// Effective CEFR level for daily prompt selection; separate from self-reported level.
+  currentPromptLevel CefrLevel?
+  /// Per-level lists of prompt indexes already shown, e.g. { "A1": [0, 3, 7] }.
+  seenPromptIndexes Json @default("{}")
+  tooEasyStreak Int @default(0)
+  tooHardStreak Int @default(0)
   createdAt     DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -131,13 +137,18 @@ model JournalEntry {
   body         String?  @db.Text
   translations Json?
   entryDate    DateTime @db.Date
+  /// Index into the static prompt list for the assigned CEFR level.
+  promptIndex  Int?
+  promptLevel  CefrLevel?
+  /// Set when the user marks today's entry as done for the day.
+  completedAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   flashcards Flashcard[]
 
-  @@unique([userId, entryDate])
+  @@index([userId, entryDate])
   @@index([userId])
 }
 

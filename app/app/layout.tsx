@@ -1,10 +1,9 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { AppLayoutClient } from "@/components/app/app-layout-client";
-import { AppSidebar } from "@/components/app/app-sidebar";
-import { AppSidebarSkeleton } from "@/components/app/app-sidebar-skeleton";
-import { isAccountPreviewMode, requireUser } from "@/lib/auth/session";
+import { AppTopNavClient } from "@/components/app/app-top-nav-client";
+import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
+import { getDevPreviewOnboardingState } from "@/lib/dev/preview-account";
 import { getOnboardingState } from "@/lib/db/onboarding";
 
 export default async function AppLayout({
@@ -13,22 +12,26 @@ export default async function AppLayout({
   children: React.ReactNode;
 }>) {
   const preview = await isAccountPreviewMode();
-  const user = await requireUser();
+  const user = await requireAppSession();
 
-  if (!preview) {
+  let userLabel: string;
+  if (preview) {
+    const onboarding = getDevPreviewOnboardingState();
+    userLabel = onboarding.displayName?.trim() || "Alex (preview)";
+  } else {
     const onboarding = await getOnboardingState(user.id);
     if (!onboarding.isComplete) {
       redirect("/onboarding");
     }
+    userLabel =
+      onboarding.displayName?.trim() || user.email.trim() || "Account";
   }
 
   return (
     <AppLayoutClient
       accountPreview={preview}
-      sidebar={
-        <Suspense fallback={<AppSidebarSkeleton />}>
-          <AppSidebar />
-        </Suspense>
+      topNav={
+        <AppTopNavClient userLabel={userLabel} previewMode={preview} />
       }
     >
       {children}

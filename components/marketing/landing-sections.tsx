@@ -150,7 +150,7 @@ function ChaosAppsVisual() {
               )}
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background/80 text-foreground/80">
-                <Icon className="size-4" strokeWidth={1.75} />
+                <Icon className="size-4" strokeWidth={1.5} />
               </span>
               <span className="text-[11px] font-medium leading-tight text-foreground">
                 {name}
@@ -168,7 +168,7 @@ function ChaosAppsVisual() {
               )}
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background/80 text-foreground/80">
-                <Icon className="size-4" strokeWidth={1.75} />
+                <Icon className="size-4" strokeWidth={1.5} />
               </span>
               <span className="text-[13px] font-medium leading-tight text-foreground">
                 {name}
@@ -207,7 +207,7 @@ function ProblemVisual() {
               )}
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Icon className="size-4" strokeWidth={1.75} />
+                <Icon className="size-4" strokeWidth={1.5} />
               </span>
               <span className="text-[13px] font-medium text-foreground/90">
                 {label}
@@ -229,7 +229,7 @@ function AudienceCards() {
           className="flex flex-col rounded-2xl border border-border/80 bg-background p-5 shadow-sm"
         >
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary/10 text-sidebar-primary">
-            <Icon className="size-[18px]" strokeWidth={1.75} />
+            <Icon className="size-[18px]" strokeWidth={1.5} />
           </span>
           <p className="mt-4 text-[15px] font-medium leading-snug text-foreground">
             {title}

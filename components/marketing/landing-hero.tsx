@@ -37,7 +37,7 @@ export function LandingHero() {
               )}
             >
               Try our beta for free
-              <ArrowUpRight className="size-4" strokeWidth={2} />
+              <ArrowUpRight className="size-4" strokeWidth={1.5} />
             </Link>
           </div>
         </div>

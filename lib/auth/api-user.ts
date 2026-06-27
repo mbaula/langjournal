@@ -19,3 +19,18 @@ export async function getAuthenticatedAppUser(): Promise<AppUser | null> {
 
   return { id: user.id, email };
 }
+
+/** Auth check without DB upsert — for hot paths where the user is already active. */
+export async function getAuthenticatedUserId(): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user?.id) {
+    return null;
+  }
+
+  return user.id;
+}

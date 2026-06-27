@@ -1,6 +1,6 @@
 import { FlashcardsView } from "@/components/flashcards/flashcards-view";
 import { appPageShellClassName } from "@/components/journal/field-styles";
-import { isAccountPreviewMode, requireUser } from "@/lib/auth/session";
+import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
 import {
   getDevPreviewFlashcards,
   getDevPreviewFlashcardStats,
@@ -9,7 +9,6 @@ import { getLanguagePair } from "@/lib/db/language";
 import {
   getPracticeStatsForUser,
   listFlashcardsForUser,
-  syncFlashcardsFromJournalEntries,
 } from "@/lib/flashcards/service";
 
 function countItemsForLanguage(
@@ -38,14 +37,8 @@ export default async function FlashcardsPage() {
     );
   }
 
-  const user = await requireUser();
+  const user = await requireAppSession();
   const { source, target } = await getLanguagePair(user.id);
-
-  try {
-    await syncFlashcardsFromJournalEntries(user.id, target);
-  } catch {
-    // Sync is best-effort; client also retries via /api/flashcards?sync=1.
-  }
 
   let flashcards: Awaited<ReturnType<typeof listFlashcardsForUser>> = [];
   let stats: Awaited<ReturnType<typeof getPracticeStatsForUser>> = {

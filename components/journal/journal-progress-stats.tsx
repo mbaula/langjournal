@@ -13,7 +13,7 @@ const statCardClass =
   "rounded-xl border border-border bg-card/50 px-3 py-2.5 backdrop-blur-sm";
 
 const labelClass =
-  "min-w-0 truncate text-[10px] leading-tight font-medium text-muted-foreground";
+  "min-w-0 truncate text-xs leading-tight font-medium text-muted-foreground";
 
 const iconClass = "size-3 shrink-0 text-sidebar-primary opacity-70";
 
@@ -46,7 +46,7 @@ function LearningLanguagesStat({
   return (
     <div className={cn(statCardClass, "flex w-full flex-col gap-1")}>
       <div className="flex min-w-0 items-center gap-1">
-        <Languages className={iconClass} strokeWidth={1.75} />
+        <Languages className={iconClass} strokeWidth={1.5} />
         <span className={labelClass}>Learning</span>
       </div>
       {languages.length > 0 ? (
@@ -59,14 +59,14 @@ function LearningLanguagesStat({
               <span className="truncate font-medium text-foreground">
                 {getLanguageDisplayName(lang.languageCode)}
               </span>
-              <span className="shrink-0 text-[11px] font-medium text-primary/70 capitalize">
+              <span className="shrink-0 text-xs font-medium text-primary/70 capitalize">
                 {lang.level}
               </span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[12px] text-muted-foreground">No languages yet</p>
+        <p className="text-sm text-muted-foreground">No languages yet</p>
       )}
     </div>
   );
@@ -82,12 +82,12 @@ export function JournalProgressStats({
         <StatCard
           label="Total entries"
           value={stats.total}
-          icon={<BookOpen className={iconClass} strokeWidth={1.75} />}
+          icon={<BookOpen className={iconClass} strokeWidth={1.5} />}
         />
         <StatCard
           label="New words"
           value={stats.translationCount}
-          icon={<Sparkles className={iconClass} strokeWidth={1.75} />}
+          icon={<Sparkles className={iconClass} strokeWidth={1.5} />}
         />
       </div>
       <LearningLanguagesStat languages={stats.learningLanguages} />
@@ -95,12 +95,12 @@ export function JournalProgressStats({
         <StatCard
           label="This week"
           value={stats.thisWeek}
-          icon={<CalendarDays className={iconClass} strokeWidth={1.75} />}
+          icon={<CalendarDays className={iconClass} strokeWidth={1.5} />}
         />
         <StatCard
           label="This month"
           value={stats.thisMonth}
-          icon={<CalendarDays className={iconClass} strokeWidth={1.75} />}
+          icon={<CalendarDays className={iconClass} strokeWidth={1.5} />}
         />
       </div>
     </div>

@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -11,6 +13,7 @@ import {
 
 import { journalEntryBodyClassName } from "@/components/journal/field-styles";
 import { JournalEditingBackdropContent } from "@/components/journal/journal-editing-backdrop-content";
+import { JournalWritePlaceholder } from "@/components/journal/journal-write-placeholder";
 import type { TranslationLoadingState } from "@/components/journal/journal-editing-backdrop-content";
 import type { InlineTranslation, TranslationSpan } from "@/lib/entries/translate";
 import {
@@ -45,6 +48,17 @@ type JournalEditorProps = {
   sourceLanguage: string;
   targetLanguage: string;
   translateTrigger?: TranslateTrigger;
+  onBodyChange?: (body: string) => void;
+  bodyMinHeightClassName?: string;
+  containerMinHeightClassName?: string;
+};
+
+export type JournalEditorHandle = {
+  flushSave: () => Promise<void>;
+  getDraftContent: () => {
+    body: string;
+    translations: InlineTranslation[];
+  };
 };
 
 /* ------------------------------------------------------------------ */
@@ -159,14 +173,21 @@ function mergeTranslationState(
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function JournalEditor({
-  entryId,
-  initialBody,
-  initialTranslations,
-  sourceLanguage,
-  targetLanguage,
-  translateTrigger = "enter",
-}: JournalEditorProps) {
+export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>(
+  function JournalEditor(
+    {
+      entryId,
+      initialBody,
+      initialTranslations,
+      sourceLanguage,
+      targetLanguage,
+      translateTrigger = "enter",
+      onBodyChange,
+      bodyMinHeightClassName = ENTRY_BODY_MIN_HEIGHT_CLASS,
+      containerMinHeightClassName,
+    },
+    ref,
+  ) {
   const [body, setBody] = useState(initialBody);
   const [translations, setTranslations] =
     useState<InlineTranslation[]>(initialTranslations);
@@ -379,6 +400,21 @@ export function JournalEditor({
   );
   const saveTranslationsRef = useRef(saveTranslations);
   saveTranslationsRef.current = saveTranslations;
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      flushSave: async () => {
+        await saveBodyRef.current(bodyRef.current);
+        await saveTranslationsRef.current(translationsRef.current);
+      },
+      getDraftContent: () => ({
+        body: bodyRef.current,
+        translations: translationsRef.current,
+      }),
+    }),
+    [],
+  );
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -812,12 +848,13 @@ export function JournalEditor({
     [saveBody],
   );
 
-  const onBodyChange = useCallback(
+  const onBodyChangeHandler = useCallback(
     (next: string) => {
       setBody(next);
+      onBodyChange?.(next);
       schedulePrefetch();
     },
-    [schedulePrefetch],
+    [onBodyChange, schedulePrefetch],
   );
 
   const wordCount = useMemo(() => countWords(body), [body]);
@@ -825,14 +862,17 @@ export function JournalEditor({
   return (
     <div
       ref={containerRef}
-      className="flex w-full max-w-none flex-col gap-3"
+      className={cn(
+        "flex w-full max-w-none min-h-0 flex-col gap-3",
+        containerMinHeightClassName,
+      )}
     >
-      <div className={cn("relative w-full flex-1", ENTRY_BODY_MIN_HEIGHT_CLASS)}>
+      <div className={cn("relative w-full min-h-0 flex-1", bodyMinHeightClassName)}>
         <div
           className="pointer-events-none absolute inset-0 z-0 overflow-visible"
           aria-hidden="true"
         >
-          <pre className="font-sans m-0 min-h-full overflow-visible whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-[15px] leading-[1.65] text-foreground antialiased">
+          <pre className="font-sans m-0 min-h-full overflow-visible whitespace-pre-wrap break-words border-0 bg-transparent px-0 py-1 text-base leading-[1.65] text-foreground antialiased">
             {editingBackdrop}
           </pre>
         </div>
@@ -866,7 +906,7 @@ export function JournalEditor({
               );
             }
             syncCaretFromTextarea(e.currentTarget);
-            onBodyChange(next);
+            onBodyChangeHandler(next);
           }}
           onSelect={(e) => {
             syncCaretFromTextarea(e.currentTarget);
@@ -877,19 +917,23 @@ export function JournalEditor({
           onKeyDown={onKeyDown}
           onBlur={handleBlur}
           autoFocus
-          placeholder="If you're stuck, use // to translate, let's write something..."
+          aria-label="Journal entry"
           className={journalEntryBodyClassName(
-            "relative z-10 text-transparent",
-            ENTRY_BODY_MIN_HEIGHT_CLASS,
+            "relative z-10 min-h-full text-transparent caret-foreground",
           )}
         />
+        {!body ? (
+          <div className="pointer-events-none absolute inset-0 z-[5] overflow-visible px-0 py-1">
+            <JournalWritePlaceholder />
+          </div>
+        ) : null}
       </div>
       {slashTranslateHint ? (
         <p className="sr-only" aria-live="polite">
           {slashTranslateHint}
         </p>
       ) : null}
-      <p className="flex justify-end pb-1 text-[12px] text-muted-foreground tabular-nums">
+      <p className="flex justify-end pb-1 text-sm text-muted-foreground tabular-nums">
         {wordCountLabel(wordCount)}
       </p>
       {error ? (
@@ -899,4 +943,5 @@ export function JournalEditor({
       ) : null}
     </div>
   );
-}
+},
+);

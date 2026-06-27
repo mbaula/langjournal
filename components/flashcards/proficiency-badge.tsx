@@ -19,7 +19,7 @@ export function ProficiencyBadge({ proficiency, className }: ProficiencyBadgePro
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium tracking-wide",
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium tracking-wide",
         PROFICIENCY_STYLES[proficiency],
         className,
       )}

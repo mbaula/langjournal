@@ -53,23 +53,27 @@ describe("listJournalEntries", () => {
   });
 
   it("requests entries ordered by date descending", async () => {
-    prismaMock.journalEntry.findMany.mockResolvedValueOnce([{ id: "e1" }]);
+    prismaMock.journalEntry.findMany.mockResolvedValueOnce([
+      { id: "e1", _count: { flashcards: 3 } },
+    ]);
     const result = await listJournalEntries("u1");
 
     expect(prismaMock.journalEntry.findMany).toHaveBeenCalledWith({
       where: { userId: "u1" },
-      orderBy: { entryDate: "desc" },
+      orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }],
       select: {
         id: true,
         title: true,
         body: true,
         translations: true,
         entryDate: true,
+        completedAt: true,
         createdAt: true,
         updatedAt: true,
+        _count: { select: { flashcards: true } },
       },
     });
-    expect(result).toEqual([{ id: "e1" }]);
+    expect(result).toEqual([{ id: "e1", flashcardCount: 3 }]);
   });
 });
 
@@ -117,6 +121,7 @@ describe("getJournalEntryForUser", () => {
         body: true,
         translations: true,
         entryDate: true,
+        completedAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -132,7 +137,7 @@ describe("getOrCreateJournalEntryForDate", () => {
 
   it("returns existing entry when found", async () => {
     const existing = { id: "existing" };
-    prismaMock.journalEntry.findUnique.mockResolvedValueOnce(existing);
+    prismaMock.journalEntry.findFirst.mockResolvedValueOnce(existing);
 
     const result = await getOrCreateJournalEntryForDate(
       "u1",
@@ -145,7 +150,7 @@ describe("getOrCreateJournalEntryForDate", () => {
   });
 
   it("creates entry when not found", async () => {
-    prismaMock.journalEntry.findUnique.mockResolvedValueOnce(null);
+    prismaMock.journalEntry.findFirst.mockResolvedValueOnce(null);
     prismaMock.journalEntry.create.mockResolvedValueOnce({ id: "new-entry" });
 
     const result = await getOrCreateJournalEntryForDate(

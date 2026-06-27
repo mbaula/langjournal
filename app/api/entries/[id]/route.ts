@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
+import { getAuthenticatedUserId } from "@/lib/auth/api-user";
 import {
   deleteJournalEntryForUser,
   getJournalEntryForUser,
@@ -13,13 +13,13 @@ import { patchJournalEntryBodySchema } from "@/lib/validations/entry";
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
-  const user = await getAuthenticatedAppUser();
-  if (!user) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await context.params;
-  const entry = await getJournalEntryForUser(id, user.id);
+  const entry = await getJournalEntryForUser(id, userId);
 
   if (!entry) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -29,8 +29,8 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const user = await getAuthenticatedAppUser();
-  if (!user) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -52,14 +52,14 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (parsed.data.title !== undefined) {
-    const result = await updateJournalEntryTitle(id, user.id, parsed.data.title);
+    const result = await updateJournalEntryTitle(id, userId, parsed.data.title);
     if (!result.ok) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }
 
   if (parsed.data.body !== undefined) {
-    const result = await updateJournalEntryBody(id, user.id, parsed.data.body);
+    const result = await updateJournalEntryBody(id, userId, parsed.data.body);
     if (!result.ok) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -68,7 +68,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (parsed.data.translations !== undefined) {
     const result = await updateJournalEntryTranslations(
       id,
-      user.id,
+      userId,
       parsed.data.translations,
     );
     if (!result.ok) {
@@ -76,18 +76,18 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
   }
 
-  const entry = await getJournalEntryForUser(id, user.id);
+  const entry = await getJournalEntryForUser(id, userId);
   return NextResponse.json({ entry });
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const user = await getAuthenticatedAppUser();
-  if (!user) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await context.params;
-  const result = await deleteJournalEntryForUser(id, user.id);
+  const result = await deleteJournalEntryForUser(id, userId);
 
   if (!result.ok) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

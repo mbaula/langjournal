@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, CircleHelp } from "lucide-react";
+import { Check, CircleHelp, Globe, Search, X } from "lucide-react";
 
 import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo";
-import { CreateEntryButton } from "@/components/journal/create-entry-button";
 import { Button } from "@/components/ui/button";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import { resolveLanguageLabel } from "@/lib/languages/display-name";
@@ -25,18 +24,60 @@ type LanguageBarProps = {
   onLanguagesSaved?: (source: string, target: string) => void;
 };
 
-const popoverPanelClass =
-  "absolute right-0 top-[calc(100%+0.5rem)] z-50 rounded-3xl border border-border bg-popover text-popover-foreground shadow-lg";
+const languageBarPopoverBaseClass =
+  "z-50 rounded-3xl border border-border bg-popover p-5 text-sm leading-relaxed text-popover-foreground shadow-lg sm:p-6";
 
-const barControlHeightClass = "h-10";
+const languageBarPopoverTitleClassName =
+  "text-base font-semibold tracking-tight text-foreground";
 
-const barControlSurfaceClass =
-  "rounded-full border border-border bg-muted/80 shadow-none";
+const languageBarPopoverDescriptionClassName =
+  "mt-1 text-sm leading-relaxed text-foreground/80";
 
-const selectClass =
-  "mt-2 w-full rounded-md border border-border/80 bg-background px-2.5 py-1.5 text-[13px] text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
+const languageBarPopoverHeaderClassName = "pb-4";
 
-function LanguagePicker({
+const languageBarPopoverBodyClassName = "border-t border-border pt-4";
+
+const languageBarPopoverCloseClassName =
+  "inline-flex size-7 shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-muted hover:text-foreground";
+
+const languagePickerPanelClass =
+  "absolute right-0 top-[calc(100%+0.5rem)] w-[min(100vw-2rem,28rem)] origin-top-right";
+
+const languagePickerSearchWrapClassName =
+  "flex items-center gap-2 rounded-full border border-border bg-background px-3 py-2";
+
+const languagePickerDisplayWrapClassName =
+  "group flex w-full cursor-pointer items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-muted/30";
+
+const languagePickerDisplayTextClassName =
+  "min-w-0 flex-1 truncate text-sm font-medium text-foreground";
+
+const languagePickerEditHintClassName =
+  "shrink-0 text-sm text-foreground/70 opacity-0 transition-opacity group-hover:opacity-100";
+
+const languagePickerSearchInputClassName =
+  "min-w-0 flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-foreground/55";
+
+const languagePickerListClassName =
+  "mt-2 max-h-44 overflow-y-auto rounded-2xl border border-border bg-background p-1";
+
+const languagePickerOptionClassName =
+  "flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-sm transition-colors";
+
+function filterLanguageOptions(options: Lang[], query: string) {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) {
+    return [];
+  }
+
+  return options.filter(
+    (language) =>
+      language.name.toLowerCase().includes(normalized) ||
+      language.code.toLowerCase().includes(normalized),
+  );
+}
+
+function SearchableLanguagePicker({
   id,
   subtitle,
   value,
@@ -51,34 +92,174 @@ function LanguagePicker({
   disabled: boolean;
   onChange: (code: string) => void;
 }) {
+  const [query, setQuery] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const selected = options.find((language) => language.code === value);
+  const isSearching = query.trim().length > 0;
+
+  const filteredOptions = useMemo(
+    () => filterLanguageOptions(options, query),
+    [options, query],
+  );
+
+  const showResults = isEditing && isSearching && filteredOptions.length > 0;
+
+  const startEditing = useCallback(() => {
+    if (disabled) return;
+    setIsEditing(true);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }, [disabled]);
+
+  const stopEditing = useCallback(() => {
+    setIsEditing(false);
+    setQuery("");
+  }, []);
+
   return (
-    <section
-      className="min-w-0 flex-1 rounded-md border border-border bg-muted/50 px-3 py-3"
-      aria-labelledby={`${id}-subtitle`}
-    >
+    <section className="min-w-0 flex-1" aria-labelledby={`${id}-subtitle`}>
       <p
         id={`${id}-subtitle`}
-        className="text-xs font-medium text-muted-foreground"
+        className="mb-2 text-sm font-medium text-foreground"
       >
         {subtitle}
       </p>
-      <select
-        id={id}
-        className={selectClass}
-        disabled={disabled}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        aria-labelledby={`${id}-subtitle`}
-      >
-        {options.map((l) => (
-          <option key={`${id}-${l.code}`} value={l.code}>
-            {l.name}
-          </option>
-        ))}
-      </select>
+
+      {isEditing ? (
+        <>
+          <label htmlFor={`${id}-search`} className="sr-only">
+            Search {subtitle.toLowerCase()}
+          </label>
+          <div className={languagePickerSearchWrapClassName}>
+            <Search
+              className="size-3.5 shrink-0 text-foreground/70"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+            <input
+              ref={inputRef}
+              id={`${id}-search`}
+              type="search"
+              value={query}
+              disabled={disabled}
+              placeholder="Search languages…"
+              onChange={(event) => setQuery(event.target.value)}
+              onBlur={() => {
+                if (!query.trim()) {
+                  stopEditing();
+                }
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  stopEditing();
+                  inputRef.current?.blur();
+                }
+              }}
+              className={languagePickerSearchInputClassName}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+
+          {showResults ? (
+            <div
+              role="listbox"
+              aria-labelledby={`${id}-subtitle`}
+              className={languagePickerListClassName}
+            >
+              {filteredOptions.map((language) => {
+                const isSelected = language.code === value;
+                return (
+                  <button
+                    key={`${id}-${language.code}`}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    disabled={disabled}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      onChange(language.code);
+                      stopEditing();
+                    }}
+                    className={cn(
+                      languagePickerOptionClassName,
+                      isSelected
+                        ? "bg-primary font-medium text-primary-foreground"
+                        : "text-foreground hover:bg-muted/60",
+                      disabled && "opacity-60",
+                    )}
+                  >
+                    <span className="min-w-0 flex-1 truncate">{language.name}</span>
+                    <span
+                      className={cn(
+                        "shrink-0 text-xs font-medium tracking-[0.06em] uppercase",
+                        isSelected
+                          ? "text-primary-foreground/80"
+                          : "text-foreground/70",
+                      )}
+                    >
+                      {formatLanguageCodeBadge(language.code)}
+                    </span>
+                    {isSelected ? (
+                      <Check className="size-3.5 shrink-0" strokeWidth={1.5} />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={startEditing}
+          className={cn(
+            languagePickerDisplayWrapClassName,
+            disabled && "cursor-not-allowed opacity-60",
+          )}
+          aria-label={`Edit ${subtitle.toLowerCase()}, currently ${selected?.name ?? "not selected"}`}
+        >
+          <span className={languagePickerDisplayTextClassName}>
+            {selected?.name ?? "Select language…"}
+          </span>
+          <span className={languagePickerEditHintClassName} aria-hidden>
+            edit
+          </span>
+        </button>
+      )}
     </section>
   );
 }
+
+function formatLanguageCodeBadge(code: string): string {
+  const base = code.split("-")[0]?.trim().toLowerCase() ?? code.trim().toLowerCase();
+  if (!base) return code.toUpperCase();
+
+  try {
+    const name = new Intl.DisplayNames(["en"], { type: "language" }).of(base);
+    const letters = name?.replace(/[^a-zA-Z]/g, "") ?? "";
+    if (letters.length >= 3) {
+      return letters.slice(0, 3).toUpperCase();
+    }
+  } catch {
+    // fall through
+  }
+
+  return base.slice(0, 3).toUpperCase();
+}
+
+const helpPopoverPanelClass =
+  "absolute left-[calc(100%+0.5rem)] top-0 w-[min(100vw-2rem,28rem)] max-sm:left-0 max-sm:top-[calc(100%+0.5rem)]";
+
+const languageBarTriggerClassName =
+  "inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-app-shell p-2 font-sans transition-opacity hover:opacity-95";
+
+const languageBarLabelClassName =
+  "flex h-9 min-w-0 items-center rounded-full bg-background px-4 text-sm font-medium tracking-[0.06em] whitespace-nowrap text-foreground uppercase";
+
+const languageBarIconButtonClassName =
+  "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground";
 
 export function LanguageBar({
   source: initialSource,
@@ -121,22 +302,32 @@ export function LanguageBar({
   sourceRef.current = source;
   targetRef.current = target;
 
-  const rootRef = useRef<HTMLDivElement>(null);
+  const languagePickerRef = useRef<HTMLDivElement>(null);
+  const helpRootRef = useRef<HTMLDivElement>(null);
   const panelWasOpenRef = useRef(false);
   const panelCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
 
   useEffect(() => {
-    if (!open && !helpOpen) return;
+    if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (rootRef.current?.contains(e.target as Node)) return;
+      if (languagePickerRef.current?.contains(e.target as Node)) return;
       setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  useEffect(() => {
+    if (!helpOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (helpRootRef.current?.contains(e.target as Node)) return;
       setHelpOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [open, helpOpen]);
+  }, [helpOpen]);
 
   useEffect(() => {
     if (open) {
@@ -216,6 +407,8 @@ export function LanguageBar({
 
   const sourceLabel = resolveLanguageLabel(source, displayCatalog);
   const targetLabel = resolveLanguageLabel(target, displayCatalog);
+  const sourceBadge = formatLanguageCodeBadge(source);
+  const targetBadge = formatLanguageCodeBadge(target);
 
   const options = useMemo(
     () => mergeProfileCodes(languages ?? [], draftSource, draftTarget),
@@ -263,50 +456,35 @@ export function LanguageBar({
   const hasChanges = draftSource !== source || draftTarget !== target;
 
   return (
-    <div
-      className="inline-flex max-w-full shrink-0 flex-nowrap items-center gap-2"
-      ref={rootRef}
-    >
-      <CreateEntryButton />
-
-      <div className="relative min-w-0 shrink">
-        <div
-          className={cn(
-            "inline-flex min-w-0 max-w-full items-center overflow-hidden font-sans text-[13px]",
-            barControlSurfaceClass,
-          )}
+    <div className="inline-flex max-w-full shrink-0 flex-nowrap items-center gap-2">
+      <div className="relative min-w-0 shrink" ref={languagePickerRef}>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen((o) => !o);
+            setHelpOpen(false);
+          }}
+          className={languageBarTriggerClassName}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-label={`Change translation languages, currently ${sourceLabel} to ${targetLabel}`}
         >
-          <button
-            type="button"
-            onClick={() => {
-              setOpen((o) => !o);
-              setHelpOpen(false);
-            }}
-            className={cn(
-              "flex min-w-0 items-center gap-1.5 rounded-full px-4 font-medium whitespace-nowrap text-foreground transition-colors hover:bg-muted sm:px-3.5",
-              barControlHeightClass,
-            )}
-            aria-expanded={open}
-            aria-haspopup="dialog"
-            aria-label="Change translation languages"
-          >
+          <span className={languageBarLabelClassName}>
             <span className="truncate">
-              {sourceLabel} → {targetLabel}
+              {sourceBadge} → {targetBadge}
             </span>
-            <ChevronDown
-              className={cn(
-                "size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out",
-                open && "rotate-180",
-              )}
-            />
-          </button>
-        </div>
+          </span>
+          <span className={languageBarIconButtonClassName} aria-hidden>
+            <Globe className="size-4" strokeWidth={1.5} />
+          </span>
+        </button>
 
         {panelMounted ? (
           <div
             className={cn(
-              popoverPanelClass,
-              "w-[min(100vw-2rem,28rem)] origin-top-right p-4 text-[13px] leading-relaxed transition-[opacity,transform] duration-200 ease-out will-change-[opacity,transform]",
+              languagePickerPanelClass,
+              languageBarPopoverBaseClass,
+              "transition-[opacity,transform] duration-200 ease-out will-change-[opacity,transform]",
               panelEntered && !panelClosing
                 ? "translate-y-0 scale-100 opacity-100"
                 : "-translate-y-1 scale-[0.98] opacity-0",
@@ -316,32 +494,41 @@ export function LanguageBar({
             aria-labelledby="language-pair-title"
             aria-describedby="language-pair-instructions"
           >
-            <header className="border-b border-border/60 pb-4">
-              <p
-                id="language-pair-title"
-                className="text-base font-medium text-foreground"
-              >
-                Select your languages
-              </p>
-              <p
-                id="language-pair-instructions"
-                className="mt-2 text-muted-foreground"
-              >
-                Pick the language you write in and the one you&apos;re learning.
-                Save when you&apos;re done.
-              </p>
+            <header className={languageBarPopoverHeaderClassName}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p id="language-pair-title" className={languageBarPopoverTitleClassName}>
+                    Language pair
+                  </p>
+                  <p
+                    id="language-pair-instructions"
+                    className={languageBarPopoverDescriptionClassName}
+                  >
+                    Pick the language you write in and the one you&apos;re learning.
+                    Save when you&apos;re done.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className={languageBarPopoverCloseClassName}
+                  aria-label="Close language picker"
+                >
+                  <X className="size-4" strokeWidth={1.5} />
+                </button>
+              </div>
             </header>
 
-            <div className="flex flex-col gap-2.5 pt-4 sm:flex-row">
-              <LanguagePicker
+            <div className={cn(languageBarPopoverBodyClassName, "flex flex-col gap-4 sm:flex-row")}>
+              <SearchableLanguagePicker
                 id="bar-native"
-                subtitle="I'm writing in…"
+                subtitle="When stuck, I'll write in…"
                 value={draftSource}
                 options={options}
                 disabled={pickerDisabled}
                 onChange={setDraftSource}
               />
-              <LanguagePicker
+              <SearchableLanguagePicker
                 id="bar-target"
                 subtitle="I'm learning…"
                 value={draftTarget}
@@ -352,7 +539,7 @@ export function LanguageBar({
             </div>
 
             {error ? (
-              <p className="mt-3 text-xs text-destructive" role="alert">
+              <p className="mt-4 text-xs text-destructive" role="alert">
                 {error}
               </p>
             ) : null}
@@ -360,14 +547,14 @@ export function LanguageBar({
             <div
               className={cn(
                 "grid transition-[grid-template-rows,opacity,margin-top] duration-200 ease-out",
-                hasChanges ? "mt-4 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
+                hasChanges ? "mt-5 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
               )}
               aria-hidden={!hasChanges}
             >
               <div className="min-h-0 overflow-hidden">
                 <div
                   className={cn(
-                    "flex justify-end gap-2 border-t border-border/60 pt-3 transition-[transform,opacity] duration-200 ease-out",
+                    "flex justify-end gap-2 border-t border-border pt-4 transition-[transform,opacity] duration-200 ease-out",
                     hasChanges
                       ? "translate-y-0 opacity-100"
                       : "translate-y-1 opacity-0",
@@ -377,7 +564,7 @@ export function LanguageBar({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-8 transition-opacity duration-150"
+                  className="h-8 rounded-full transition-opacity duration-150"
                   disabled={saving || savedPulse}
                   onClick={() => {
                     setDraftSource(source);
@@ -392,7 +579,7 @@ export function LanguageBar({
                   type="button"
                   size="sm"
                   className={cn(
-                    "h-8 min-w-[4.5rem] transition-all duration-200 ease-out",
+                    "h-8 min-w-[4.5rem] rounded-full transition-all duration-200 ease-out",
                     savedPulse && "scale-[0.98] opacity-90",
                   )}
                   disabled={pickerDisabled || savedPulse}
@@ -407,39 +594,62 @@ export function LanguageBar({
         ) : null}
       </div>
 
-      <div className="relative shrink-0">
+      <div className="relative shrink-0" ref={helpRootRef}>
         <button
           type="button"
           onClick={() => {
             setHelpOpen((h) => !h);
             setOpen(false);
           }}
-          className="flex shrink-0 items-center justify-center p-1 text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex shrink-0 items-center gap-1.5 px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
           aria-expanded={helpOpen}
           aria-haspopup="dialog"
           aria-label="How to translate"
         >
-          <CircleHelp className="size-5" strokeWidth={1.75} />
+          <CircleHelp className="size-5 shrink-0" strokeWidth={1.5} />
+          <span>Help</span>
         </button>
 
         {helpOpen ? (
           <div
-            className={`${popoverPanelClass} w-[min(100vw-2rem,26rem)] p-4 text-[13px] leading-relaxed`}
+            className={cn(helpPopoverPanelClass, languageBarPopoverBaseClass)}
             role="dialog"
-            aria-label="Translation help"
+            aria-labelledby="translation-help-title"
+            aria-describedby="translation-help-instructions"
           >
-            <p className="font-medium text-foreground">How to translate</p>
-            <p className="mt-2 text-muted-foreground">
-              Type{" "}
-              <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">{"//"}</code>{" "}
-              followed by the word or phrase you want, then press{" "}
-              <kbd className="rounded border border-border bg-muted px-1 font-sans text-[0.7rem] text-foreground">
-                {triggerKeyLabel}
-              </kbd>
-              .
-            </p>
+            <header className={languageBarPopoverHeaderClassName}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p id="translation-help-title" className={languageBarPopoverTitleClassName}>
+                    How to translate
+                  </p>
+                  <p
+                    id="translation-help-instructions"
+                    className={languageBarPopoverDescriptionClassName}
+                  >
+                    Type{" "}
+                    <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">
+                      {"//"}
+                    </code>{" "}
+                    followed by the word or phrase you want, then press{" "}
+                    <kbd className="rounded border border-border bg-muted px-1 font-sans text-xs text-foreground">
+                      {triggerKeyLabel}
+                    </kbd>
+                    .
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setHelpOpen(false)}
+                  className={languageBarPopoverCloseClassName}
+                  aria-label="Close help"
+                >
+                  <X className="size-4" strokeWidth={1.5} />
+                </button>
+              </div>
+            </header>
 
-            <div className="mt-4">
+            <div className={languageBarPopoverBodyClassName}>
               <SlashTranslateDemo
                 variant="compact"
                 translateTriggerKey={triggerKeyLabel}

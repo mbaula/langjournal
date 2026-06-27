@@ -57,7 +57,7 @@ describe("patchJournalEntryBodySchema", () => {
     );
   });
 
-  it("rejects payload with neither title nor body", () => {
+  it("rejects payload with no patch fields", () => {
     const parsed = patchJournalEntryBodySchema.safeParse({});
     expect(parsed.success).toBe(false);
   });

@@ -25,7 +25,7 @@ export default async function SettingsPage() {
       <div className={appPageShellClassName}>
         <header className="space-y-1">
           <h1 className={journalPageTitleClassName}>Settings</h1>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Update your profile and journal language preferences.
           </p>
         </header>
@@ -54,7 +54,7 @@ export default async function SettingsPage() {
     <div className={appPageShellClassName}>
       <header className="space-y-1">
         <h1 className={journalPageTitleClassName}>Settings</h1>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Update your profile and journal language preferences.
         </p>
       </header>

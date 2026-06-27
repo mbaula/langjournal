@@ -21,7 +21,7 @@ function IconHoverLabel({ label, children }: IconHoverLabelProps) {
       {children}
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-0.5 text-[11px] font-medium text-background opacity-0 transition-opacity duration-75 group-hover/icon-label:opacity-100"
+        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-0.5 text-xs font-medium text-background opacity-0 transition-opacity duration-75 group-hover/icon-label:opacity-100"
       >
         {label}
       </span>
@@ -35,6 +35,7 @@ type InlineEditableTextProps = {
   className?: string;
   muted?: boolean;
   editable?: boolean;
+  truncate?: boolean;
 };
 
 function InlineEditableText({
@@ -43,6 +44,7 @@ function InlineEditableText({
   className,
   muted = false,
   editable = false,
+  truncate = false,
 }: InlineEditableTextProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -72,8 +74,12 @@ function InlineEditableText({
   if (!editable) {
     return (
       <span
+        title={truncate ? value : undefined}
         className={cn(
-          "block whitespace-pre-wrap break-words",
+          "block min-w-0",
+          truncate
+            ? "w-full overflow-hidden text-ellipsis whitespace-nowrap"
+            : "max-w-full whitespace-pre-wrap break-words",
           muted ? "text-muted-foreground" : "text-foreground",
           className,
         )}
@@ -176,19 +182,29 @@ export function FlashcardLibraryCard({
   const collapsedMinHeight = showBoth ? "min-h-[6.75rem]" : "min-h-[5.75rem]";
 
   const phraseContent = (
-    <div className="flex flex-col items-center gap-[5px]">
+    <div
+      className={cn(
+        "flex w-full min-w-0 max-w-full flex-col items-center gap-[5px] px-1",
+        showBoth && "text-center",
+      )}
+    >
       <InlineEditableText
         value={primaryText}
         onChange={onPrimaryChange}
         editable={expanded}
-        className="text-[15px] font-medium leading-snug"
+        truncate={!expanded}
+        className={cn(
+          "w-full text-base font-medium leading-snug",
+          showBoth && "text-center",
+        )}
       />
       {showSecondary ? (
         <InlineEditableText
           value={secondaryText}
           onChange={onSecondaryChange}
           editable={expanded}
-          className="text-[13px] leading-snug"
+          truncate={!expanded}
+          className={cn("w-full text-sm leading-snug", showBoth && "text-center")}
           muted
         />
       ) : null}
@@ -198,10 +214,10 @@ export function FlashcardLibraryCard({
   return (
     <article
       className={cn(
-        "relative flex flex-col rounded-2xl border border-border bg-card shadow-sm transition-[box-shadow,ring-color]",
+        "relative flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-[box-shadow,ring-color]",
         expanded
           ? "ring-2 ring-ring/30"
-          : cn("group cursor-pointer hover:border-border/90 hover:shadow-md", collapsedMinHeight),
+          : cn("group cursor-pointer hover:border-border hover:shadow-md", collapsedMinHeight),
       )}
       onClick={!expanded ? onToggleExpand : undefined}
       onKeyDown={
@@ -235,30 +251,30 @@ export function FlashcardLibraryCard({
       {!expanded ? (
         <div
           className={cn(
-            "relative flex flex-col items-center justify-center px-3 py-3 text-center",
+            "relative flex w-full min-w-0 flex-col items-center justify-center overflow-hidden px-5 py-4 text-center",
             collapsedMinHeight,
           )}
         >
-          <div className="flex flex-col items-center transition-transform duration-100 ease-out group-hover:-translate-y-2">
+          <div className="flex w-full min-w-0 flex-col items-center overflow-hidden transition-transform duration-100 ease-out group-hover:-translate-y-2">
             {phraseContent}
           </div>
-          <p className="pointer-events-none absolute inset-x-3 bottom-2.5 text-[11px] text-muted-foreground opacity-0 transition-opacity duration-75 group-hover:opacity-100">
+          <p className="pointer-events-none absolute inset-x-5 bottom-3 text-xs text-muted-foreground opacity-0 transition-opacity duration-75 group-hover:opacity-100">
             click to view
           </p>
         </div>
       ) : (
         <>
-          <div className="flex flex-col items-center px-3 py-3 text-center">
+          <div className="flex flex-col items-center px-5 py-4 text-center">
             {phraseContent}
           </div>
 
           <div
-            className="border-t border-border px-3 py-3"
+            className="border-t border-border px-5 py-4"
             onClick={(event) => event.stopPropagation()}
           >
             {deleteConfirming ? (
               <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-3">
-                <p className="text-[13px]">Delete this flashcard?</p>
+                <p className="text-sm">Delete this flashcard?</p>
                 <div className="flex gap-2">
                   <Button type="button" variant="ghost" size="sm" onClick={onDeleteCancel}>
                     Cancel
@@ -282,11 +298,11 @@ export function FlashcardLibraryCard({
                   {card.entryId ? (
                     <IconHoverLabel label="View entry">
                       <Link
-                        href={`/app/entry/${card.entryId}`}
+                        href={`/app/journal?edit=${card.entryId}`}
                         aria-label="View entry"
                         className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
-                        <ExternalLink className="size-4" strokeWidth={1.75} />
+                        <ExternalLink className="size-4" strokeWidth={1.5} />
                       </Link>
                     </IconHoverLabel>
                   ) : null}
@@ -300,7 +316,7 @@ export function FlashcardLibraryCard({
                       className="size-9 shrink-0 text-destructive hover:bg-muted hover:text-destructive"
                       onClick={onDeleteRequest}
                     >
-                      <Trash2 className="size-4" strokeWidth={1.75} />
+                      <Trash2 className="size-4" strokeWidth={1.5} />
                     </Button>
                   </IconHoverLabel>
                 </div>

@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
@@ -108,19 +109,18 @@ export function EntryProvider({
         abortControllerRef.current.abort();
       }
 
-      const cached = entriesRef.current.get(id);
-      if (cached) {
-        setIsLoading(false);
-        setCurrentEntryId(id);
-        setLoadError(null);
-        router.replace(`/app/entry/${id}`, { scroll: false });
+      setIsLoading(false);
+      setCurrentEntryId(id);
+      setLoadError(null);
+      startTransition(() => {
+        router.push(`/app/journal?edit=${id}`);
+      });
+
+      if (entriesRef.current.has(id)) {
         return;
       }
 
       setIsLoading(true);
-      setLoadError(null);
-      setCurrentEntryId(id);
-      router.replace(`/app/entry/${id}`, { scroll: false });
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
@@ -141,11 +141,12 @@ export function EntryProvider({
         setIsLoading(false);
       }
     },
-    [fetchEntry, router]
+    [fetchEntry, router],
   );
 
   const prefetchEntry = useCallback(
     async (id: string) => {
+      router.prefetch(`/app/journal?edit=${id}`);
       if (entriesRef.current.has(id)) return;
       try {
         const entry = await fetchEntry(id);
@@ -157,7 +158,7 @@ export function EntryProvider({
         // Best-effort prefetch only.
       }
     },
-    [fetchEntry]
+    [fetchEntry, router],
   );
 
   const refreshEntry = useCallback(async () => {
@@ -193,18 +194,12 @@ export function EntryProvider({
     setCurrentEntryId((curr) => (curr === id ? null : curr));
   }, []);
 
-  // Handle deep links - sync URL to state on mount and URL changes
+  // Clear active entry when leaving the journal write surface.
   useEffect(() => {
-    const match = pathname.match(/^\/app\/entry\/([^/]+)$/);
-    if (match) {
-      const urlEntryId = match[1];
-      if (urlEntryId !== currentEntryId) {
-        void switchEntry(urlEntryId);
-      }
-    } else if (pathname === "/app/journal" || pathname === "/app/entry") {
+    if (!pathname.startsWith("/app/journal")) {
       setCurrentEntryId(null);
     }
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Refetch on window focus for data freshness
   useEffect(() => {

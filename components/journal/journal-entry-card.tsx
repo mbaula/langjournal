@@ -11,6 +11,7 @@ import {
 } from "@/components/journal/field-styles";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
 import { segmentTranslatedLineBySpans } from "@/lib/entries/entry-body-segments";
+import { formatEntrySubtitle } from "@/components/journal/entry-list";
 import { useEntry } from "@/lib/entries/entry-context";
 import type { InlineTranslation } from "@/lib/entries/translate";
 import { cn } from "@/lib/utils";
@@ -34,24 +35,40 @@ function coalesceTranslations(raw: unknown): InlineTranslation[] {
 
 export type JournalEntryCardProps = {
   entryId: string;
-  href: string;
+  href?: string;
+  onOpen?: () => void;
   title: string | null;
   dateLabel: string;
+  languageLabel?: string | null;
+  flashcardCount?: number;
   body: string | null;
   translations: unknown;
   onRenameTitle?: (entryId: string) => void;
   onDelete?: (entryId: string) => void;
+  onDeleted?: (entryId: string) => void;
 };
+
+function formatEntryMetaLabel(
+  dateLabel: string,
+  languageLabel?: string | null,
+  flashcardCount?: number,
+) {
+  return formatEntrySubtitle(dateLabel, { languageLabel, flashcardCount });
+}
 
 export function JournalEntryCard({
   entryId,
   href,
+  onOpen,
   title,
   dateLabel,
+  languageLabel,
+  flashcardCount,
   body,
   translations,
   onRenameTitle,
   onDelete,
+  onDeleted,
 }: JournalEntryCardProps) {
   const router = useRouter();
   const { removeEntryFromCache, updateEntryInCache } = useEntry();
@@ -66,8 +83,13 @@ export function JournalEntryCard({
   const [previewClamped, setPreviewClamped] = useState(false);
 
   const trimmedTitle = titleValue?.trim();
-  const displayTitle = trimmedTitle || dateLabel;
-  const subtitle = trimmedTitle ? dateLabel : null;
+  const entryMetaLabel = formatEntryMetaLabel(
+    dateLabel,
+    languageLabel,
+    flashcardCount,
+  );
+  const displayTitle = trimmedTitle || entryMetaLabel;
+  const subtitle = trimmedTitle ? entryMetaLabel : null;
 
   const startRename = useCallback(() => {
     setRenaming(true);
@@ -120,13 +142,14 @@ export function JournalEntryCard({
       const result = await deleteJournalEntryRequest(entryId);
       if (result.ok) {
         removeEntryFromCache(entryId);
+        onDeleted?.(entryId);
         router.refresh();
       }
     } finally {
       setDeletePending(false);
       setDeleteConfirming(false);
     }
-  }, [deletePending, entryId, removeEntryFromCache, router]);
+  }, [deletePending, entryId, onDeleted, removeEntryFromCache, router]);
 
   const text = body ?? "";
   const lines = text.split("\n");
@@ -157,11 +180,11 @@ export function JournalEntryCard({
 
   const entryHeader = (
     <>
-      <h2 className="text-base font-semibold tracking-tight text-foreground">
+      <h2 className="text-lg font-semibold tracking-tight text-foreground">
         {displayTitle}
       </h2>
       {subtitle ? (
-        <p className="mt-0.5 text-[13px] text-muted-foreground">{subtitle}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
       ) : null}
     </>
   );
@@ -227,8 +250,7 @@ export function JournalEntryCard({
   );
 
   return (
-    <li className="list-none">
-      <div className="group/row flex gap-2 sm:gap-3">
+    <div className="group/entry flex w-full gap-2 sm:gap-3">
         {renaming ? (
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -244,12 +266,12 @@ export function JournalEntryCard({
                 disabled={renamePending}
                 placeholder="Entry title…"
                 aria-label="Rename entry title"
-                className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-[13px] text-foreground outline-none focus:border-ring"
+                className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-ring"
               />
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
-                  className="rounded-md px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   disabled={renamePending}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={cancelRename}
@@ -258,7 +280,7 @@ export function JournalEntryCard({
                 </button>
                 <button
                   type="button"
-                  className="rounded-md px-3 py-2 text-[12px] text-foreground transition-colors hover:bg-muted"
+                  className="rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                   disabled={renamePending}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => void saveRename()}
@@ -269,9 +291,23 @@ export function JournalEntryCard({
             </div>
             <div className="mt-3">{entryBody}</div>
           </div>
+        ) : onOpen ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="min-w-0 flex-1 cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label={
+              subtitle
+                ? `Edit entry: ${displayTitle}, ${subtitle}`
+                : `Edit entry: ${displayTitle}`
+            }
+          >
+            {entryHeader}
+            {entryBody}
+          </button>
         ) : (
           <Link
-            href={href}
+            href={href ?? `/app/journal?edit=${entryId}`}
             className="min-w-0 flex-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={
               subtitle
@@ -292,13 +328,13 @@ export function JournalEntryCard({
           />
           {deleteConfirming ? (
             <div className="mt-2 flex flex-col items-end gap-1 pr-1">
-              <div className="rounded-md border border-border bg-popover px-2 py-1 text-[12px] text-muted-foreground shadow-sm">
+              <div className="rounded-md border border-border bg-popover px-2 py-1 text-sm text-muted-foreground shadow-sm">
                 Delete this entry?
               </div>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  className="rounded-md px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   disabled={deletePending}
                   onClick={() => setDeleteConfirming(false)}
                 >
@@ -306,7 +342,7 @@ export function JournalEntryCard({
                 </button>
                 <button
                   type="button"
-                  className="rounded-md px-3 py-2 text-[12px] text-destructive transition-colors hover:bg-destructive/10"
+                  className="rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
                   disabled={deletePending}
                   onClick={() => void performDelete()}
                 >
@@ -316,7 +352,6 @@ export function JournalEntryCard({
             </div>
           ) : null}
         </div>
-      </div>
-    </li>
+    </div>
   );
 }

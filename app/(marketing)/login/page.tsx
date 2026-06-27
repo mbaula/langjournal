@@ -52,7 +52,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             )}
           >
             Back to home
-            <ArrowUpRight className="size-4" strokeWidth={2} />
+            <ArrowUpRight className="size-4" strokeWidth={1.5} />
           </Link>
         </div>
       </MarketingFlowShell>

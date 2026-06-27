@@ -205,7 +205,7 @@ export function ContributionChart({
     <div className={cn("flex flex-col gap-2", className)}>
       {title ? (
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-[10px] font-medium text-muted-foreground">
+          <h2 className="text-xs font-medium text-muted-foreground">
             {title}
           </h2>
           <div className="flex items-center gap-0.5">
@@ -216,7 +216,7 @@ export function ContributionChart({
               disabled={!canGoOlder}
               onClick={() => setPageIndex((p) => Math.min(maxPage, p + 1))}
             >
-              <ChevronLeft className="size-3.5" strokeWidth={2} />
+              <ChevronLeft className="size-3.5" strokeWidth={1.5} />
             </button>
             <button
               type="button"
@@ -225,7 +225,7 @@ export function ContributionChart({
               disabled={!canGoNewer}
               onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
             >
-              <ChevronRight className="size-3.5" strokeWidth={2} />
+              <ChevronRight className="size-3.5" strokeWidth={1.5} />
             </button>
           </div>
         </div>
@@ -237,7 +237,7 @@ export function ContributionChart({
       >
         <div className="inline-flex flex-col gap-1">
           <div
-            className="flex text-[10px] text-muted-foreground"
+            className="flex text-xs text-muted-foreground"
             style={{ gap: `${CELL_GAP}px`, paddingLeft: DAY_LABEL_WIDTH + DAY_LABEL_GAP }}
           >
             {weeks.map((week, i) => (
@@ -250,7 +250,7 @@ export function ContributionChart({
           </div>
 
           <div className="flex" style={{ gap: DAY_LABEL_GAP }}>
-            <div className="relative w-7 text-[10px] text-muted-foreground">
+            <div className="relative w-7 text-xs text-muted-foreground">
               {DAY_LABELS.map(({ label, row }) => (
                 <span
                   key={label}
@@ -291,7 +291,7 @@ export function ContributionChart({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>
           {totalEntries} {totalEntries === 1 ? "entry" : "entries"} · {rangeLabel}
         </span>

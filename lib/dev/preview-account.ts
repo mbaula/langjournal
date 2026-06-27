@@ -64,6 +64,7 @@ export function getDevPreviewJournalEntries() {
       body: "Aujourd'hui j'ai marché le long de la rivière. Le temps était //sunny et j'ai pris un café en terrasse.",
       translations: [],
       entryDate: daysAgoUtc(0),
+      completedAt: null,
       createdAt: now,
       updatedAt: now,
     },
@@ -73,8 +74,10 @@ export function getDevPreviewJournalEntries() {
       body: "J'ai révisé le subjonctif pendant une heure. C'est difficile mais //progress.",
       translations: [],
       entryDate: daysAgoUtc(2),
+      completedAt: null,
       createdAt: now,
       updatedAt: now,
+      flashcardCount: 1,
     },
     {
       id: "00000000-0000-0000-0000-000000000003",
@@ -82,8 +85,10 @@ export function getDevPreviewJournalEntries() {
       body: "Ce week-end j'ai lu un chapitre de mon livre préféré en français.",
       translations: [],
       entryDate: daysAgoUtc(5),
+      completedAt: null,
       createdAt: now,
       updatedAt: now,
+      flashcardCount: 3,
     },
   ];
 }

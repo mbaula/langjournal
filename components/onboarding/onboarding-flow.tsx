@@ -89,10 +89,10 @@ function OnboardingNextButton({
       variant="default"
       onClick={onClick}
       disabled={disabled || loading}
-      className="h-10 gap-1.5 rounded-full px-5 text-[13px] shadow-sm"
+      className="h-10 gap-1.5 rounded-full px-5 text-sm shadow-sm"
     >
       {loading ? "Saving…" : "Next"}
-      {!loading ? <ArrowRight className="size-4" strokeWidth={2} /> : null}
+      {!loading ? <ArrowRight className="size-4" strokeWidth={1.5} /> : null}
     </Button>
   );
 }
@@ -242,7 +242,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
           </p>
           <Button
             onClick={() => router.push("/app/journal")}
-            className="mt-8 h-12 rounded-full px-8 text-[15px] shadow-sm"
+            className="mt-8 h-12 rounded-full px-8 text-base shadow-sm"
           >
             Start journaling
           </Button>
@@ -351,7 +351,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth={2}
+              strokeWidth={1.5}
               aria-hidden
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -402,7 +402,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                 className="flex items-center gap-3 rounded-2xl border border-border/80 bg-background/80 p-4 shadow-sm"
               >
                 <div className="min-w-0 flex-1 text-left">
-                  <p className="text-[15px] font-medium text-foreground">
+                  <p className="text-base font-medium text-foreground">
                     {getLanguageName(lang.languageCode)}
                   </p>
                 </div>
@@ -415,7 +415,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                         e.target.value as OnboardingLanguageLevel,
                       )
                     }
-                    className="h-9 cursor-pointer appearance-none rounded-full border border-border/80 bg-background pl-3 pr-8 text-[13px] text-foreground outline-none"
+                    className="h-9 cursor-pointer appearance-none rounded-full border border-border/80 bg-background pl-3 pr-8 text-sm text-foreground outline-none"
                   >
                     {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
                       <option key={level} value={level}>
@@ -428,7 +428,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     aria-hidden
                   >
                     <path
@@ -461,7 +461,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                   disabled={loadingLanguages}
                   className={cn(
                     marketingFlowFieldClassName,
-                    "cursor-pointer appearance-none pr-10 text-[14px] disabled:opacity-50",
+                    "cursor-pointer appearance-none pr-10 text-sm disabled:opacity-50",
                   )}
                 >
                   <option value="">
@@ -478,7 +478,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   aria-hidden
                 >
                   <path
@@ -496,7 +496,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                   }
                   className={cn(
                     marketingFlowFieldClassName,
-                    "cursor-pointer appearance-none pr-10 text-[14px]",
+                    "cursor-pointer appearance-none pr-10 text-sm",
                   )}
                 >
                   <option value="">Select level...</option>
@@ -511,7 +511,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   aria-hidden
                 >
                   <path
@@ -538,7 +538,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                 type="button"
                 onClick={addLanguage}
                 disabled={!newLangCode || !newLangLevel}
-                className="rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-opacity disabled:opacity-40"
+                className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity disabled:opacity-40"
               >
                 Add
               </button>
@@ -548,7 +548,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
           <button
             type="button"
             onClick={() => setAddingLanguage(true)}
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-5 py-3 text-[14px] text-muted-foreground shadow-sm transition-colors hover:border-sidebar-primary/30 hover:text-foreground"
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-5 py-3 text-sm text-muted-foreground shadow-sm transition-colors hover:border-sidebar-primary/30 hover:text-foreground"
           >
             <Plus className="size-4" />
             Add a language

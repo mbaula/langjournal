@@ -93,14 +93,16 @@ export function FlashcardLibraryGrid<T>({
   );
 
   return (
-    <div ref={containerRef} className={cn("flex w-full gap-4", className)}>
+    <div ref={containerRef} className={cn("flex w-full min-w-0 gap-4", className)}>
       {columns.map((columnItems, columnIndex) => (
         <div
           key={columnIndex}
           className="flex min-w-0 flex-1 flex-col gap-4"
         >
           {columnItems.map((item) => (
-            <div key={getItemKey(item)}>{renderItem(item)}</div>
+            <div key={getItemKey(item)} className="min-w-0 w-full">
+              {renderItem(item)}
+            </div>
           ))}
         </div>
       ))}

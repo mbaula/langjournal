@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inclusive-sans), sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --font-display: var(--font-folio), ui-serif, Georgia, "Times New Roman", serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -64,8 +65,8 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: #D9D9D9;
+  --input: #D9D9D9;
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -76,7 +77,7 @@
 
   /* --- App chrome (default / data-accent="gray" uses :root below) --- */
   /* oklch(L C H): lightness 0–1, chroma, hue degrees. Tweak C/H together per palette. */
-  /* --app-shell: outer frame (layout bg-app-shell). --sidebar must match to avoid a lighter "box". */
+  /* --app-shell: accent-tinted control surfaces (language bar on Write). Page layout uses --background. */
   --app-shell: oklch(0.955 0 0);
   --sidebar: var(--app-shell);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -89,7 +90,7 @@
   /* --sidebar-accent: hover surface for inactive nav / Customize open. */
   --sidebar-accent: oklch(0.91 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-border: #D9D9D9;
   --sidebar-ring: oklch(0.708 0 0);
   /* --contribution-fill: journal calendar filled cells (bg-contribution-fill). */
   --contribution-fill: oklch(0.55 0 0);
@@ -114,8 +115,8 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: #D9D9D9;
+  --input: #D9D9D9;
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -131,7 +132,7 @@
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.91 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-border: #D9D9D9;
   --sidebar-ring: oklch(0.708 0 0);
   --contribution-fill: oklch(0.55 0 0);
 }
@@ -220,7 +221,8 @@ html.dark:not([data-force-light]) .app-grain {
  *   --contribution-fill  Contribution chart
  *   --sidebar-border, --sidebar-ring  Optional chrome
  *
- * Main journal content stays --background (white / dark card), not tinted here.
+ * Page layout uses --background (flat white / dark).
+ * --app-shell tints compact controls (Write page language bar), not the page frame.
  */
 /* Green — muted #C8D5CC */
 html[data-accent="green"],
@@ -708,6 +710,75 @@ html.dark:not([data-force-light]) [data-marketing-theme="blue"] {
   .journal-entry-textarea {
     field-sizing: content;
   }
+
+  .border {
+    border-width: 1.5px;
+  }
+  .border-t {
+    border-top-width: 1.5px;
+  }
+  .border-r {
+    border-right-width: 1.5px;
+  }
+  .border-b {
+    border-bottom-width: 1.5px;
+  }
+  .border-l {
+    border-left-width: 1.5px;
+  }
+  .border-x {
+    border-left-width: 1.5px;
+    border-right-width: 1.5px;
+  }
+  .border-y {
+    border-top-width: 1.5px;
+    border-bottom-width: 1.5px;
+  }
+}
+
+@keyframes flashcard-slide-in-next {
+  from {
+    opacity: 0;
+    transform: translateX(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes flashcard-slide-in-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes flashcard-reveal-fade {
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.flashcard-slide-in-next {
+  animation: flashcard-slide-in-next 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flashcard-slide-in-prev {
+  animation: flashcard-slide-in-prev 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flashcard-reveal-fade {
+  animation: flashcard-reveal-fade 0.22s ease-out;
 }
 
 @layer base {
@@ -715,16 +786,17 @@ html.dark:not([data-force-light]) [data-marketing-theme="blue"] {
     @apply border-border outline-ring/50;
   }
   html {
-    @apply font-sans;
+    @apply antialiased;
+    font-size: 100%;
     transition:
       color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
       background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     overflow-x: clip;
     transition:
       background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-      color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }

@@ -1,12 +1,9 @@
-import { EntryList } from "@/components/journal/entry-list";
-import { appPageShellClassName } from "@/components/journal/field-styles";
-import { JournalHomeHeader } from "@/components/journal/journal-home-header";
-import { JournalProgressRail } from "@/components/journal/journal-progress-rail";
-import { isAccountPreviewMode, requireUser } from "@/lib/auth/session";
+import { type TranslateTrigger } from "@/components/journal/journal-editor";
+import { JournalWriteBody } from "@/components/journal/journal-write-body";
+import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
 import {
-  getDevPreviewContributionData,
+  DEV_PREVIEW_ENTRY_ID,
   getDevPreviewJournalEntries,
-  getDevPreviewJournalStats,
   getDevPreviewLanguagePair,
   getDevPreviewOnboardingState,
 } from "@/lib/dev/preview-account";
@@ -16,64 +13,38 @@ import {
   journalGreetingName,
   pickEncouragingSubtitle,
 } from "@/lib/journal/greeting";
+import { getDailyPromptForEntry } from "@/lib/prompts/daily-prompt";
 import {
-  getContributionData,
-  getJournalStats,
+  getOrCreateJournalEntryForDate,
+  isSavedJournalEntry,
   listJournalEntries,
 } from "@/lib/entries/service";
 
-type JournalHomeBodyProps = {
-  greetingName: string;
-  encouragingSubtitle: string;
-  source: string;
-  target: string;
-  entries: Awaited<ReturnType<typeof listJournalEntries>>;
-  stats: Awaited<ReturnType<typeof getJournalStats>>;
-  contributions: Awaited<ReturnType<typeof getContributionData>>;
-};
+const translateTrigger: TranslateTrigger =
+  (process.env.NEXT_PUBLIC_TRANSLATE_TRIGGER as TranslateTrigger) || "enter";
 
-function JournalHomeBody({
-  greetingName,
-  encouragingSubtitle,
-  source,
-  target,
-  entries,
-  stats,
-  contributions,
-}: JournalHomeBodyProps) {
-  return (
-    <div className={appPageShellClassName}>
-      <JournalHomeHeader
-        greetingName={greetingName}
-        subtitle={encouragingSubtitle}
-        source={source}
-        target={target}
-      />
-
-      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-x-10 lg:gap-y-8">
-        <div className="order-3 min-w-0 lg:order-none">
-          <EntryList entries={entries} />
-        </div>
-
-        <JournalProgressRail
-          stats={stats}
-          contributions={contributions}
-          className="order-2 lg:order-none lg:sticky lg:top-6 lg:self-start"
-        />
-      </div>
-    </div>
-  );
+function normalizeTranslations(translations: unknown) {
+  return Array.isArray(translations) ? translations : [];
 }
 
-export default async function JournalPage() {
+export default async function JournalPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ edit?: string }>;
+}) {
+  const { edit: initialEditEntryId } = await searchParams;
   const preview = await isAccountPreviewMode();
 
   if (preview) {
-    const entries = getDevPreviewJournalEntries();
     const { source, target } = getDevPreviewLanguagePair();
-    const stats = getDevPreviewJournalStats();
-    const contributions = getDevPreviewContributionData();
     const onboarding = getDevPreviewOnboardingState();
+    const todayEntry =
+      getDevPreviewJournalEntries().find(
+        (entry) => entry.id === DEV_PREVIEW_ENTRY_ID,
+      ) ?? getDevPreviewJournalEntries()[0]!;
+    const pastEntries = getDevPreviewJournalEntries().filter((entry) =>
+      entry.id !== todayEntry.id,
+    );
     const greetingName = journalGreetingName(
       onboarding.displayName,
       "alex.preview@folio.local",
@@ -81,40 +52,55 @@ export default async function JournalPage() {
     const encouragingSubtitle = pickEncouragingSubtitle();
 
     return (
-      <JournalHomeBody
+      <JournalWriteBody
         greetingName={greetingName}
-        encouragingSubtitle={encouragingSubtitle}
-        source={source}
-        target={target}
-        entries={entries}
-        stats={stats}
-        contributions={contributions}
+        subtitle={encouragingSubtitle}
+        sourceLanguage={source}
+        targetLanguage={target}
+        translateTrigger={translateTrigger}
+        entryId={todayEntry.id}
+        initialTitle={todayEntry.title}
+        initialBody={todayEntry.body ?? ""}
+        initialTranslations={normalizeTranslations(todayEntry.translations)}
+        pastEntries={pastEntries}
+        initialEditEntryId={initialEditEntryId ?? null}
       />
     );
   }
 
-  const user = await requireUser();
-  const [entries, { source, target }, stats, contributions, onboarding] =
+  const user = await requireAppSession();
+  const [{ entry: todayEntry, dailyPrompt }, entries, { source, target }, onboarding] =
     await Promise.all([
+      getOrCreateJournalEntryForDate(user.id, new Date()).then(async (draft) => ({
+        entry: draft.entry,
+        dailyPrompt: await getDailyPromptForEntry(user.id, draft.entry.id),
+      })),
       listJournalEntries(user.id),
       getLanguagePair(user.id),
-      getJournalStats(user.id),
-      getContributionData(user.id),
       getOnboardingState(user.id),
     ]);
+
+  const pastEntries = entries.filter((entry) =>
+    isSavedJournalEntry(entry, todayEntry.id),
+  );
 
   const greetingName = journalGreetingName(onboarding.displayName, user.email);
   const encouragingSubtitle = pickEncouragingSubtitle();
 
   return (
-    <JournalHomeBody
+    <JournalWriteBody
       greetingName={greetingName}
-      encouragingSubtitle={encouragingSubtitle}
-      source={source}
-      target={target}
-      entries={entries}
-      stats={stats}
-      contributions={contributions}
+      subtitle={encouragingSubtitle}
+      sourceLanguage={source}
+      targetLanguage={target}
+      translateTrigger={translateTrigger}
+      entryId={todayEntry.id}
+      initialTitle={todayEntry.title}
+      initialBody={todayEntry.body ?? ""}
+      initialTranslations={normalizeTranslations(todayEntry.translations)}
+      pastEntries={pastEntries}
+      dailyPrompt={dailyPrompt}
+      initialEditEntryId={initialEditEntryId ?? null}
     />
   );
 }
