@@ -283,7 +283,6 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
           <input
             type="text"
             value={name}
-            maxLength={50}
             placeholder="Your name or nickname..."
             className={cn(marketingFlowFieldClassName, "mt-8")}
             onChange={(e) => setName(e.target.value)}

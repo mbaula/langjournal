@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
 import {
   getOnboardingState,
-  updateOnboardingProfile,
+  updateSettingsProfile,
 } from "@/lib/db/onboarding";
-import { onboardingPayloadSchema } from "@/lib/validations/onboarding";
+import { settingsProfilePayloadSchema } from "@/lib/validations/settings";
 
 export async function GET() {
   const user = await getAuthenticatedAppUser();
@@ -30,7 +30,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const parsed = onboardingPayloadSchema.safeParse(json);
+  const parsed = settingsProfilePayloadSchema.safeParse(json);
   if (!parsed.success) {
     const flat = parsed.error.flatten();
     const first =
@@ -44,9 +44,8 @@ export async function PATCH(request: Request) {
 
   const displayName = parsed.data.displayName?.trim() ?? "";
 
-  await updateOnboardingProfile(user.id, {
+  await updateSettingsProfile(user.id, {
     displayName: displayName.length > 0 ? displayName : null,
-    ageRange: parsed.data.ageRange ?? null,
     languages: parsed.data.languages,
   });
 

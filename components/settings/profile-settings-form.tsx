@@ -1,16 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  SettingsPanelRow,
+  SettingsSection,
+} from "@/components/settings/settings-panel";
+import {
+  settingsFieldRowClassName,
+  settingsFieldRowStartClassName,
+  settingsInputClassName,
+  settingsSelectClassName,
+} from "@/components/settings/settings-field-styles";
 import type { OnboardingState, UserLanguageEntry } from "@/lib/db/onboarding";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import {
-  AGE_RANGE_LABELS,
   LANGUAGE_LEVEL_LABELS,
-  ONBOARDING_AGE_RANGES,
   ONBOARDING_LANGUAGE_LEVELS,
 } from "@/lib/onboarding/labels";
 import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
@@ -21,14 +30,9 @@ type ProfileSettingsFormProps = {
   initialState: OnboardingState;
 };
 
-const fieldClass =
-  "mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
-
-const selectClass = `${fieldClass} cursor-pointer`;
-
 export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) {
+  const router = useRouter();
   const [displayName, setDisplayName] = useState(initialState.displayName ?? "");
-  const [ageRange, setAgeRange] = useState(initialState.ageRange ?? "");
   const [userLanguages, setUserLanguages] = useState<UserLanguageEntry[]>(
     initialState.languages,
   );
@@ -122,7 +126,6 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           displayName,
-          ageRange: ageRange || undefined,
           languages: userLanguages,
         }),
       });
@@ -132,68 +135,44 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
         return;
       }
       setDisplayName(data.displayName ?? "");
-      setAgeRange(data.ageRange ?? "");
       setUserLanguages(data.languages);
       setSaved(true);
+      router.refresh();
       window.setTimeout(() => setSaved(false), 2500);
     } catch {
       setError("Save failed");
     } finally {
       setSaving(false);
     }
-  }, [ageRange, displayName, userLanguages]);
+  }, [displayName, router, userLanguages]);
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="space-y-1">
-        <h2 className="text-lg font-semibold text-foreground">Profile</h2>
-        <p className="text-sm text-muted-foreground">
-          Name, age range, and languages you are learning — the same details from
-          onboarding.
-        </p>
-      </div>
+    <SettingsSection title="Profile">
+      <SettingsPanelRow>
+        <div className={settingsFieldRowClassName}>
+          <Label htmlFor="profile-display-name">Name</Label>
+          <input
+            id="profile-display-name"
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Your name or nickname"
+            className={settingsInputClassName}
+          />
+        </div>
+      </SettingsPanelRow>
 
-      <div className="rounded-2xl border border-border bg-background/80 p-5 shadow-sm">
-        <div className="flex flex-col gap-5">
-          <div>
-            <Label htmlFor="profile-display-name">Name</Label>
-            <input
-              id="profile-display-name"
-              type="text"
-              maxLength={50}
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name or nickname"
-              className={fieldClass}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="profile-age-range">Age range</Label>
-            <select
-              id="profile-age-range"
-              value={ageRange}
-              onChange={(e) => setAgeRange(e.target.value)}
-              className={selectClass}
-            >
-              <option value="">Not specified</option>
-              {ONBOARDING_AGE_RANGES.map((value) => (
-                <option key={value} value={value}>
-                  {AGE_RANGE_LABELS[value]}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <Label>Languages you are learning</Label>
-            <p className="mt-1 text-sm text-muted-foreground">
+      <SettingsPanelRow>
+        <div className={settingsFieldRowStartClassName}>
+          <Label className="pt-2">Languages</Label>
+          <div className="min-w-0 space-y-3">
+            <p className="text-sm text-muted-foreground">
               The first language is used as your default learning target in the
               journal.
             </p>
 
             {userLanguages.length > 0 ? (
-              <ul className="mt-3 space-y-2">
+              <ul className="space-y-2">
                 {userLanguages.map((lang) => (
                   <li
                     key={lang.languageCode}
@@ -230,19 +209,19 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 No languages added yet.
               </p>
             )}
 
             {addingLanguage ? (
-              <div className="mt-3 space-y-3 rounded-lg border border-dashed border-border p-3">
+              <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <select
                     value={newLangCode}
                     onChange={(e) => setNewLangCode(e.target.value)}
                     disabled={loadingLanguages}
-                    className={selectClass}
+                    className={settingsSelectClassName}
                   >
                     <option value="">
                       {loadingLanguages ? "Loading…" : "Select language…"}
@@ -258,7 +237,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                     onChange={(e) =>
                       setNewLangLevel(e.target.value as OnboardingLanguageLevel)
                     }
-                    className={selectClass}
+                    className={settingsSelectClassName}
                   >
                     <option value="">Select level…</option>
                     {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
@@ -296,7 +275,6 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                 type="button"
                 variant="outline"
                 size="sm"
-                className="mt-3"
                 disabled={loadingLanguages || unusedLanguages.length === 0}
                 onClick={() => setAddingLanguage(true)}
               >
@@ -306,22 +284,29 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
             )}
           </div>
         </div>
+      </SettingsPanelRow>
 
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Button type="button" onClick={() => void save()} disabled={saving}>
-            {saving ? "Saving…" : "Save profile"}
-          </Button>
-          {saved && (
-            <span className="text-sm text-muted-foreground">Saved.</span>
-          )}
+      <SettingsPanelRow>
+        <div className={settingsFieldRowClassName}>
+          <div aria-hidden="true" />
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {saved && (
+              <span className="text-sm text-muted-foreground">Saved.</span>
+            )}
+            <Button type="button" onClick={() => void save()} disabled={saving}>
+              {saving ? "Saving…" : "Save profile"}
+            </Button>
+          </div>
         </div>
+      </SettingsPanelRow>
 
-        {error && (
-          <p className="mt-3 text-sm text-destructive" role="alert">
+      {error ? (
+        <SettingsPanelRow>
+          <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
-        )}
-      </div>
-    </section>
+        </SettingsPanelRow>
+      ) : null}
+    </SettingsSection>
   );
 }

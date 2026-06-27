@@ -1,4 +1,4 @@
-import { mkdir, readFile, unlink, writeFile } from "fs/promises";
+import { mkdir, readFile, rm, unlink, writeFile } from "fs/promises";
 import path from "path";
 
 const AUDIO_ROOT = path.join(process.cwd(), ".data", "flashcards-audio");
@@ -73,6 +73,14 @@ export async function readFlashcardAudio(
   }
 
   return null;
+}
+
+export async function deleteUserFlashcardAudioDir(userId: string): Promise<void> {
+  try {
+    await rm(path.join(AUDIO_ROOT, userId), { recursive: true, force: true });
+  } catch {
+    // ignore missing directories
+  }
 }
 
 export async function deleteFlashcardAudio(

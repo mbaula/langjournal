@@ -21,22 +21,13 @@ import { cn } from "@/lib/utils";
 
 type AppTopNavClientProps = {
   userLabel: string;
+  avatarLetter?: string | null;
   previewMode?: boolean;
 };
 
-function profilePlaceholderInitials(label: string): string | null {
-  const trimmed = label.trim();
-  if (!trimmed || trimmed === "Account") return null;
-  if (trimmed.includes("@")) return trimmed[0]?.toUpperCase() ?? null;
-  const parts = trimmed.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) {
-    return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();
-  }
-  return trimmed.slice(0, 2).toUpperCase();
-}
-
 export function AppTopNavClient({
   userLabel,
+  avatarLetter = null,
   previewMode = false,
 }: AppTopNavClientProps) {
   const pathname = usePathname();
@@ -59,7 +50,7 @@ export function AppTopNavClient({
   const progressActive = pathname.startsWith("/app/progress");
   const flashcardsActive = pathname.startsWith("/app/flashcards");
   const displayUser = userLabel.trim() || "Account";
-  const profileInitials = profilePlaceholderInitials(displayUser);
+  const profileInitials = avatarLetter;
 
   useEffect(() => {
     router.prefetch("/app/journal");

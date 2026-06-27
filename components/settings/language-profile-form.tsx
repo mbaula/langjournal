@@ -4,6 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  SettingsPanelRow,
+  SettingsSection,
+} from "@/components/settings/settings-panel";
+import {
+  settingsFieldRowClassName,
+  settingsSelectClassName,
+} from "@/components/settings/settings-field-styles";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 
 type Lang = { code: string; name: string };
@@ -103,64 +111,64 @@ export function LanguageProfileForm({
     }
   }, [nativeLanguage, targetLanguage]);
 
-  const selectClass =
-    "mt-1.5 w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60";
-
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-foreground">Translation</h2>
-
-      <div className="rounded-2xl border border-border bg-background/80 p-5 shadow-sm">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
-          <div className="min-w-0 flex-1">
-            <Label htmlFor="native-language">Native (source)</Label>
-            <select
-              id="native-language"
-              className={selectClass}
-              disabled={loadingList}
-              value={nativeLanguage}
-              onChange={(e) => setNativeLanguage(e.target.value)}
-            >
-              {options.map((l) => (
-                <option key={l.code} value={l.code}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="min-w-0 flex-1">
-            <Label htmlFor="target-language">Learning (target)</Label>
-            <select
-              id="target-language"
-              className={selectClass}
-              disabled={loadingList}
-              value={targetLanguage}
-              onChange={(e) => setTargetLanguage(e.target.value)}
-            >
-              {options.map((l) => (
-                <option key={`t-${l.code}`} value={l.code}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-          </div>
+    <SettingsSection title="Translation">
+      <SettingsPanelRow>
+        <div className={settingsFieldRowClassName}>
+          <Label htmlFor="native-language">Native</Label>
+          <select
+            id="native-language"
+            className={settingsSelectClassName}
+            disabled={loadingList}
+            value={nativeLanguage}
+            onChange={(e) => setNativeLanguage(e.target.value)}
+          >
+            {options.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.name}
+              </option>
+            ))}
+          </select>
         </div>
+      </SettingsPanelRow>
 
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Button type="button" onClick={() => void save()} disabled={saving}>
-            {saving ? "Saving…" : "Save translation"}
-          </Button>
+      <SettingsPanelRow>
+        <div className={settingsFieldRowClassName}>
+          <Label htmlFor="target-language">Learning</Label>
+          <select
+            id="target-language"
+            className={settingsSelectClassName}
+            disabled={loadingList}
+            value={targetLanguage}
+            onChange={(e) => setTargetLanguage(e.target.value)}
+          >
+            {options.map((l) => (
+              <option key={`t-${l.code}`} value={l.code}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </SettingsPanelRow>
+
+      <SettingsPanelRow>
+        <div className="flex flex-wrap items-center justify-end gap-3">
           {saved && (
             <span className="text-sm text-muted-foreground">Saved.</span>
           )}
+          <Button type="button" onClick={() => void save()} disabled={saving}>
+            {saving ? "Saving…" : "Save translation"}
+          </Button>
         </div>
+      </SettingsPanelRow>
 
-        {error && (
-          <p className="mt-3 text-sm text-destructive" role="alert">
+      {error ? (
+        <SettingsPanelRow>
+          <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
-        )}
-      </div>
-    </section>
+        </SettingsPanelRow>
+      ) : null}
+    </SettingsSection>
   );
 }

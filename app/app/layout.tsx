@@ -5,6 +5,7 @@ import { AppTopNavClient } from "@/components/app/app-top-nav-client";
 import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
 import { getDevPreviewOnboardingState } from "@/lib/dev/preview-account";
 import { getOnboardingState } from "@/lib/db/onboarding";
+import { profileAvatarLetter } from "@/lib/user/profile-avatar-letter";
 
 export default async function AppLayout({
   children,
@@ -31,7 +32,11 @@ export default async function AppLayout({
     <AppLayoutClient
       accountPreview={preview}
       topNav={
-        <AppTopNavClient userLabel={userLabel} previewMode={preview} />
+        <AppTopNavClient
+          userLabel={userLabel}
+          avatarLetter={profileAvatarLetter(userLabel)}
+          previewMode={preview}
+        />
       }
     >
       {children}

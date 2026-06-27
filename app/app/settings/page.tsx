@@ -1,24 +1,18 @@
-import { notFound } from "next/navigation";
-
-import { LanguageProfileForm } from "@/components/settings/language-profile-form";
 import { ProfileSettingsForm } from "@/components/settings/profile-settings-form";
+import { SettingsMoreSection } from "@/components/settings/settings-more-section";
+import { SettingsPrivacySection } from "@/components/settings/settings-privacy-section";
 import {
   appPageShellClassName,
   journalPageTitleClassName,
 } from "@/components/journal/field-styles";
 import { isAccountPreviewMode, requireUser } from "@/lib/auth/session";
-import {
-  getDevPreviewLanguageProfile,
-  getDevPreviewOnboardingState,
-} from "@/lib/dev/preview-account";
+import { getDevPreviewOnboardingState } from "@/lib/dev/preview-account";
 import { getOnboardingState } from "@/lib/db/onboarding";
-import { getLanguageProfile } from "@/lib/db/language";
 
 export default async function SettingsPage() {
   const preview = await isAccountPreviewMode();
 
   if (preview) {
-    const profile = getDevPreviewLanguageProfile();
     const onboarding = getDevPreviewOnboardingState();
 
     return (
@@ -26,45 +20,36 @@ export default async function SettingsPage() {
         <header className="space-y-1">
           <h1 className={journalPageTitleClassName}>Settings</h1>
           <p className="text-sm text-muted-foreground">
-            Update your profile and journal language preferences.
+            Update your profile and preferences.
           </p>
         </header>
 
+        <SettingsPrivacySection />
+
         <ProfileSettingsForm initialState={onboarding} />
 
-        <LanguageProfileForm
-          initialNative={profile.nativeLanguage}
-          initialTarget={profile.targetLanguage}
-        />
+        <SettingsMoreSection previewMode />
       </div>
     );
   }
 
   const user = await requireUser();
-  const [profile, onboarding] = await Promise.all([
-    getLanguageProfile(user.id),
-    getOnboardingState(user.id),
-  ]);
-
-  if (!profile) {
-    notFound();
-  }
+  const onboarding = await getOnboardingState(user.id);
 
   return (
     <div className={appPageShellClassName}>
       <header className="space-y-1">
         <h1 className={journalPageTitleClassName}>Settings</h1>
         <p className="text-sm text-muted-foreground">
-          Update your profile and journal language preferences.
+          Update your profile and preferences.
         </p>
       </header>
 
+      <SettingsPrivacySection />
+
       <ProfileSettingsForm initialState={onboarding} />
 
-      <LanguageProfileForm
-        initialNative={profile.nativeLanguage}
-        initialTarget={profile.targetLanguage}
-      />
+      <SettingsMoreSection />
     </div>
   );
 }

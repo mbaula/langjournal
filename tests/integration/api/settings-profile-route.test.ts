@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   getAuthenticatedAppUser: vi.fn(),
   getOnboardingState: vi.fn(),
-  updateOnboardingProfile: vi.fn(),
+  updateSettingsProfile: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/api-user", () => ({
@@ -12,7 +12,7 @@ vi.mock("@/lib/auth/api-user", () => ({
 
 vi.mock("@/lib/db/onboarding", () => ({
   getOnboardingState: mocks.getOnboardingState,
-  updateOnboardingProfile: mocks.updateOnboardingProfile,
+  updateSettingsProfile: mocks.updateSettingsProfile,
 }));
 
 import { GET, PATCH } from "@/app/api/settings/profile/route";
@@ -65,8 +65,8 @@ describe("api/settings/profile route", () => {
     const req = new Request("http://localhost", {
       method: "PATCH",
       body: JSON.stringify({
-        displayName: "Bad!",
-        languages: [{ languageCode: "ja", level: "intermediate" }],
+        displayName: "Linh",
+        languages: [{ languageCode: "ja", level: "fluent" }],
       }),
       headers: { "content-type": "application/json" },
     });
@@ -74,12 +74,29 @@ describe("api/settings/profile route", () => {
     expect(res.status).toBe(400);
   });
 
+  it("PATCH rejects age range updates", async () => {
+    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+
+    const req = new Request("http://localhost", {
+      method: "PATCH",
+      body: JSON.stringify({
+        displayName: "Linh",
+        ageRange: "18_24",
+        languages: [{ languageCode: "ja", level: "intermediate" }],
+      }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await PATCH(req);
+    expect(res.status).toBe(400);
+    expect(mocks.updateSettingsProfile).not.toHaveBeenCalled();
+  });
+
   it("PATCH clears display name when empty", async () => {
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
-    mocks.updateOnboardingProfile.mockResolvedValueOnce(undefined);
+    mocks.updateSettingsProfile.mockResolvedValueOnce(undefined);
     mocks.getOnboardingState.mockResolvedValueOnce({
       displayName: null,
-      ageRange: null,
+      ageRange: "25_34",
       languages: [{ languageCode: "ja", level: "beginner" }],
       isComplete: true,
     });
@@ -94,9 +111,8 @@ describe("api/settings/profile route", () => {
     });
     const res = await PATCH(req);
 
-    expect(mocks.updateOnboardingProfile).toHaveBeenCalledWith("u1", {
+    expect(mocks.updateSettingsProfile).toHaveBeenCalledWith("u1", {
       displayName: null,
-      ageRange: null,
       languages: [{ languageCode: "ja", level: "beginner" }],
     });
     expect(res.status).toBe(200);
@@ -104,7 +120,7 @@ describe("api/settings/profile route", () => {
 
   it("PATCH updates profile and returns state", async () => {
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
-    mocks.updateOnboardingProfile.mockResolvedValueOnce(undefined);
+    mocks.updateSettingsProfile.mockResolvedValueOnce(undefined);
     mocks.getOnboardingState.mockResolvedValueOnce({
       displayName: "Linh",
       ageRange: "18_24",
@@ -119,7 +135,6 @@ describe("api/settings/profile route", () => {
       method: "PATCH",
       body: JSON.stringify({
         displayName: "  Linh  ",
-        ageRange: "18_24",
         languages: [
           { languageCode: "ja", level: "intermediate" },
           { languageCode: "es", level: "beginner" },
@@ -129,9 +144,8 @@ describe("api/settings/profile route", () => {
     });
     const res = await PATCH(req);
 
-    expect(mocks.updateOnboardingProfile).toHaveBeenCalledWith("u1", {
+    expect(mocks.updateSettingsProfile).toHaveBeenCalledWith("u1", {
       displayName: "Linh",
-      ageRange: "18_24",
       languages: [
         { languageCode: "ja", level: "intermediate" },
         { languageCode: "es", level: "beginner" },

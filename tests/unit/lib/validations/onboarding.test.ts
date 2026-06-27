@@ -14,12 +14,12 @@ describe("onboardingPayloadSchema", () => {
     expect(parsed.success).toBe(true);
   });
 
-  it("rejects invalid display name characters", () => {
+  it("accepts display names with any characters", () => {
     const parsed = onboardingPayloadSchema.safeParse({
       displayName: "Mark!",
       languages: [{ languageCode: "es", level: "intermediate" }],
     });
-    expect(parsed.success).toBe(false);
+    expect(parsed.success).toBe(true);
   });
 
   it("rejects invalid age range", () => {
