@@ -1,21 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getAuthenticatedAppUser: vi.fn(),
+  getAuthenticatedUserId: vi.fn(),
   getJournalEntryForUser: vi.fn(),
   updateJournalEntryTitle: vi.fn(),
   updateJournalEntryBody: vi.fn(),
+  updateJournalEntryTranslations: vi.fn(),
   deleteJournalEntryForUser: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/api-user", () => ({
-  getAuthenticatedAppUser: mocks.getAuthenticatedAppUser,
+  getAuthenticatedUserId: mocks.getAuthenticatedUserId,
 }));
 
 vi.mock("@/lib/entries/service", () => ({
   getJournalEntryForUser: mocks.getJournalEntryForUser,
   updateJournalEntryTitle: mocks.updateJournalEntryTitle,
   updateJournalEntryBody: mocks.updateJournalEntryBody,
+  updateJournalEntryTranslations: mocks.updateJournalEntryTranslations,
   deleteJournalEntryForUser: mocks.deleteJournalEntryForUser,
 }));
 
@@ -29,13 +31,13 @@ describe("api/entries/[id] route", () => {
   });
 
   it("GET returns 401 when unauthorized", async () => {
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce(null);
+    mocks.getAuthenticatedUserId.mockResolvedValueOnce(null);
     const res = await GET(new Request("http://localhost"), ctx("e1"));
     expect(res.status).toBe(401);
   });
 
   it("GET returns 404 when entry not found", async () => {
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.getAuthenticatedUserId.mockResolvedValueOnce("u1");
     mocks.getJournalEntryForUser.mockResolvedValueOnce(null);
 
     const res = await GET(new Request("http://localhost"), ctx("e1"));
@@ -45,7 +47,7 @@ describe("api/entries/[id] route", () => {
 
   it("GET returns entry when found", async () => {
     const entry = { id: "e1", title: "Title" };
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.getAuthenticatedUserId.mockResolvedValueOnce("u1");
     mocks.getJournalEntryForUser.mockResolvedValueOnce(entry);
 
     const res = await GET(new Request("http://localhost"), ctx("e1"));
@@ -54,7 +56,7 @@ describe("api/entries/[id] route", () => {
   });
 
   it("PATCH returns 400 on invalid JSON body", async () => {
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.getAuthenticatedUserId.mockResolvedValueOnce("u1");
     const req = new Request("http://localhost", {
       method: "PATCH",
       body: "{",
@@ -67,7 +69,7 @@ describe("api/entries/[id] route", () => {
   });
 
   it("PATCH returns 400 on schema validation failure", async () => {
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.getAuthenticatedUserId.mockResolvedValueOnce("u1");
     const req = new Request("http://localhost", {
       method: "PATCH",
       body: JSON.stringify({}),
@@ -80,7 +82,7 @@ describe("api/entries/[id] route", () => {
 
   it("PATCH updates title/body and returns updated entry", async () => {
     const updated = { id: "e1", title: "T", body: "B" };
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.getAuthenticatedUserId.mockResolvedValueOnce("u1");
     mocks.updateJournalEntryTitle.mockResolvedValueOnce({ ok: true });
     mocks.updateJournalEntryBody.mockResolvedValueOnce({ ok: true });
     mocks.getJournalEntryForUser.mockResolvedValueOnce(updated);
@@ -99,7 +101,7 @@ describe("api/entries/[id] route", () => {
   });
 
   it("DELETE returns 404 when service says not found", async () => {
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.getAuthenticatedUserId.mockResolvedValueOnce("u1");
     mocks.deleteJournalEntryForUser.mockResolvedValueOnce({
       ok: false,
       error: "not_found",
@@ -110,7 +112,7 @@ describe("api/entries/[id] route", () => {
   });
 
   it("DELETE returns 204 on success", async () => {
-    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.getAuthenticatedUserId.mockResolvedValueOnce("u1");
     mocks.deleteJournalEntryForUser.mockResolvedValueOnce({ ok: true });
 
     const res = await DELETE(new Request("http://localhost"), ctx("e1"));

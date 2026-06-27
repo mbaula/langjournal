@@ -53,7 +53,9 @@ describe("listJournalEntries", () => {
   });
 
   it("requests entries ordered by date descending", async () => {
-    prismaMock.journalEntry.findMany.mockResolvedValueOnce([{ id: "e1" }]);
+    prismaMock.journalEntry.findMany.mockResolvedValueOnce([
+      { id: "e1", _count: { flashcards: 3 } },
+    ]);
     const result = await listJournalEntries("u1");
 
     expect(prismaMock.journalEntry.findMany).toHaveBeenCalledWith({
@@ -68,9 +70,10 @@ describe("listJournalEntries", () => {
         completedAt: true,
         createdAt: true,
         updatedAt: true,
+        _count: { select: { flashcards: true } },
       },
     });
-    expect(result).toEqual([{ id: "e1" }]);
+    expect(result).toEqual([{ id: "e1", flashcardCount: 3 }]);
   });
 });
 
