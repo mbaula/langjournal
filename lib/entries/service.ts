@@ -1,4 +1,4 @@
-import { revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 import { Prisma } from "@prisma/client";
 
@@ -338,11 +338,18 @@ export async function deleteJournalEntryForUser(
     return { ok: false, error: "not_found" };
   }
 
+  await prisma.promptUsage.updateMany({
+    where: { entryId, userId },
+    data: { entryId: null },
+  });
+
   await prisma.journalEntry.delete({
     where: { id: entryId },
   });
 
   revalidateTag("journal-entry", { expire: 0 });
+  revalidatePath("/app/journal");
+  revalidatePath("/app/progress");
   return { ok: true };
 }
 

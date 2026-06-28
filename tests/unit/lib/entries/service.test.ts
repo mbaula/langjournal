@@ -12,6 +12,9 @@ const { revalidateTagMock, prismaMock } = vi.hoisted(() => ({
       delete: vi.fn(),
       count: vi.fn(),
     },
+    promptUsage: {
+      updateMany: vi.fn(),
+    },
     userLanguage: {
       findMany: vi.fn(),
     },
@@ -21,11 +24,13 @@ const { revalidateTagMock, prismaMock } = vi.hoisted(() => ({
     user: {
       findUnique: vi.fn(),
     },
+    $transaction: vi.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
   },
 }));
 
 vi.mock("next/cache", () => ({
   revalidateTag: revalidateTagMock,
+  revalidatePath: vi.fn(),
   unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
 }));
 
@@ -370,10 +375,15 @@ describe("deleteJournalEntryForUser", () => {
 
   it("deletes entry and revalidates cache", async () => {
     prismaMock.journalEntry.findFirst.mockResolvedValueOnce({ id: "e1" });
+    prismaMock.promptUsage.updateMany.mockResolvedValueOnce({ count: 0 });
     prismaMock.journalEntry.delete.mockResolvedValueOnce({ id: "e1" });
 
     const result = await deleteJournalEntryForUser("e1", "u1");
 
+    expect(prismaMock.promptUsage.updateMany).toHaveBeenCalledWith({
+      where: { entryId: "e1", userId: "u1" },
+      data: { entryId: null },
+    });
     expect(prismaMock.journalEntry.delete).toHaveBeenCalledWith({
       where: { id: "e1" },
     });

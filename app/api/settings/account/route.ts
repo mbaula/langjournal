@@ -12,23 +12,14 @@ export async function DELETE() {
   }
 
   try {
-    const admin = createAdminClient();
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Account deletion is temporarily unavailable." },
-        { status: 503 },
-      );
-    }
-
     await deleteUserAccount(user.id);
 
-    const { error } = await admin.auth.admin.deleteUser(user.id);
-    if (error) {
-      console.error("Failed to delete Supabase auth user:", error.message);
-      return NextResponse.json(
-        { error: "Could not fully delete account. Please contact support." },
-        { status: 500 },
-      );
+    const admin = createAdminClient();
+    if (admin) {
+      const { error: authError } = await admin.auth.admin.deleteUser(user.id);
+      if (authError) {
+        console.warn("Could not delete Supabase auth user:", authError.message);
+      }
     }
 
     const supabase = await createClient();

@@ -44,7 +44,6 @@ export type JournalEntryCardProps = {
   body: string | null;
   translations: unknown;
   onRenameTitle?: (entryId: string) => void;
-  onDelete?: (entryId: string) => void;
   onDeleted?: (entryId: string) => void;
 };
 
@@ -67,7 +66,6 @@ export function JournalEntryCard({
   body,
   translations,
   onRenameTitle,
-  onDelete,
   onDeleted,
 }: JournalEntryCardProps) {
   const router = useRouter();
@@ -78,8 +76,6 @@ export function JournalEntryCard({
   const [renameValue, setRenameValue] = useState(title?.trim() ?? "");
   const renameInputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-  const [deleteConfirming, setDeleteConfirming] = useState(false);
-  const [deletePending, setDeletePending] = useState(false);
   const [previewClamped, setPreviewClamped] = useState(false);
 
   const trimmedTitle = titleValue?.trim();
@@ -93,7 +89,6 @@ export function JournalEntryCard({
 
   const startRename = useCallback(() => {
     setRenaming(true);
-    setDeleteConfirming(false);
     const next = titleValue?.trim() ?? "";
     setRenameValue(next);
     queueMicrotask(() => {
@@ -130,26 +125,14 @@ export function JournalEntryCard({
     }
   }, [entryId, renamePending, renameValue, router, updateEntryInCache]);
 
-  const startDelete = useCallback(() => {
-    setDeleteConfirming(true);
-    setRenaming(false);
-  }, []);
-
-  const performDelete = useCallback(async () => {
-    if (deletePending) return;
-    setDeletePending(true);
-    try {
-      const result = await deleteJournalEntryRequest(entryId);
-      if (result.ok) {
-        removeEntryFromCache(entryId);
-        onDeleted?.(entryId);
-        router.refresh();
-      }
-    } finally {
-      setDeletePending(false);
-      setDeleteConfirming(false);
+  const confirmDelete = useCallback(async () => {
+    const result = await deleteJournalEntryRequest(entryId);
+    if (result.ok) {
+      removeEntryFromCache(entryId);
+      onDeleted?.(entryId);
     }
-  }, [deletePending, entryId, onDeleted, removeEntryFromCache, router]);
+    return result;
+  }, [entryId, onDeleted, removeEntryFromCache]);
 
   const text = body ?? "";
   const lines = text.split("\n");
@@ -323,34 +306,9 @@ export function JournalEntryCard({
           <EntryActionsMenu
             entryId={entryId}
             onRenameTitle={onRenameTitle ?? (() => startRename())}
-            onDelete={onDelete ?? (() => startDelete())}
+            onDeleteConfirm={confirmDelete}
             triggerClassName="text-muted-foreground"
           />
-          {deleteConfirming ? (
-            <div className="mt-2 flex flex-col items-end gap-1 pr-1">
-              <div className="rounded-md border border-border bg-popover px-2 py-1 text-sm text-muted-foreground shadow-sm">
-                Delete this entry?
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  disabled={deletePending}
-                  onClick={() => setDeleteConfirming(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
-                  disabled={deletePending}
-                  onClick={() => void performDelete()}
-                >
-                  {deletePending ? "…" : "Delete"}
-                </button>
-              </div>
-            </div>
-          ) : null}
         </div>
     </div>
   );

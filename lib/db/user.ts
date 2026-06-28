@@ -14,6 +14,7 @@ export async function ensureAppUser(userId: string, email: string) {
     create: {
       userId,
       nativeLanguage: "en",
+      sourceLanguage: "en",
       targetLanguage: "fr",
       uiLocale: "en",
     },

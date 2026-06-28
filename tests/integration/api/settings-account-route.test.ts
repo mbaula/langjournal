@@ -40,16 +40,18 @@ describe("api/settings/account route", () => {
     expect(res.status).toBe(401);
   });
 
-  it("DELETE returns 503 when admin client is unavailable", async () => {
+  it("DELETE works even when admin client is unavailable", async () => {
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce({
       id: "u1",
       email: "user@example.com",
     });
     mocks.createAdminClient.mockReturnValueOnce(null);
+    mocks.deleteUserAccount.mockResolvedValueOnce(undefined);
 
     const res = await DELETE();
-    expect(res.status).toBe(503);
-    expect(mocks.deleteUserAccount).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(mocks.deleteUserAccount).toHaveBeenCalledWith("u1");
+    expect(mocks.signOut).toHaveBeenCalled();
   });
 
   it("DELETE removes account data and auth user", async () => {
@@ -74,7 +76,7 @@ describe("api/settings/account route", () => {
     await expect(res.json()).resolves.toEqual({ ok: true });
   });
 
-  it("DELETE returns 500 when auth user deletion fails", async () => {
+  it("DELETE succeeds even when auth user deletion fails", async () => {
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce({
       id: "u1",
       email: "user@example.com",
@@ -91,7 +93,8 @@ describe("api/settings/account route", () => {
     mocks.deleteUserAccount.mockResolvedValueOnce(undefined);
 
     const res = await DELETE();
-    expect(res.status).toBe(500);
-    expect(mocks.signOut).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(mocks.deleteUserAccount).toHaveBeenCalledWith("u1");
+    expect(mocks.signOut).toHaveBeenCalled();
   });
 });

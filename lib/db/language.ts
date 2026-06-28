@@ -46,6 +46,7 @@ export async function updateLanguageProfile(
     where: { userId },
     data: {
       nativeLanguage: data.nativeLanguage,
+      sourceLanguage: data.nativeLanguage,
       targetLanguage: data.targetLanguage,
     },
   });

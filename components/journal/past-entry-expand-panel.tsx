@@ -64,7 +64,7 @@ export function PastEntryExpandPanel({
     <div
       className={cn(
         "grid transition-[grid-template-rows,margin] ease-[cubic-bezier(0.22,1,0.36,1)]",
-        expanded ? "mb-0 grid-rows-[1fr]" : "mb-0 grid-rows-[0fr]",
+        expanded ? "mb-0 grid-rows-[1fr]" : "mb-0 grid-rows-[0fr] pointer-events-none",
       )}
       style={{ transitionDuration: `${PAST_ENTRY_EXPAND_MS}ms` }}
     >

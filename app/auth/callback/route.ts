@@ -74,25 +74,37 @@ export async function GET(request: NextRequest) {
 
   let redirectPath = next;
 
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user?.id) {
+  const {
+    data: { user },
+    error: getUserError,
+  } = await supabase.auth.getUser();
+
+  if (getUserError) {
+    console.error("Auth callback: getUser failed:", getUserError.message);
+    return NextResponse.redirect(
+      loginUrlWithAuthError(url.origin, "Sign-in failed. Please try again.").href,
+    );
+  }
+
+  if (user?.id) {
+    try {
       await ensureAppUser(user.id, user.email ?? "");
+    } catch (err) {
+      console.error("Auth callback: ensureAppUser failed:", err);
+      return NextResponse.redirect(
+        loginUrlWithAuthError(url.origin, "Sign-in failed. Please try again.").href,
+      );
+    }
+
+    try {
       const onboarding = await getOnboardingState(user.id);
       if (!onboarding.isComplete) {
         redirectPath = "/onboarding";
       }
+    } catch (err) {
+      console.error("Auth callback: getOnboardingState failed:", err);
+      redirectPath = "/onboarding";
     }
-  } catch (err) {
-    console.error("Auth callback failed after session exchange:", err);
-    return NextResponse.redirect(
-      loginUrlWithAuthError(
-        url.origin,
-        "Sign-in failed. Please try again.",
-      ).href,
-    );
   }
 
   return redirectWithSessionCookies(
