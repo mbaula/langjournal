@@ -7,9 +7,8 @@ import { MarketingFlowShell } from "@/components/marketing/marketing-flow-shell"
 import {
   marketingFlowDescriptionClassName,
   marketingFlowEyebrowClassName,
-  marketingFlowNavButtonClassName,
+  marketingFlowTitleClassName,
 } from "@/components/marketing/marketing-flow-styles";
-import { buttonVariants } from "@/components/ui/button";
 import { resolveLoginErrorMessage } from "@/lib/auth/callback-errors";
 import { cn } from "@/lib/utils";
 
@@ -25,37 +24,45 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error, redirectTo } = await searchParams;
 
   return (
-    <div
-      data-force-light-scope
-      data-marketing-theme="blue"
-      className="min-h-dvh bg-background text-foreground"
-    >
-      <MarketingFlowShell>
-        <p className={marketingFlowEyebrowClassName}>Sign in</p>
-        <h1 className="mt-2 font-[family-name:var(--font-folio)] text-[clamp(1.625rem,5vw,1.875rem)] font-semibold tracking-[-0.02em] text-foreground sm:mt-3">
-          Continue with email
-        </h1>
-        <p className={marketingFlowDescriptionClassName}>
-          We&apos;ll email you a magic link — no password to remember.
-        </p>
-        <LoginForm
-          redirectTo={redirectTo}
-          error={error ? resolveLoginErrorMessage(error) : undefined}
-        />
-        <div className="mt-6">
-          <Link
-            href="/"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              marketingFlowNavButtonClassName,
-              "inline-flex h-auto items-center gap-1 rounded-full px-0 hover:bg-transparent",
-            )}
-          >
-            Back to home
-            <ArrowUpRight className="size-4" strokeWidth={1.5} />
-          </Link>
-        </div>
-      </MarketingFlowShell>
-    </div>
+    <MarketingFlowShell>
+      <p
+        className={cn(
+          marketingFlowEyebrowClassName,
+          "landing-enter landing-enter-delay-1 mb-0",
+        )}
+      >
+        Sign in
+      </p>
+      <h1
+        className={cn(
+          marketingFlowTitleClassName,
+          "landing-enter landing-enter-delay-2 mt-3 max-w-none text-[clamp(1.875rem,4.5vw,2.75rem)]",
+        )}
+      >
+        Continue with email
+      </h1>
+      <p
+        className={cn(
+          marketingFlowDescriptionClassName,
+          "landing-enter landing-enter-delay-3 text-[#2C2C2C]/60",
+        )}
+      >
+        We&apos;ll email you a magic link — no password to remember.
+      </p>
+      <LoginForm
+        redirectTo={redirectTo}
+        error={error ? resolveLoginErrorMessage(error) : undefined}
+        className="landing-enter landing-enter-delay-4"
+      />
+      <div className="landing-enter landing-enter-delay-5 mt-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 font-sans text-[15px] font-medium text-[#2C2C2C]/60 transition-colors hover:text-[#2C2C2C]"
+        >
+          Back to home
+          <ArrowUpRight className="size-4" strokeWidth={1.5} />
+        </Link>
+      </div>
+    </MarketingFlowShell>
   );
 }

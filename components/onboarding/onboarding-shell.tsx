@@ -71,7 +71,7 @@ export function OnboardingShell({
         </main>
 
         <p className={marketingWatermarkClassName} aria-hidden>
-          Folio
+          folio
         </p>
       </section>
     </div>

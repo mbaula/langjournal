@@ -7,9 +7,20 @@ import { cn } from "@/lib/utils";
 type LandingRevealProps = {
   children: ReactNode;
   className?: string;
+  /** Stagger entrance after the reveal triggers. */
+  delayMs?: number;
+  from?: "below" | "above";
+  /** When true, visibility follows scroll — fades in on enter, out on leave. */
+  followScroll?: boolean;
 };
 
-export function LandingReveal({ children, className }: LandingRevealProps) {
+export function LandingReveal({
+  children,
+  className,
+  delayMs = 0,
+  from = "below",
+  followScroll = false,
+}: LandingRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -19,6 +30,11 @@ export function LandingReveal({ children, className }: LandingRevealProps) {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (followScroll) {
+          setVisible(entry?.isIntersecting ?? false);
+          return;
+        }
+
         if (entry?.isIntersecting) {
           setVisible(true);
           observer.disconnect();
@@ -29,12 +45,20 @@ export function LandingReveal({ children, className }: LandingRevealProps) {
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [followScroll]);
 
   return (
     <div
       ref={ref}
-      className={cn("landing-reveal", visible && "landing-reveal-visible", className)}
+      style={{
+        transitionDelay: visible && delayMs > 0 ? `${delayMs}ms` : "0ms",
+      }}
+      className={cn(
+        "landing-reveal",
+        from === "above" ? "landing-reveal-from-above" : "landing-reveal-from-below",
+        visible && "landing-reveal-visible",
+        className,
+      )}
     >
       {children}
     </div>

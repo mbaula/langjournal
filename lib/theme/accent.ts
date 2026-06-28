@@ -29,13 +29,13 @@ export type AccentOption = {
 
 export const ACCENT_OPTIONS: AccentOption[] = [
   { id: "gray", swatch: "#5c5c5c" },
-  { id: "green", swatch: "#5f8a68" },
-  { id: "blue", swatch: "#5a7394" },
-  { id: "yellow", swatch: "#e5b340" },
+  { id: "green", swatch: "#D6DC82" },
+  { id: "blue", swatch: "#9FCEE4" },
+  { id: "yellow", swatch: "#FFE790" },
   { id: "pink", swatch: "#b87a90" },
   { id: "sky", swatch: "#5a8fa3" },
-  { id: "purple", swatch: "#7d6494" },
-  { id: "red", swatch: "#c45454" },
+  { id: "purple", swatch: "#C6C3F2" },
+  { id: "red", swatch: "#F7BDB2" },
   { id: "orange", swatch: "#c48642" },
   { id: "teal", swatch: "#4f8484" },
 ];

@@ -1,4 +1,5 @@
 import { LandingMotion } from "@/components/marketing/landing-motion";
+import { ForceLightScope } from "@/components/theme/force-light-scope";
 
 export default function MarketingLayout({
   children,
@@ -7,12 +8,12 @@ export default function MarketingLayout({
 }>) {
   return (
     <LandingMotion>
-      <div
+      <ForceLightScope
         data-marketing-theme="blue"
-        className="flex min-h-dvh flex-col bg-background text-foreground"
+        className="flex min-h-dvh flex-col"
       >
         {children}
-      </div>
+      </ForceLightScope>
     </LandingMotion>
   );
 }
