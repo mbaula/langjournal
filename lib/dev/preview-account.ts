@@ -2,6 +2,7 @@ import type { AppUser } from "@/lib/auth/session";
 import type { OnboardingState } from "@/lib/db/onboarding";
 import type {
   ContributionDay,
+  EntryTranslationProgress,
   JournalStats,
 } from "@/lib/entries/service";
 import type {
@@ -9,6 +10,33 @@ import type {
   FlashcardRecord,
 } from "@/lib/flashcards/types";
 import { isDevEnvironment } from "@/lib/dev/preview";
+import {
+  formatProgressChartDateLabel,
+  formatProgressChartPointTooltip,
+  formatProgressChartTooltipLabel,
+} from "@/lib/journal/progress-chart-labels";
+
+function previewTranslationProgressEntry(input: {
+  id: string;
+  entryDate: Date;
+  title: string | null;
+  translationPercent: number;
+}): EntryTranslationProgress {
+  const entryDate = input.entryDate.toISOString().slice(0, 10);
+  return {
+    id: input.id,
+    entryDate,
+    title: input.title,
+    translationPercent: input.translationPercent,
+    dateLabel: formatProgressChartDateLabel(input.entryDate),
+    tooltipLabel: formatProgressChartTooltipLabel(input.entryDate, input.title),
+    tooltipText: formatProgressChartPointTooltip(
+      input.entryDate,
+      input.title,
+      input.translationPercent,
+    ),
+  };
+}
 
 export const DEV_ACCOUNT_PREVIEW_COOKIE = "dev-preview-account";
 export const DEV_ACCOUNT_PREVIEW_PARAM = "account";
@@ -96,9 +124,8 @@ export function getDevPreviewJournalEntries() {
 export function getDevPreviewJournalStats(): JournalStats {
   return {
     total: 12,
-    translationCount: 28,
-    thisWeek: 3,
-    thisMonth: 8,
+    flashcardCount: 28,
+    writingSinceYear: 2025,
     learningLanguages: [{ languageCode: "fr", level: "intermediate" }],
   };
 }
@@ -112,6 +139,41 @@ export function getDevPreviewContributionData(): ContributionDay[] {
     days.push({ date, count });
   }
   return days;
+}
+
+export function getDevPreviewTranslationProgress(): EntryTranslationProgress[] {
+  return [
+    previewTranslationProgressEntry({
+      id: "preview-entry-1",
+      entryDate: daysAgoUtc(28),
+      title: "First week",
+      translationPercent: 8,
+    }),
+    previewTranslationProgressEntry({
+      id: "preview-entry-2",
+      entryDate: daysAgoUtc(21),
+      title: "Market day",
+      translationPercent: 18,
+    }),
+    previewTranslationProgressEntry({
+      id: "preview-entry-3",
+      entryDate: daysAgoUtc(14),
+      title: "Weekend notes",
+      translationPercent: 31,
+    }),
+    previewTranslationProgressEntry({
+      id: "preview-entry-4",
+      entryDate: daysAgoUtc(7),
+      title: null,
+      translationPercent: 44,
+    }),
+    previewTranslationProgressEntry({
+      id: DEV_PREVIEW_ENTRY_ID,
+      entryDate: daysAgoUtc(0),
+      title: "A walk along the Seine",
+      translationPercent: 57,
+    }),
+  ];
 }
 
 export function getDevPreviewSidebarRecents() {

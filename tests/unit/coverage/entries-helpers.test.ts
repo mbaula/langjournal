@@ -21,6 +21,14 @@ vi.mock("@/lib/db/prisma", () => ({
     userLanguage: {
       findMany: vi.fn(async () => []),
     },
+    flashcard: {
+      count: vi.fn(async () => 0),
+    },
+    user: {
+      findUnique: vi.fn(async () => ({
+        createdAt: new Date("2025-01-01T00:00:00.000Z"),
+      })),
+    },
   },
 }));
 

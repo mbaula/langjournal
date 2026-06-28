@@ -3,7 +3,13 @@ import { revalidateTag, unstable_cache } from "next/cache";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
+import { translationCoveragePercent } from "@/lib/entries/translation-coverage";
 import type { InlineTranslation } from "@/lib/entries/translate";
+import {
+  formatProgressChartDateLabel,
+  formatProgressChartPointTooltip,
+  formatProgressChartTooltipLabel,
+} from "@/lib/journal/progress-chart-labels";
 
 export function utcCalendarDate(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -347,26 +353,10 @@ export type LearningLanguageStat = {
 
 export type JournalStats = {
   total: number;
-  translationCount: number;
-  thisWeek: number;
-  thisMonth: number;
+  flashcardCount: number;
+  writingSinceYear: number;
   learningLanguages: LearningLanguageStat[];
 };
-
-function countStoredTranslations(translations: unknown): number {
-  return Array.isArray(translations) ? translations.length : 0;
-}
-
-function getUtcIsoWeekStart(d: Date): Date {
-  const date = utcCalendarDate(d);
-  const day = date.getUTCDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + diff));
-}
-
-function getUtcMonthStart(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
-}
 
 export async function getJournalStats(userId: string): Promise<JournalStats> {
   return getCachedJournalStats(userId);
@@ -374,40 +364,24 @@ export async function getJournalStats(userId: string): Promise<JournalStats> {
 
 const getCachedJournalStats = unstable_cache(
   async (userId: string): Promise<JournalStats> => {
-    const now = new Date();
-    const weekStart = getUtcIsoWeekStart(now);
-    const monthStart = getUtcMonthStart(now);
-
-    const [total, thisWeek, thisMonth, entries, learningLanguages] =
-      await Promise.all([
-        prisma.journalEntry.count({ where: { userId } }),
-        prisma.journalEntry.count({
-          where: { userId, entryDate: { gte: weekStart } },
-        }),
-        prisma.journalEntry.count({
-          where: { userId, entryDate: { gte: monthStart } },
-        }),
-        prisma.journalEntry.findMany({
-          where: { userId },
-          select: { translations: true },
-        }),
-        prisma.userLanguage.findMany({
-          where: { userId },
-          orderBy: { createdAt: "asc" },
-          select: { languageCode: true, level: true },
-        }),
-      ]);
-
-    const translationCount = entries.reduce(
-      (sum, entry) => sum + countStoredTranslations(entry.translations),
-      0,
-    );
+    const [total, flashcardCount, learningLanguages, user] = await Promise.all([
+      prisma.journalEntry.count({ where: { userId } }),
+      prisma.flashcard.count({ where: { userId } }),
+      prisma.userLanguage.findMany({
+        where: { userId },
+        orderBy: { createdAt: "asc" },
+        select: { languageCode: true, level: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { createdAt: true },
+      }),
+    ]);
 
     return {
       total,
-      translationCount,
-      thisWeek,
-      thisMonth,
+      flashcardCount,
+      writingSinceYear: user?.createdAt.getUTCFullYear() ?? new Date().getUTCFullYear(),
       learningLanguages,
     };
   },
@@ -419,6 +393,64 @@ export type ContributionDay = {
   date: string;
   count: number;
 };
+
+export type EntryTranslationProgress = {
+  id: string;
+  entryDate: string;
+  title: string | null;
+  translationPercent: number;
+  dateLabel: string;
+  tooltipLabel: string;
+  tooltipText: string;
+};
+
+export async function getJournalTranslationProgress(
+  userId: string,
+): Promise<EntryTranslationProgress[]> {
+  return getCachedJournalTranslationProgress(userId);
+}
+
+const getCachedJournalTranslationProgress = unstable_cache(
+  async (userId: string): Promise<EntryTranslationProgress[]> => {
+    const entries = await prisma.journalEntry.findMany({
+      where: { userId },
+      orderBy: [{ entryDate: "asc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        translations: true,
+        entryDate: true,
+      },
+    });
+
+    return entries.map((entry) => {
+        const translationPercent = translationCoveragePercent(
+          entry.body,
+          entry.translations,
+        );
+
+        return {
+          id: entry.id,
+          entryDate: entry.entryDate.toISOString().slice(0, 10),
+          title: entry.title,
+          translationPercent,
+          dateLabel: formatProgressChartDateLabel(entry.entryDate),
+          tooltipLabel: formatProgressChartTooltipLabel(
+            entry.entryDate,
+            entry.title,
+          ),
+          tooltipText: formatProgressChartPointTooltip(
+            entry.entryDate,
+            entry.title,
+            translationPercent,
+          ),
+        };
+      });
+  },
+  ["journal-translation-progress"],
+  { revalidate: 30, tags: ["journal-entry"] },
+);
 
 export async function getContributionData(
   userId: string,
