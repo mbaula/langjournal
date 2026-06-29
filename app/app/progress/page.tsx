@@ -14,6 +14,8 @@ import {
 } from "@/lib/entries/service";
 import { journalGreetingName } from "@/lib/journal/greeting";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProgressPage() {
   const preview = await isAccountPreviewMode();
 

@@ -9,29 +9,18 @@ import { safeNextPath } from "@/lib/auth/redirect";
 import { DEV_ACCOUNT_PREVIEW_COOKIE } from "@/lib/dev/preview-account";
 import { isDevEnvironment, isDevPreviewParam } from "@/lib/dev/preview";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
-
-function copySupabaseCookies(from: NextResponse, to: NextResponse) {
-  for (const cookie of from.cookies.getAll()) {
-    to.cookies.set(cookie);
-  }
-}
-
-function nextWithPathname(request: NextRequest, pathname: string) {
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
-}
+import {
+  attachForwardedRequest,
+  copyResponseCookies,
+  nextWithForwardedRequest,
+} from "@/lib/supabase/middleware-forward";
 
 function redirectWithSupabaseCookies(
   url: URL,
   supabaseResponse: NextResponse,
 ) {
   const redirect = NextResponse.redirect(url);
-  copySupabaseCookies(supabaseResponse, redirect);
+  copyResponseCookies(supabaseResponse, redirect);
   return redirect;
 }
 
@@ -44,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   const { url: supabaseUrl, anonKey: supabaseAnonKey } = env;
   const pathname = request.nextUrl.pathname;
 
-  let supabaseResponse = nextWithPathname(request, pathname);
+  let supabaseResponse = nextWithForwardedRequest(request, pathname);
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -55,7 +44,7 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value),
         );
-        supabaseResponse = nextWithPathname(request, pathname);
+        supabaseResponse = nextWithForwardedRequest(request, pathname);
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options),
         );
@@ -66,6 +55,13 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  supabaseResponse = attachForwardedRequest(
+    supabaseResponse,
+    request,
+    pathname,
+    user,
+  );
 
   const authError = getAuthCallbackErrorMessage(request.nextUrl.searchParams);
   if (authError && (pathname === "/" || pathname === "/auth/callback")) {

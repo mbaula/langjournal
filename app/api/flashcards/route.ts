@@ -5,7 +5,7 @@ import { getLanguagePair } from "@/lib/db/language";
 import {
   getPracticeStatsForUser,
   listDistinctFlashcardLanguages,
-  listFlashcardsForUser,
+  listFlashcardsForUserDisplay,
   syncFlashcardsFromJournalEntries,
 } from "@/lib/flashcards/service";
 import { flashcardListQuerySchema } from "@/lib/validations/flashcard";
@@ -33,13 +33,17 @@ export async function GET(request: Request) {
   }
 
   const sync = url.searchParams.get("sync") === "1";
+  const { target } = await getLanguagePair(user.id);
   if (sync) {
-    const { target } = await getLanguagePair(user.id);
-    await syncFlashcardsFromJournalEntries(user.id, target);
+    try {
+      await syncFlashcardsFromJournalEntries(user.id, target);
+    } catch (error) {
+      console.error("Flashcard sync failed:", error);
+    }
   }
 
   const [flashcards, languages, stats] = await Promise.all([
-    listFlashcardsForUser(user.id, parsed.data),
+    listFlashcardsForUserDisplay(user.id, target, parsed.data),
     listDistinctFlashcardLanguages(user.id),
     getPracticeStatsForUser(user.id),
   ]);

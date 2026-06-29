@@ -124,7 +124,7 @@ export function getDevPreviewJournalEntries() {
 export function getDevPreviewJournalStats(): JournalStats {
   return {
     total: 12,
-    flashcardCount: 28,
+    flashcardCount: getDevPreviewFlashcards().length,
     writingSinceYear: 2025,
     learningLanguages: [{ languageCode: "fr", level: "intermediate" }],
   };

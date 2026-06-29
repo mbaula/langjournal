@@ -11,6 +11,9 @@ const mocks = vi.hoisted(() => ({
       findFirst: vi.fn(),
       update: vi.fn(),
     },
+    flashcard: {
+      deleteMany: vi.fn(),
+    },
   },
 }));
 
@@ -180,6 +183,7 @@ describe("api/entries/[id]/translate route", () => {
     });
     mocks.removeTranslation.mockReturnValueOnce([{ id: "t2" }]);
     mocks.prisma.journalEntry.update.mockResolvedValueOnce({});
+    mocks.prisma.flashcard.deleteMany.mockResolvedValueOnce({ count: 1 });
 
     const req = new Request("http://localhost", {
       method: "DELETE",

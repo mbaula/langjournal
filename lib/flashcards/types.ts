@@ -11,6 +11,7 @@ export type FlashcardRecord = {
   proficiency: FlashcardProficiency;
   entryId: string | null;
   entryTitle: string | null;
+  translationId?: string | null;
   createdAt: string;
   updatedAt: string;
 };

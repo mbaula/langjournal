@@ -170,7 +170,7 @@ model Flashcard {
   user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
   entry JournalEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
 
-  @@unique([userId, languageCode, word])
+  @@unique([userId, translationId])
   @@index([userId, proficiency])
   @@index([userId, languageCode])
   @@index([userId, createdAt])
