@@ -11,6 +11,11 @@ import {
   languageBarLabelClassName,
   languageBarTriggerClassName,
 } from "@/components/journal/language-bar-trigger-display";
+import {
+  LanguageBarFloatingPanel,
+  computeHelpPopoverRect,
+  computeLanguagePickerRect,
+} from "@/components/journal/language-bar-floating-panel";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import { resolveLanguageLabel } from "@/lib/languages/display-name";
 import { cn } from "@/lib/utils";
@@ -31,7 +36,7 @@ type LanguageBarProps = {
 };
 
 const languageBarPopoverBaseClass =
-  "z-50 rounded-3xl border border-border bg-popover p-5 text-sm leading-relaxed text-popover-foreground shadow-lg sm:p-6";
+  "rounded-3xl border border-border bg-popover p-5 text-sm leading-relaxed text-popover-foreground shadow-lg sm:p-6";
 
 const languageBarPopoverTitleClassName =
   "text-base font-semibold tracking-tight text-foreground";
@@ -46,8 +51,7 @@ const languageBarPopoverBodyClassName = "border-t border-border pt-4";
 const languageBarPopoverCloseClassName =
   "inline-flex size-7 shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-muted hover:text-foreground";
 
-const languagePickerPanelClass =
-  "absolute right-0 top-[calc(100%+0.5rem)] w-[min(100vw-2rem,28rem)] origin-top-right";
+const languagePickerPanelClass = "origin-top-right";
 
 const languagePickerSearchWrapClassName =
   "flex items-center gap-2 rounded-full border border-border bg-background px-3 py-2";
@@ -238,9 +242,6 @@ function SearchableLanguagePicker({
   );
 }
 
-const helpPopoverPanelClass =
-  "absolute left-[calc(100%+0.5rem)] top-0 w-[min(100vw-2rem,28rem)] max-sm:left-0 max-sm:top-[calc(100%+0.5rem)]";
-
 const languageBarTriggerButtonClassName = cn(
   languageBarTriggerClassName,
   "transition-opacity hover:opacity-95",
@@ -288,7 +289,9 @@ export function LanguageBar({
   targetRef.current = target;
 
   const languagePickerRef = useRef<HTMLDivElement>(null);
+  const languagePickerPanelRef = useRef<HTMLDivElement>(null);
   const helpRootRef = useRef<HTMLDivElement>(null);
+  const helpPanelRef = useRef<HTMLDivElement>(null);
   const panelWasOpenRef = useRef(false);
   const panelCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -297,7 +300,9 @@ export function LanguageBar({
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (languagePickerRef.current?.contains(e.target as Node)) return;
+      const target = e.target as Node;
+      if (languagePickerRef.current?.contains(target)) return;
+      if (languagePickerPanelRef.current?.contains(target)) return;
       setOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
@@ -307,7 +312,9 @@ export function LanguageBar({
   useEffect(() => {
     if (!helpOpen) return;
     const onDoc = (e: MouseEvent) => {
-      if (helpRootRef.current?.contains(e.target as Node)) return;
+      const target = e.target as Node;
+      if (helpRootRef.current?.contains(target)) return;
+      if (helpPanelRef.current?.contains(target)) return;
       setHelpOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
@@ -441,7 +448,7 @@ export function LanguageBar({
   const hasChanges = draftSource !== source || draftTarget !== target;
 
   return (
-    <div className="inline-flex max-w-full shrink-0 flex-nowrap items-center gap-2">
+    <div className="relative z-30 inline-flex max-w-full shrink-0 flex-nowrap items-center gap-2">
       <div className="relative min-w-0 shrink" ref={languagePickerRef}>
         <button
           type="button"
@@ -465,7 +472,14 @@ export function LanguageBar({
         </button>
 
         {panelMounted ? (
-          <div
+          <LanguageBarFloatingPanel
+            open={panelMounted}
+            anchorRef={languagePickerRef}
+            panelRef={languagePickerPanelRef}
+            computeRect={computeLanguagePickerRect}
+            role="dialog"
+            ariaLabelledBy="language-pair-title"
+            ariaDescribedBy="language-pair-instructions"
             className={cn(
               languagePickerPanelClass,
               languageBarPopoverBaseClass,
@@ -475,9 +489,6 @@ export function LanguageBar({
                 : "-translate-y-1 scale-[0.98] opacity-0",
               panelClosing && "pointer-events-none",
             )}
-            role="dialog"
-            aria-labelledby="language-pair-title"
-            aria-describedby="language-pair-instructions"
           >
             <header className={languageBarPopoverHeaderClassName}>
               <div className="flex items-start justify-between gap-3">
@@ -575,7 +586,7 @@ export function LanguageBar({
                 </div>
               </div>
             </div>
-          </div>
+          </LanguageBarFloatingPanel>
         ) : null}
       </div>
 
@@ -596,11 +607,15 @@ export function LanguageBar({
         </button>
 
         {helpOpen ? (
-          <div
-            className={cn(helpPopoverPanelClass, languageBarPopoverBaseClass)}
+          <LanguageBarFloatingPanel
+            open={helpOpen}
+            anchorRef={helpRootRef}
+            panelRef={helpPanelRef}
+            computeRect={computeHelpPopoverRect}
             role="dialog"
-            aria-labelledby="translation-help-title"
-            aria-describedby="translation-help-instructions"
+            ariaLabelledBy="translation-help-title"
+            ariaDescribedBy="translation-help-instructions"
+            className={languageBarPopoverBaseClass}
           >
             <header className={languageBarPopoverHeaderClassName}>
               <div className="flex items-start justify-between gap-3">
@@ -637,7 +652,7 @@ export function LanguageBar({
             <div className={languageBarPopoverBodyClassName}>
               <SlashTranslateDemo variant="compact" />
             </div>
-          </div>
+          </LanguageBarFloatingPanel>
         ) : null}
       </div>
     </div>

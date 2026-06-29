@@ -11,6 +11,11 @@ import {
 import { isDevEnvironment } from "@/lib/dev/preview";
 import { ensureAppUser } from "@/lib/db/user";
 import { createClient } from "@/lib/supabase/server";
+import {
+  MIDDLEWARE_USER_EMAIL_HEADER,
+  MIDDLEWARE_USER_ID_HEADER,
+  PATHNAME_HEADER,
+} from "@/lib/supabase/middleware-forward";
 
 export type AppUser = { id: string; email: string };
 
@@ -24,8 +29,19 @@ export const isAccountPreviewMode = cache(async (): Promise<boolean> => {
 
 async function resolveRedirectTo(fallback: string): Promise<string> {
   const headerStore = await headers();
-  const pathname = headerStore.get("x-pathname");
+  const pathname = headerStore.get(PATHNAME_HEADER);
   return safeNextPath(pathname ?? fallback);
+}
+
+async function userFromMiddlewareHeaders(): Promise<AppUser | null> {
+  const headerStore = await headers();
+  const userId = headerStore.get(MIDDLEWARE_USER_ID_HEADER);
+  if (!userId) return null;
+
+  return {
+    id: userId,
+    email: headerStore.get(MIDDLEWARE_USER_EMAIL_HEADER) ?? "",
+  };
 }
 
 export const requireAppSession = cache(async (
@@ -33,6 +49,11 @@ export const requireAppSession = cache(async (
 ): Promise<AppUser> => {
   if (await isAccountPreviewMode()) {
     return getDevPreviewUser();
+  }
+
+  const middlewareUser = await userFromMiddlewareHeaders();
+  if (middlewareUser) {
+    return middlewareUser;
   }
 
   const supabase = await createClient();
