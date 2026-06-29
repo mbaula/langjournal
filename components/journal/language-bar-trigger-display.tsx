@@ -3,13 +3,13 @@ import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const languageBarTriggerClassName =
-  "inline-flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full bg-app-shell p-2 font-sans";
+  "inline-flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full bg-app-shell p-2 font-sans dark:border dark:border-foreground/14 dark:bg-muted dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)]";
 
 export const languageBarLabelClassName =
-  "flex h-9 min-w-0 items-center rounded-full bg-background px-4 text-sm font-medium tracking-[0.06em] whitespace-nowrap text-foreground uppercase";
+  "flex h-9 min-w-0 items-center rounded-full bg-background px-4 text-sm font-medium tracking-[0.06em] whitespace-nowrap text-foreground uppercase dark:bg-card/80 dark:ring-1 dark:ring-foreground/8";
 
 export const languageBarIconButtonClassName =
-  "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground";
+  "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm dark:ring-1 dark:ring-foreground/12";
 
 export function formatLanguageCodeBadge(code: string): string {
   const base = code.split("-")[0]?.trim().toLowerCase() ?? code.trim().toLowerCase();

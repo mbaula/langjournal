@@ -586,7 +586,7 @@ export function LanguageBar({
             setHelpOpen((h) => !h);
             setOpen(false);
           }}
-          className="inline-flex shrink-0 items-center gap-1.5 px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex shrink-0 items-center gap-1.5 px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground dark:text-foreground/82 dark:hover:text-foreground"
           aria-expanded={helpOpen}
           aria-haspopup="dialog"
           aria-label="How to translate"

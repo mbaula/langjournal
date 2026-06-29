@@ -22,7 +22,7 @@ export const journalTranslationHighlightClassName =
  * Any horizontal/vertical padding here desynchronizes caret vs. mirrored text.
  */
 export const journalEditorTranslationHighlightClassName =
-  "rounded bg-blue-100 text-foreground [box-decoration-break:clone] dark:bg-blue-500/20 dark:text-foreground";
+  "rounded bg-blue-100 text-foreground [box-decoration-break:clone] dark:bg-blue-400/30 dark:text-foreground";
 
 /** Journal home list: entry preview lines (matches date subtitle / page encouraging text). */
 export const journalEntryPreviewTextClassName =
@@ -39,7 +39,7 @@ export function journalTextareaClassName(...extra: (string | undefined)[]) {
 /** Entry body: borderless canvas that grows with content and fills the page. */
 export function journalEntryBodyClassName(...extra: (string | undefined)[]) {
   return cn(
-    "journal-entry-textarea font-sans block w-full resize-none overflow-hidden break-words rounded-none border-0 bg-transparent px-0 py-1 text-base leading-[1.65] text-foreground antialiased caret-foreground shadow-none outline-none selection:bg-primary/15 focus-visible:ring-0 placeholder:text-muted-foreground/70",
+    "journal-entry-textarea font-sans block w-full resize-none overflow-hidden break-words rounded-none border-0 bg-transparent px-0 py-1 text-base leading-[1.65] text-foreground antialiased caret-foreground shadow-none outline-none selection:bg-primary/15 focus-visible:ring-0 placeholder:text-muted-foreground/70 dark:placeholder:text-foreground/68",
     ...extra,
   );
 }
@@ -64,11 +64,11 @@ export const journalWriteEditorContainerClassName =
 
 /** Today's write area — fills the viewport workspace; body scrolls inside. */
 export const journalWriteAreaShellClassName =
-  "flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden rounded-2xl border border-border bg-muted/20 p-4 sm:p-5";
+  "flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden rounded-2xl border border-border bg-journal-surface p-4 sm:p-5";
 
 /** Expanded past-entry editor — natural height, not viewport-locked. */
 export const journalPastEntryAreaShellClassName =
-  "flex min-w-0 flex-col rounded-2xl border border-border bg-muted/20 p-4 sm:p-5";
+  "flex min-w-0 flex-col rounded-2xl border border-border bg-journal-surface p-4 sm:p-5";
 
 /** Shared shell for journal, entry, settings, and other app pages. */
 export const appPageShellClassName =

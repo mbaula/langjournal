@@ -59,7 +59,7 @@ export function AppTopNavClient({
   }, [router]);
 
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-transparent bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-border/40 dark:bg-background/90 dark:supports-[backdrop-filter]:bg-background/75">
       <div className="mx-auto grid h-14 max-w-[1200px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:h-[3.75rem] sm:gap-4 sm:px-8 md:px-16 lg:px-20">
         <Link
           href="/app/journal"

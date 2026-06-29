@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const saveEntryButtonClassName =
-  "h-11 rounded-full border border-border bg-white px-5 text-sm shadow-none hover:bg-white/90 dark:bg-background dark:hover:bg-background/90";
+  "h-11 rounded-full border border-border bg-white px-5 text-sm shadow-none hover:bg-white/90 dark:border-border dark:bg-card dark:hover:bg-card/90";
 
 type SaveEntryBarProps = {
   canFinish: boolean;
