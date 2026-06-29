@@ -32,7 +32,7 @@ export default async function ProgressPage() {
     );
   }
 
-  const user = await requireAppSession();
+  const user = await requireAppSession("/app/progress");
   const [stats, contributions, translationProgress, onboarding] =
     await Promise.all([
       getJournalStats(user.id),
