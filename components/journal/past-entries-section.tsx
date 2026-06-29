@@ -1,17 +1,21 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   EntryList,
   countEntryTranslations,
-  formatEntrySubtitle,
   pastEntryAnchorId,
   type EntryRow,
 } from "@/components/journal/entry-list";
-import { getLanguageDisplayName } from "@/lib/languages/display-name";
 import { cn } from "@/lib/utils";
 import type { TranslateTrigger } from "@/components/journal/journal-editor";
+
+const PAST_ENTRIES_PAGE_SIZE = 10;
+
+const paginationNavButtonClassName =
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-35";
 
 type PastEntriesSectionProps = {
   entries: EntryRow[];
@@ -47,6 +51,19 @@ function entryTocTitle(entry: EntryRow, dateLabel: string) {
   return dateLabel;
 }
 
+function getEntryPageIndex(entries: EntryRow[], entryId: string) {
+  const index = entries.findIndex((entry) => entry.id === entryId);
+  if (index < 0) {
+    return 0;
+  }
+  return Math.floor(index / PAST_ENTRIES_PAGE_SIZE);
+}
+
+function getPastEntriesPage(entries: EntryRow[], page: number) {
+  const start = page * PAST_ENTRIES_PAGE_SIZE;
+  return entries.slice(start, start + PAST_ENTRIES_PAGE_SIZE);
+}
+
 export function PastEntriesSection({
   entries,
   targetLanguage,
@@ -58,39 +75,64 @@ export function PastEntriesSection({
   initialEditingEntryId,
   sectionRef,
 }: PastEntriesSectionProps) {
-  const languageLabel = targetLanguage
-    ? getLanguageDisplayName(targetLanguage)
-    : null;
-
+  const totalPages = Math.max(1, Math.ceil(entries.length / PAST_ENTRIES_PAGE_SIZE));
+  const [page, setPage] = useState(0);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(
     entries[0]?.id ?? null,
   );
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const initialEditHandledRef = useRef(false);
 
+  const paginatedEntries = useMemo(
+    () => getPastEntriesPage(entries, page),
+    [entries, page],
+  );
+
   const tocItems = useMemo(
     () =>
-      entries.map((entry) => {
+      paginatedEntries.map((entry) => {
         const dateLabel = formatEntryDay(entry.entryDate);
         return {
           id: entry.id,
           title: entryTocTitle(entry, dateLabel),
-          dateLabel: formatEntrySubtitle(dateLabel, {
-            languageLabel,
-            flashcardCount: entry.flashcardCount,
-          }),
           translationCount: countEntryTranslations(entry.translations),
         };
       }),
-    [entries, languageLabel],
+    [paginatedEntries],
   );
 
   useEffect(() => {
-    if (entries.length === 0) {
+    if (page > totalPages - 1) {
+      setPage(Math.max(0, totalPages - 1));
+    }
+  }, [page, totalPages]);
+
+  useEffect(() => {
+    if (paginatedEntries.length === 0) {
+      setActiveEntryId(null);
       return;
     }
 
-    const targets = entries
+    if (!paginatedEntries.some((entry) => entry.id === activeEntryId)) {
+      setActiveEntryId(paginatedEntries[0]!.id);
+    }
+  }, [activeEntryId, paginatedEntries]);
+
+  useEffect(() => {
+    if (
+      editingEntryId &&
+      !paginatedEntries.some((entry) => entry.id === editingEntryId)
+    ) {
+      setEditingEntryId(null);
+    }
+  }, [editingEntryId, paginatedEntries]);
+
+  useEffect(() => {
+    if (paginatedEntries.length === 0) {
+      return;
+    }
+
+    const targets = paginatedEntries
       .map((entry) => document.getElementById(pastEntryAnchorId(entry.id)))
       .filter((node): node is HTMLElement => node != null);
 
@@ -122,7 +164,7 @@ export function PastEntriesSection({
     }
 
     return () => observer.disconnect();
-  }, [entries]);
+  }, [paginatedEntries]);
 
   useEffect(() => {
     if (
@@ -134,6 +176,7 @@ export function PastEntriesSection({
     }
 
     initialEditHandledRef.current = true;
+    setPage(getEntryPageIndex(entries, initialEditingEntryId));
     setEditingEntryId(initialEditingEntryId);
     requestAnimationFrame(() => {
       document
@@ -174,18 +217,57 @@ export function PastEntriesSection({
     [onEntryDeleted],
   );
 
+  const goToPreviousPage = useCallback(() => {
+    setPage((current) => Math.max(0, current - 1));
+    sectionRef?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [sectionRef]);
+
+  const goToNextPage = useCallback(() => {
+    setPage((current) => Math.min(totalPages - 1, current + 1));
+    sectionRef?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [sectionRef, totalPages]);
+
   if (entries.length === 0) {
     return null;
   }
+
+  const showPagination = totalPages > 1;
 
   return (
     <section
       ref={sectionRef}
       className="space-y-6 border-t border-border pt-8"
     >
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        Past entries
-      </h2>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-xl font-semibold tracking-tight text-foreground">
+          Past entries
+        </h2>
+        {showPagination ? (
+          <div className="flex items-center gap-2">
+            <span className="hidden text-sm text-muted-foreground sm:inline">
+              Page {page + 1} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className={paginationNavButtonClassName}
+              aria-label="Previous page"
+              disabled={page === 0}
+              onClick={goToPreviousPage}
+            >
+              <ChevronLeft className="size-4" strokeWidth={1.5} />
+            </button>
+            <button
+              type="button"
+              className={paginationNavButtonClassName}
+              aria-label="Next page"
+              disabled={page >= totalPages - 1}
+              onClick={goToNextPage}
+            >
+              <ChevronRight className="size-4" strokeWidth={1.5} />
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12 xl:gap-16">
         <nav
@@ -222,9 +304,6 @@ export function PastEntriesSection({
                         </span>
                       ) : null}
                     </div>
-                    <span className="mt-0.5 block truncate text-xs text-muted-foreground sm:text-sm">
-                      {item.dateLabel}
-                    </span>
                   </button>
                 </li>
               );
@@ -234,7 +313,7 @@ export function PastEntriesSection({
 
         <div className="min-w-0 flex-1">
           <EntryList
-            entries={entries}
+            entries={paginatedEntries}
             targetLanguage={targetLanguage}
             sourceLanguage={sourceLanguage}
             translateTrigger={translateTrigger}

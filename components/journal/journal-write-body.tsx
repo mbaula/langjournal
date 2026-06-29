@@ -4,7 +4,7 @@ import { ArrowDown } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { appPageShellClassName, journalWriteAreaShellClassName, journalWriteEditorMinHeightClassName, journalWriteTitleClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
+import { journalWriteAreaShellClassName, journalWriteEditorContainerClassName, journalWriteEditorMinHeightClassName, journalWritePageShellClassName, journalWriteTitleClassName, journalWriteViewportClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
 import { DailyPromptCard } from "@/components/journal/daily-prompt-card";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import { type EntryRow } from "@/components/journal/entry-list";
@@ -19,6 +19,7 @@ import {
   type TranslateTrigger,
 } from "@/components/journal/journal-editor";
 import type { DailyPromptState } from "@/lib/prompts/prompt-core";
+import { cn } from "@/lib/utils";
 
 type JournalWriteBodyProps = {
   greetingName: string;
@@ -288,7 +289,7 @@ export function JournalWriteBody({
         onLanguagesSaved={handleLanguagesSaved}
       />
 
-      <div className="mt-6 flex min-h-0 flex-1 flex-col gap-3">
+      <div className="mt-6 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
         <EntryTitleField
           key={activeEntryId}
           entryId={activeEntryId}
@@ -309,7 +310,7 @@ export function JournalWriteBody({
           translateTrigger={translateTrigger}
           onBodyChange={setDraftBody}
           bodyMinHeightClassName={journalWriteEditorMinHeightClassName}
-          containerMinHeightClassName={journalWriteEditorMinHeightClassName}
+          containerMinHeightClassName={journalWriteEditorContainerClassName}
         />
 
         <SaveEntryBar
@@ -324,11 +325,16 @@ export function JournalWriteBody({
   );
 
   return (
-    <div className={appPageShellClassName}>
+    <div className={journalWritePageShellClassName}>
       <JournalHomeHeader greetingName={greetingName} subtitle={subtitle} />
 
       {dailyPrompt ? (
-        <div className={journalWriteWorkspaceClassName}>
+        <div
+          className={cn(
+            journalWriteWorkspaceClassName,
+            journalWriteViewportClassName,
+          )}
+        >
           <DailyPromptCard
             key={activeEntryId}
             entryId={activeEntryId}
@@ -342,7 +348,7 @@ export function JournalWriteBody({
           {entryEditorColumn}
         </div>
       ) : (
-        entryEditorColumn
+        <div className={journalWriteViewportClassName}>{entryEditorColumn}</div>
       )}
 
       <PastEntriesScrollHint

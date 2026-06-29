@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
-import { journalWriteAreaShellClassName, journalWriteTitleClassName } from "@/components/journal/field-styles";
+import { journalPastEntryAreaShellClassName, journalWriteAreaShellClassName, journalWriteTitleClassName } from "@/components/journal/field-styles";
 import {
   JournalEditor,
   type InlineTranslation,
@@ -98,7 +98,7 @@ export function PastEntryEditor({
   }, [entry.id, onDeleted]);
 
   return (
-    <div className={cn("group/entry", journalWriteAreaShellClassName)}>
+    <div className={cn("group/entry", journalPastEntryAreaShellClassName)}>
       <div className="flex items-start justify-between gap-3">
         <LanguageBar
           source={sourceLanguage}

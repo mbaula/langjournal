@@ -6,8 +6,16 @@ const ENCOURAGING_SUBTITLES = [
   "You should probably write something today (side-eye)",
 ] as const;
 
-export function pickEncouragingSubtitle(): string {
-  const index = Math.floor(Math.random() * ENCOURAGING_SUBTITLES.length);
+export function pickEncouragingSubtitle(
+  date: Date = new Date(),
+): string {
+  const dayIndex = Math.floor(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) /
+      86_400_000,
+  );
+  const index =
+    ((dayIndex % ENCOURAGING_SUBTITLES.length) + ENCOURAGING_SUBTITLES.length) %
+    ENCOURAGING_SUBTITLES.length;
   return ENCOURAGING_SUBTITLES[index] ?? ENCOURAGING_SUBTITLES[0];
 }
 
