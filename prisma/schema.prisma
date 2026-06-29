@@ -126,6 +126,7 @@ model LanguageProfile {
   nativeLanguage  String
   targetLanguage  String
   uiLocale        String
+  sourceLanguage  String
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { appNavUtilityButtonClass } from "@/components/app/app-nav-styles";
 import { getTallyFeedbackFormId } from "@/lib/feedback/tally";
@@ -29,9 +29,46 @@ function ensureTallyEmbedScript() {
 }
 
 type FeedbackButtonProps = {
-  variant?: "nav" | "sidebar";
+  variant?: "nav" | "sidebar" | "marketing";
   className?: string;
 };
+
+type FeedbackInlineLinkProps = {
+  className?: string;
+  children?: ReactNode;
+};
+
+export function FeedbackInlineLink({
+  className,
+  children = "click here",
+}: FeedbackInlineLinkProps) {
+  const formId = getTallyFeedbackFormId();
+
+  useEffect(() => {
+    if (!formId) {
+      return;
+    }
+    ensureTallyEmbedScript();
+  }, [formId]);
+
+  if (!formId) {
+    return <span className={className}>{children}</span>;
+  }
+
+  return (
+    <button
+      type="button"
+      data-tally-open={formId}
+      data-tally-layout="modal"
+      className={cn(
+        "font-inherit text-inherit underline decoration-current/40 underline-offset-2 transition-colors hover:decoration-current/70",
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function FeedbackButton({
   variant = "nav",
@@ -48,6 +85,22 @@ export function FeedbackButton({
 
   if (!formId) {
     return null;
+  }
+
+  if (variant === "marketing") {
+    return (
+      <button
+        type="button"
+        data-tally-open={formId}
+        data-tally-layout="modal"
+        className={cn(
+          "rounded-md px-2 py-1.5 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-base",
+          className,
+        )}
+      >
+        Feedback
+      </button>
+    );
   }
 
   if (variant === "sidebar") {

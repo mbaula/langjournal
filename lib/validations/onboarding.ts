@@ -4,8 +4,7 @@ import {
   ONBOARDING_AGE_RANGES,
   ONBOARDING_LANGUAGE_LEVELS,
 } from "@/lib/onboarding/constants";
-
-const nameRegex = /^[A-Za-z][A-Za-z\s'-]*$/;
+import { displayNameSchema } from "@/lib/validations/display-name";
 
 const languageCode = z
   .string()
@@ -21,13 +20,7 @@ const userLanguageEntry = z.object({
 
 export const onboardingPayloadSchema = z
   .object({
-    displayName: z
-      .string()
-      .trim()
-      .max(50, "Name must be 50 characters or fewer")
-      .regex(nameRegex, "Use letters, spaces, apostrophes, or hyphens only")
-      .optional()
-      .or(z.literal("")),
+    displayName: displayNameSchema,
     ageRange: z.enum(ONBOARDING_AGE_RANGES).optional(),
     languages: z
       .array(userLanguageEntry)

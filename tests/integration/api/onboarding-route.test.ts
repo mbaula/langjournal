@@ -53,8 +53,15 @@ describe("api/onboarding route", () => {
     });
   });
 
-  it("POST validates payload - rejects invalid name", async () => {
+  it("POST accepts display names with special characters", async () => {
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.completeOnboarding.mockResolvedValueOnce(undefined);
+    mocks.getOnboardingState.mockResolvedValueOnce({
+      displayName: "Bad!",
+      ageRange: null,
+      languages: [{ languageCode: "ja", level: "intermediate" }],
+      isComplete: true,
+    });
 
     const req = new Request("http://localhost", {
       method: "POST",
@@ -65,7 +72,7 @@ describe("api/onboarding route", () => {
       }),
     });
     const res = await POST(req);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(200);
   });
 
   it("POST validates payload - requires at least one language", async () => {

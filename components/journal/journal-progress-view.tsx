@@ -2,19 +2,26 @@ import type { ReactNode } from "react";
 
 import { ContributionChart } from "@/components/journal/contribution-chart";
 import { JournalProgressStats } from "@/components/journal/journal-progress-stats";
+import { TranslationProgressChart } from "@/components/journal/translation-progress-chart";
 import {
   appPageShellClassName,
   journalPageTitleClassName,
 } from "@/components/journal/field-styles";
-import type { ContributionDay, JournalStats } from "@/lib/entries/service";
+import type {
+  ContributionDay,
+  EntryTranslationProgress,
+  JournalStats,
+} from "@/lib/entries/service";
 import { cn } from "@/lib/utils";
 
 type JournalProgressViewProps = {
   stats: JournalStats;
+  studentName: string;
   contributions: ContributionDay[];
+  translationProgress: EntryTranslationProgress[];
 };
 
-function ActivityWidget({
+function ProgressWidget({
   children,
   className,
 }: {
@@ -35,7 +42,9 @@ function ActivityWidget({
 
 export function JournalProgressView({
   stats,
+  studentName,
   contributions,
+  translationProgress,
 }: JournalProgressViewProps) {
   return (
     <div className={appPageShellClassName}>
@@ -47,16 +56,29 @@ export function JournalProgressView({
         </p>
       </header>
 
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:gap-8">
-        <JournalProgressStats stats={stats} />
-        <ActivityWidget className="min-w-0">
-          <ContributionChart
-            data={contributions}
-            title="Activity"
-            variant="default"
+      <div className="grid grid-cols-1 items-stretch gap-3 xl:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] xl:gap-4">
+        <JournalProgressStats
+          stats={stats}
+          studentName={studentName}
+          className="h-full"
+        />
+        <ProgressWidget className="flex h-full min-w-0 flex-col">
+          <TranslationProgressChart
+            data={translationProgress}
+            className="flex-1"
           />
-        </ActivityWidget>
+        </ProgressWidget>
       </div>
+
+      <ProgressWidget>
+        <ContributionChart
+          data={contributions}
+          title="Activity"
+          variant="default"
+          monthsPerPage={12}
+          fillWidth
+        />
+      </ProgressWidget>
     </div>
   );
 }

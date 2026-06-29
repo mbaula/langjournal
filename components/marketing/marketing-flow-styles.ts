@@ -1,3 +1,6 @@
+import { folioWordmarkClassName } from "@/components/journal/field-styles";
+import { cn } from "@/lib/utils";
+
 /** Shared horizontal inset for marketing pages. */
 export const marketingShellInsetClassName = "px-4 sm:px-6 lg:px-8";
 
@@ -14,22 +17,71 @@ export const marketingFlowContentWidthClassName =
   "w-full min-w-0 max-w-sm sm:max-w-md";
 
 /** Faint Folio wordmark anchored to the section bottom. */
-export const marketingWatermarkClassName =
-  "pointer-events-none absolute inset-x-4 bottom-4 z-0 mx-auto max-w-6xl select-none font-[family-name:var(--font-folio)] text-[clamp(2.75rem,14vw,9rem)] font-semibold leading-none tracking-[-0.04em] text-foreground/[0.06] sm:inset-x-6 sm:bottom-6 lg:inset-x-8";
+export const marketingWatermarkClassName = cn(
+  "pointer-events-none absolute inset-x-4 bottom-4 z-0 mx-auto max-w-6xl select-none leading-none sm:inset-x-6 sm:bottom-6 lg:inset-x-8",
+  folioWordmarkClassName,
+  "text-[clamp(2.75rem,14vw,9rem)] text-foreground/[0.06]",
+);
 
-/** Landing hero grid — stacks on mobile, splits from md up. */
+/** White outer frame around the landing hero panel. */
+export const marketingHeroSectionClassName =
+  "flex min-h-[calc(100dvh-3.5rem)] flex-col bg-background pt-0 px-4 pb-4 sm:min-h-[calc(100dvh-4rem)] sm:px-6 sm:pb-6 md:px-8 md:pb-8";
+
+/** Tinted hero panel — brand purple on marketing. */
+export const marketingHeroPanelClassName =
+  "relative mx-auto flex w-full flex-1 flex-col justify-center rounded-none bg-marketing-hero-panel px-5 py-6 sm:px-8 sm:py-8 md:px-10 md:py-9";
+
+/** Landing hero — single column, vertically stacked. */
 export const marketingHeroGridClassName =
-  "relative mx-auto grid w-full min-w-0 max-w-6xl grid-cols-1 items-start gap-8 px-4 py-14 sm:gap-10 sm:px-6 sm:py-16 md:min-h-[min(88vh,52rem)] md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:items-center md:gap-8 md:py-24 lg:gap-10 lg:px-8 lg:py-28";
+  "relative flex w-full flex-col items-center gap-4 sm:gap-5";
+
+/** White demo card inside the hero panel. */
+export const marketingDemoShellClassName =
+  "relative w-full max-w-lg overflow-hidden rounded-2xl border border-border/50 bg-background px-4 py-5 sm:px-5 sm:py-6";
+
+/** White outer frame for auth flows (matches landing hero frame). */
+export const marketingFlowFrameClassName =
+  "flex flex-1 flex-col bg-background px-4 pb-4 pt-0 sm:px-6 sm:pb-6 md:px-8 md:pb-8";
+
+/** Purple panel for auth flows. */
+export const marketingFlowPanelClassName =
+  "relative mx-auto flex w-full flex-1 flex-col justify-center rounded-none bg-marketing-hero-panel px-5 py-12 sm:px-8 sm:py-16 md:px-10 md:py-20";
+
+/** Centered auth content column. */
+export const marketingFlowPanelContentClassName =
+  "mx-auto w-full max-w-md text-center";
+
+/** Card on purple panel for forms. */
+export const marketingFlowCardClassName =
+  "rounded-2xl border border-border/80 bg-background px-5 py-6 text-left sm:px-6 sm:py-7";
+
+/** Landing hero — serif display headline. */
+export const marketingHeroEyebrowClassName =
+  "mb-3 font-sans text-[15px] font-medium tracking-normal text-[#262628] sm:text-base";
 
 /** Shared typography and field styles for login + onboarding flows. */
-export const marketingFlowEyebrowClassName =
-  "text-[11px] font-medium uppercase tracking-[0.2em] text-sidebar-primary";
+export const marketingFlowEyebrowClassName = marketingHeroEyebrowClassName;
 
 export const marketingFlowTitleClassName =
   "max-w-2xl font-[family-name:var(--font-folio)] text-[clamp(2rem,4.5vw,3rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground";
 
 export const marketingFlowDescriptionClassName =
-  "mt-3 max-w-lg text-[15px] leading-relaxed text-muted-foreground sm:text-base";
+  "mt-3 max-w-lg font-sans text-[15px] leading-relaxed text-muted-foreground sm:text-base";
+
+export const marketingHeroTitleClassName =
+  "font-[family-name:var(--font-folio)] text-[clamp(2.125rem,5vw,3.875rem)] font-semibold leading-[0.94] tracking-[-0.03em] text-foreground";
+
+export const marketingHeroCtaClassName =
+  "h-12 rounded-full border-0 bg-[#262628] px-6 text-[15px] text-white shadow-none hover:bg-[#262628]/90 [a]:hover:bg-[#262628]/90 focus-visible:border-transparent focus-visible:ring-[#262628]/30";
+
+export const marketingNavCtaClassName =
+  "h-9 rounded-full border-0 bg-[#262628] px-4 text-[13px] text-white shadow-none hover:bg-[#262628]/90 [a]:hover:bg-[#262628]/90 focus-visible:border-transparent focus-visible:ring-[#262628]/30";
+
+export const marketingNavLinkClassName =
+  "rounded-md px-2 py-1.5 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-base";
+
+export const marketingHeroDescriptionClassName =
+  "mt-3 max-w-xl font-sans text-[15px] leading-relaxed text-muted-foreground sm:text-base";
 
 export const marketingFlowFieldClassName =
   "h-12 w-full rounded-full border border-border/80 bg-background/80 px-5 text-left text-[15px] text-foreground shadow-sm outline-none transition-[border-color,box-shadow,background-color] placeholder:text-muted-foreground/70 focus:border-sidebar-primary/30 focus:bg-background focus:ring-2 focus:ring-sidebar-primary/15";

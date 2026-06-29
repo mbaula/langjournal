@@ -22,7 +22,7 @@ export const journalTranslationHighlightClassName =
  * Any horizontal/vertical padding here desynchronizes caret vs. mirrored text.
  */
 export const journalEditorTranslationHighlightClassName =
-  "rounded bg-blue-100 text-foreground [box-decoration-break:clone] dark:bg-blue-500/20 dark:text-foreground";
+  "rounded bg-blue-100 text-foreground [box-decoration-break:clone] dark:bg-blue-400/30 dark:text-foreground";
 
 /** Journal home list: entry preview lines (matches date subtitle / page encouraging text). */
 export const journalEntryPreviewTextClassName =
@@ -39,7 +39,7 @@ export function journalTextareaClassName(...extra: (string | undefined)[]) {
 /** Entry body: borderless canvas that grows with content and fills the page. */
 export function journalEntryBodyClassName(...extra: (string | undefined)[]) {
   return cn(
-    "journal-entry-textarea font-sans block w-full resize-none overflow-hidden break-words rounded-none border-0 bg-transparent px-0 py-1 text-base leading-[1.65] text-foreground antialiased caret-foreground shadow-none outline-none selection:bg-primary/15 focus-visible:ring-0 placeholder:text-muted-foreground/70",
+    "journal-entry-textarea font-sans block w-full resize-none overflow-hidden break-words rounded-none border-0 bg-transparent px-0 py-1 text-base leading-[1.65] text-foreground antialiased caret-foreground shadow-none outline-none selection:bg-primary/15 focus-visible:ring-0 placeholder:text-muted-foreground/70 dark:placeholder:text-foreground/68",
     ...extra,
   );
 }
@@ -48,16 +48,37 @@ export function journalEntryBodyClassName(...extra: (string | undefined)[]) {
 export const journalWriteWorkspaceClassName =
   "grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] lg:items-stretch lg:gap-10 xl:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] xl:gap-12";
 
-/** Write page editor block: grows to fill the writing area shell. */
-export const journalWriteEditorMinHeightClassName = "min-h-0 flex-1";
+/**
+ * Today's write workspace — height tracks the viewport below nav, greeting, and page padding.
+ */
+export const journalWriteViewportClassName =
+  "min-h-[14rem] h-[calc(100dvh-14.5rem-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-15.5rem-env(safe-area-inset-bottom,0px))] lg:h-[calc(100dvh-16.25rem-env(safe-area-inset-bottom,0px))]";
 
-/** Bordered shell for today's write area and expanded past-entry editors. */
+/** Write page editor body: fills remaining shell height and scrolls when content overflows. */
+export const journalWriteEditorMinHeightClassName =
+  "min-h-0 flex-1 overflow-y-auto";
+
+/** Write page editor shell: participates in the flex height chain. */
+export const journalWriteEditorContainerClassName =
+  "min-h-0 flex-1 overflow-hidden";
+
+/** Today's write area — fills the viewport workspace; body scrolls inside. */
 export const journalWriteAreaShellClassName =
-  "flex min-h-[calc(100dvh-13rem)] min-w-0 flex-col rounded-2xl border border-border bg-muted/20 p-4 sm:min-h-[calc(100dvh-14rem)] sm:p-5";
+  "flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden rounded-2xl border border-border bg-journal-surface p-4 sm:p-5";
+
+/** Expanded past-entry editor — natural height, not viewport-locked. */
+export const journalPastEntryAreaShellClassName =
+  "flex min-w-0 flex-col rounded-2xl border border-border bg-journal-surface p-4 sm:p-5";
 
 /** Shared shell for journal, entry, settings, and other app pages. */
 export const appPageShellClassName =
   "flex w-full flex-col gap-8 pt-2 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] lg:gap-10";
+
+/** Write page shell — tighter bottom padding so the entry box can use viewport height. */
+export const journalWritePageShellClassName = cn(
+  appPageShellClassName,
+  "pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] lg:pb-[calc(3rem+env(safe-area-inset-bottom,0px))]",
+);
 
 /** @deprecated Use appPageShellClassName */
 export const journalPageShellClassName = appPageShellClassName;

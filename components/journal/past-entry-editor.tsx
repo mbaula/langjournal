@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
-import { journalWriteAreaShellClassName, journalWriteTitleClassName } from "@/components/journal/field-styles";
+import { journalPastEntryAreaShellClassName, journalWriteAreaShellClassName, journalWriteTitleClassName } from "@/components/journal/field-styles";
 import {
   JournalEditor,
   type InlineTranslation,
@@ -41,7 +41,7 @@ type PastEntryEditorProps = {
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
   onSaved: (entry: EntryRow) => void;
-  onDelete?: (entryId: string) => void;
+  onDeleted?: (entryId: string) => void;
 };
 
 export function PastEntryEditor({
@@ -51,15 +51,13 @@ export function PastEntryEditor({
   translateTrigger,
   onLanguagesSaved,
   onSaved,
-  onDelete,
+  onDeleted,
 }: PastEntryEditorProps) {
   const editorRef = useRef<JournalEditorHandle>(null);
   const [entryTitle, setEntryTitle] = useState(entry.title?.trim() ?? "");
   const [draftBody, setDraftBody] = useState(entry.body ?? "");
   const [savePending, setSavePending] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [deleteConfirming, setDeleteConfirming] = useState(false);
-  const [deletePending, setDeletePending] = useState(false);
 
   const initialTranslations = coalesceTranslations(entry.translations);
 
@@ -91,25 +89,16 @@ export function PastEntryEditor({
 
   const canSave = Boolean(entryTitle.trim() || draftBody.trim());
 
-  const handleDelete = useCallback(async () => {
-    if (deletePending || !onDelete) {
-      return;
+  const confirmDelete = useCallback(async () => {
+    const result = await deleteJournalEntryRequest(entry.id);
+    if (result.ok) {
+      onDeleted?.(entry.id);
     }
-
-    setDeletePending(true);
-    try {
-      const result = await deleteJournalEntryRequest(entry.id);
-      if (result.ok) {
-        onDelete(entry.id);
-      }
-    } finally {
-      setDeletePending(false);
-      setDeleteConfirming(false);
-    }
-  }, [deletePending, entry.id, onDelete]);
+    return result;
+  }, [entry.id, onDeleted]);
 
   return (
-    <div className={cn("group/entry", journalWriteAreaShellClassName)}>
+    <div className={cn("group/entry", journalPastEntryAreaShellClassName)}>
       <div className="flex items-start justify-between gap-3">
         <LanguageBar
           source={sourceLanguage}
@@ -117,45 +106,20 @@ export function PastEntryEditor({
           translateTrigger={translateTrigger}
           onLanguagesSaved={onLanguagesSaved}
         />
-        {onDelete ? (
-          <div className="relative shrink-0">
-            <EntryActionsMenu
-              entryId={entry.id}
-              onRenameTitle={() => {
-                const el = document.getElementById(`past-entry-title-${entry.id}`);
-                if (el instanceof HTMLInputElement) {
-                  el.focus();
-                  el.select();
-                }
-              }}
-              onDelete={() => setDeleteConfirming(true)}
-              className="pointer-events-auto opacity-100"
-              triggerClassName="text-muted-foreground"
-            />
-            {deleteConfirming ? (
-              <div className="absolute right-0 top-full z-40 mt-2 min-w-[10rem] rounded-md border border-border bg-popover px-2 py-1 text-sm shadow-sm">
-                <p className="text-muted-foreground">Delete this entry?</p>
-                <div className="mt-1 flex items-center justify-end gap-1">
-                  <button
-                    type="button"
-                    className="rounded px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    disabled={deletePending}
-                    onClick={() => setDeleteConfirming(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded px-2 py-1 text-destructive transition-colors hover:bg-destructive/10"
-                    disabled={deletePending}
-                    onClick={() => void handleDelete()}
-                  >
-                    {deletePending ? "…" : "Delete"}
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </div>
+        {onDeleted ? (
+          <EntryActionsMenu
+            entryId={entry.id}
+            onRenameTitle={() => {
+              const el = document.getElementById(`past-entry-title-${entry.id}`);
+              if (el instanceof HTMLInputElement) {
+                el.focus();
+                el.select();
+              }
+            }}
+            onDeleteConfirm={confirmDelete}
+            className="pointer-events-auto opacity-100"
+            triggerClassName="text-muted-foreground"
+          />
         ) : null}
       </div>
 

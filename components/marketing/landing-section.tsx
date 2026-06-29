@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { landingSectionXClassName } from "@/components/marketing/landing-spacing";
 import { cn } from "@/lib/utils";
 
 type LandingAccent =
@@ -121,7 +122,7 @@ export function LandingSection({
         className,
       )}
     >
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+      <div className={cn("mx-auto max-w-6xl", landingSectionXClassName)}>
         {isSplit ? (
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
             <div

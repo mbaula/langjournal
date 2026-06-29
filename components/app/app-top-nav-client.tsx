@@ -21,22 +21,13 @@ import { cn } from "@/lib/utils";
 
 type AppTopNavClientProps = {
   userLabel: string;
+  avatarLetter?: string | null;
   previewMode?: boolean;
 };
 
-function profilePlaceholderInitials(label: string): string | null {
-  const trimmed = label.trim();
-  if (!trimmed || trimmed === "Account") return null;
-  if (trimmed.includes("@")) return trimmed[0]?.toUpperCase() ?? null;
-  const parts = trimmed.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) {
-    return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();
-  }
-  return trimmed.slice(0, 2).toUpperCase();
-}
-
 export function AppTopNavClient({
   userLabel,
+  avatarLetter = null,
   previewMode = false,
 }: AppTopNavClientProps) {
   const pathname = usePathname();
@@ -59,7 +50,7 @@ export function AppTopNavClient({
   const progressActive = pathname.startsWith("/app/progress");
   const flashcardsActive = pathname.startsWith("/app/flashcards");
   const displayUser = userLabel.trim() || "Account";
-  const profileInitials = profilePlaceholderInitials(displayUser);
+  const profileInitials = avatarLetter;
 
   useEffect(() => {
     router.prefetch("/app/journal");
@@ -68,7 +59,7 @@ export function AppTopNavClient({
   }, [router]);
 
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-transparent bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-border/40 dark:bg-background/90 dark:supports-[backdrop-filter]:bg-background/75">
       <div className="mx-auto grid h-14 max-w-[1200px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:h-[3.75rem] sm:gap-4 sm:px-8 md:px-16 lg:px-20">
         <Link
           href="/app/journal"

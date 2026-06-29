@@ -117,6 +117,23 @@ export async function completeOnboarding(
   invalidateLanguagePairCache();
 }
 
+export async function updateSettingsProfile(
+  userId: string,
+  input: {
+    displayName: string | null;
+    languages: UserLanguageEntry[];
+  },
+) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      displayName: input.displayName,
+    },
+  });
+
+  await syncUserLanguages(userId, input.languages);
+}
+
 export async function updateOnboardingProfile(
   userId: string,
   input: {

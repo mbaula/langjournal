@@ -14,6 +14,12 @@ import {
 } from "@/lib/theme/accent";
 import { cn } from "@/lib/utils";
 
+const customizePopoverClassName =
+  "absolute top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-lg";
+
+const accentSwatchClassName =
+  "size-7 rounded-md shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)] transition-[transform,box-shadow,ring-color] duration-150 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)]";
+
 export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "toolbar" }) {
   const { resolvedTheme, setTheme } = useTheme();
   const { accent, setAccent } = useAccent();
@@ -68,22 +74,21 @@ export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "
       {open ? (
         <div
           className={cn(
-            "absolute top-full z-50 mt-1 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg",
-            variant === "toolbar"
-              ? "right-0 w-56"
-              : "right-0 left-0",
+            customizePopoverClassName,
+            variant === "toolbar" ? "right-0 w-[12.75rem] p-4" : "right-0 left-0 p-4",
           )}
           role="menu"
         >
-          <div
-            className="flex items-center gap-2 px-2 py-1.5 text-sm"
-            id="customize-accent-label"
-          >
-            <Palette className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
-            Color
+          <div className="mb-3">
+            <p
+              className="text-sm font-semibold text-foreground"
+              id="customize-accent-label"
+            >
+              Color
+            </p>
           </div>
           <div
-            className="grid grid-cols-5 gap-2 px-2 pb-1"
+            className="grid grid-cols-5 gap-1.5"
             role="group"
             aria-labelledby="customize-accent-label"
           >
@@ -98,32 +103,26 @@ export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "
                   title={accentLabel(option.id)}
                   aria-label={accentLabel(option.id)}
                   onClick={() => selectAccent(option.id)}
+                  style={{ backgroundColor: option.swatch }}
                   className={cn(
-                    "flex size-8 items-center justify-center justify-self-center rounded-md border transition-[transform,box-shadow,border-color] duration-150",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                    accentSwatchClassName,
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     selected
-                      ? "scale-105 border-foreground/30 shadow-sm"
-                      : "border-border hover:scale-105 hover:border-border",
+                      ? "ring-2 ring-foreground/35 ring-offset-2 ring-offset-background"
+                      : "hover:scale-[1.03]",
                   )}
-                >
-                  <span
-                    className="size-5 rounded-full ring-1 ring-black/10 dark:ring-white/15"
-                    style={{ backgroundColor: option.swatch }}
-                    aria-hidden
-                  />
-                  <span className="sr-only">{accentLabel(option.id)}</span>
-                </button>
+                />
               );
             })}
           </div>
 
-          <div className="my-3 border-t border-border" />
+          <div className="my-4 h-px bg-border" role="presentation" />
 
           <button
             type="button"
             role="menuitem"
             onClick={toggleTheme}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted"
+            className="flex w-full items-center gap-2 rounded-xl px-2 py-2.5 text-left text-sm transition-colors hover:bg-muted/60"
           >
             {mounted ? (
               resolvedTheme === "dark" ? (

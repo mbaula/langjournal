@@ -83,6 +83,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 export async function DELETE(_request: Request, context: RouteContext) {
   const userId = await getAuthenticatedUserId();
   if (!userId) {
+    console.error("[DELETE /api/entries/:id] Unauthorized - no user ID");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -90,6 +91,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const result = await deleteJournalEntryForUser(id, userId);
 
   if (!result.ok) {
+    console.error(`[DELETE /api/entries/${id}] Entry not found for user ${userId}`);
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

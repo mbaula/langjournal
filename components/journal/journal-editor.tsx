@@ -933,7 +933,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           {slashTranslateHint}
         </p>
       ) : null}
-      <p className="flex justify-end pb-1 text-sm text-muted-foreground tabular-nums">
+      <p className="flex justify-end pb-1 text-sm text-muted-foreground tabular-nums dark:text-foreground/80">
         {wordCountLabel(wordCount)}
       </p>
       {error ? (

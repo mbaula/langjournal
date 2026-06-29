@@ -12,14 +12,25 @@ const { revalidateTagMock, prismaMock } = vi.hoisted(() => ({
       delete: vi.fn(),
       count: vi.fn(),
     },
+    promptUsage: {
+      updateMany: vi.fn(),
+    },
     userLanguage: {
       findMany: vi.fn(),
     },
+    flashcard: {
+      count: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn(),
+    },
+    $transaction: vi.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
   },
 }));
 
 vi.mock("next/cache", () => ({
   revalidateTag: revalidateTagMock,
+  revalidatePath: vi.fn(),
   unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
 }));
 
@@ -32,6 +43,7 @@ import {
   getContributionData,
   getJournalEntryForUser,
   getJournalStats,
+  getJournalTranslationProgress,
   getOrCreateJournalEntryForDate,
   listJournalEntries,
   listJournalRecentsForSidebar,
@@ -245,23 +257,24 @@ describe("getJournalStats", () => {
     vi.clearAllMocks();
   });
 
-  it("aggregates counts, translations, and learning languages", async () => {
-    prismaMock.journalEntry.count
-      .mockResolvedValueOnce(10)
-      .mockResolvedValueOnce(3)
-      .mockResolvedValueOnce(7);
-    prismaMock.journalEntry.findMany.mockResolvedValueOnce([
-      { translations: [{ id: "t1" }, { id: "t2" }] },
-      { translations: null },
-      { translations: "not-an-array" },
-    ]);
+  it("aggregates entry, flashcard, and learning language stats", async () => {
+    prismaMock.journalEntry.count.mockResolvedValueOnce(10);
+    prismaMock.flashcard.count.mockResolvedValueOnce(24);
     prismaMock.userLanguage.findMany.mockResolvedValueOnce([
       { languageCode: "ja", level: "intermediate" },
     ]);
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      createdAt: new Date("2024-03-15T00:00:00.000Z"),
+    });
 
     const result = await getJournalStats("u1");
 
-    expect(prismaMock.journalEntry.count).toHaveBeenCalledTimes(3);
+    expect(prismaMock.journalEntry.count).toHaveBeenCalledWith({
+      where: { userId: "u1" },
+    });
+    expect(prismaMock.flashcard.count).toHaveBeenCalledWith({
+      where: { userId: "u1" },
+    });
     expect(prismaMock.userLanguage.findMany).toHaveBeenCalledWith({
       where: { userId: "u1" },
       orderBy: { createdAt: "asc" },
@@ -269,10 +282,46 @@ describe("getJournalStats", () => {
     });
     expect(result).toEqual({
       total: 10,
-      translationCount: 2,
-      thisWeek: 3,
-      thisMonth: 7,
+      flashcardCount: 24,
+      writingSinceYear: 2024,
       learningLanguages: [{ languageCode: "ja", level: "intermediate" }],
+    });
+  });
+});
+
+describe("getJournalTranslationProgress", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("includes entries with empty bodies so the chart matches total entry count", async () => {
+    prismaMock.journalEntry.findMany.mockResolvedValueOnce([
+      {
+        id: "e1",
+        title: null,
+        body: "",
+        translations: [],
+        entryDate: new Date("2026-01-01T00:00:00.000Z"),
+      },
+      {
+        id: "e2",
+        title: "Draft",
+        body: "Bonjour",
+        translations: [],
+        entryDate: new Date("2026-01-02T00:00:00.000Z"),
+      },
+    ]);
+
+    const result = await getJournalTranslationProgress("u1");
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({
+      id: "e1",
+      translationPercent: 0,
+    });
+    expect(result[1]).toMatchObject({
+      id: "e2",
+      translationPercent: 0,
     });
   });
 });
@@ -326,10 +375,15 @@ describe("deleteJournalEntryForUser", () => {
 
   it("deletes entry and revalidates cache", async () => {
     prismaMock.journalEntry.findFirst.mockResolvedValueOnce({ id: "e1" });
+    prismaMock.promptUsage.updateMany.mockResolvedValueOnce({ count: 0 });
     prismaMock.journalEntry.delete.mockResolvedValueOnce({ id: "e1" });
 
     const result = await deleteJournalEntryForUser("e1", "u1");
 
+    expect(prismaMock.promptUsage.updateMany).toHaveBeenCalledWith({
+      where: { entryId: "e1", userId: "u1" },
+      data: { entryId: null },
+    });
     expect(prismaMock.journalEntry.delete).toHaveBeenCalledWith({
       where: { id: "e1" },
     });

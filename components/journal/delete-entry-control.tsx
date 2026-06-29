@@ -13,7 +13,7 @@ export async function deleteJournalEntryRequest(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const res = await fetch(`/api/entries/${entryId}`, { method: "DELETE" });
-    if (res.ok || res.status === 404) {
+    if (res.ok) {
       return { ok: true };
     }
     let message = "Could not delete";

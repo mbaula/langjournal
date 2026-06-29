@@ -20,6 +20,8 @@ type ContributionChartProps = {
   title?: string;
   /** `rail` — tighter cells for the right widget column */
   variant?: "default" | "rail";
+  /** When true, cells grow to use the full viewport width (for full-year views). */
+  fillWidth?: boolean;
   monthsPerPage?: number;
 };
 
@@ -132,6 +134,7 @@ export function ContributionChart({
   className,
   title,
   variant = "default",
+  fillWidth = false,
   monthsPerPage = CONTRIBUTION_MONTHS_PER_PAGE,
 }: ContributionChartProps) {
   const layout = LAYOUT[variant];
@@ -188,7 +191,12 @@ export function ContributionChart({
       );
 
       setCellSize(
-        Math.max(layout.minCellSize, Math.min(layout.maxCellSize, candidate)),
+        fillWidth
+          ? Math.max(layout.minCellSize, candidate)
+          : Math.max(
+              layout.minCellSize,
+              Math.min(layout.maxCellSize, candidate),
+            ),
       );
     };
 
@@ -196,7 +204,7 @@ export function ContributionChart({
     const observer = new ResizeObserver(computeLayout);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [weeks.length, variant, layout.minCellSize, layout.maxCellSize]);
+  }, [weeks.length, variant, layout.minCellSize, layout.maxCellSize, fillWidth]);
 
   const navButtonClass =
     "inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-35";
@@ -212,7 +220,7 @@ export function ContributionChart({
             <button
               type="button"
               className={navButtonClass}
-              aria-label="Previous six months"
+              aria-label="Previous months"
               disabled={!canGoOlder}
               onClick={() => setPageIndex((p) => Math.min(maxPage, p + 1))}
             >
@@ -221,7 +229,7 @@ export function ContributionChart({
             <button
               type="button"
               className={navButtonClass}
-              aria-label="Next six months"
+              aria-label="Next months"
               disabled={!canGoNewer}
               onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
             >
@@ -233,11 +241,16 @@ export function ContributionChart({
 
       <div
         ref={viewportRef}
-        className="overflow-x-hidden pb-2"
+        className={cn("pb-2", fillWidth ? "w-full" : "overflow-x-hidden")}
       >
-        <div className="inline-flex flex-col gap-1">
+        <div
+          className={cn(
+            "inline-flex flex-col gap-1",
+            fillWidth && "w-full",
+          )}
+        >
           <div
-            className="flex text-xs text-muted-foreground"
+            className="flex w-full text-xs text-muted-foreground"
             style={{ gap: `${CELL_GAP}px`, paddingLeft: DAY_LABEL_WIDTH + DAY_LABEL_GAP }}
           >
             {weeks.map((week, i) => (
@@ -249,7 +262,7 @@ export function ContributionChart({
             ))}
           </div>
 
-          <div className="flex" style={{ gap: DAY_LABEL_GAP }}>
+          <div className="flex w-full" style={{ gap: DAY_LABEL_GAP }}>
             <div className="relative w-7 text-xs text-muted-foreground">
               {DAY_LABELS.map(({ label, row }) => (
                 <span
@@ -262,7 +275,7 @@ export function ContributionChart({
               ))}
             </div>
 
-            <div className="flex" style={{ gap: `${CELL_GAP}px` }}>
+            <div className="flex flex-1" style={{ gap: `${CELL_GAP}px` }}>
               {weeks.map((week, weekIdx) => (
                 <div
                   key={weekIdx}

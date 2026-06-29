@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
-import { marketingFlowFieldClassName } from "@/components/marketing/marketing-flow-styles";
+import {
+  marketingFlowCardClassName,
+  marketingFlowFieldClassName,
+  marketingHeroCtaClassName,
+} from "@/components/marketing/marketing-flow-styles";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/auth/redirect";
@@ -11,9 +15,14 @@ import { cn } from "@/lib/utils";
 type LoginFormProps = {
   redirectTo?: string;
   error?: string;
+  className?: string;
 };
 
-export function LoginForm({ redirectTo, error: initialError }: LoginFormProps) {
+export function LoginForm({
+  redirectTo,
+  error: initialError,
+  className,
+}: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
     "idle",
@@ -48,48 +57,51 @@ export function LoginForm({ redirectTo, error: initialError }: LoginFormProps) {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="mt-6 flex w-full min-w-0 flex-col gap-4 sm:mt-8"
-    >
-      <label htmlFor="email" className="sr-only">
-        Email
-      </label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        autoComplete="email"
-        required
-        placeholder="you@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        disabled={status === "loading" || status === "sent"}
-        aria-invalid={status === "error" || Boolean(initialError)}
-        className={marketingFlowFieldClassName}
-      />
-      {message ? (
-        <p
-          className={
-            status === "error" || initialError
-              ? "text-[14px] text-destructive"
-              : "text-[14px] text-muted-foreground"
-          }
-          role={status === "error" || initialError ? "alert" : undefined}
-        >
-          {message}
-        </p>
-      ) : null}
-      <Button
-        type="submit"
-        disabled={status === "loading" || status === "sent"}
-        className={cn(
-          "h-12 w-full rounded-full px-6 text-[15px] shadow-sm",
-          status === "sent" && "opacity-80",
-        )}
+    <div className={cn("mt-8", className)}>
+      <form
+        onSubmit={onSubmit}
+        className={cn(marketingFlowCardClassName, "flex flex-col gap-4")}
       >
-        {status === "loading" ? "Sending link…" : "Email me a magic link"}
-      </Button>
-    </form>
+        <label htmlFor="email" className="sr-only">
+          Email
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={status === "loading" || status === "sent"}
+          aria-invalid={status === "error" || Boolean(initialError)}
+          className={marketingFlowFieldClassName}
+        />
+        {message ? (
+          <p
+            className={
+              status === "error" || initialError
+                ? "text-[14px] text-destructive"
+                : "text-[14px] text-muted-foreground"
+            }
+            role={status === "error" || initialError ? "alert" : undefined}
+          >
+            {message}
+          </p>
+        ) : null}
+        <Button
+          type="submit"
+          disabled={status === "loading" || status === "sent"}
+          className={cn(
+            marketingHeroCtaClassName,
+            "w-full",
+            status === "sent" && "opacity-80",
+          )}
+        >
+          {status === "loading" ? "Sending link…" : "Email me a magic link"}
+        </Button>
+      </form>
+    </div>
   );
 }

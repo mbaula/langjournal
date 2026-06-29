@@ -1,108 +1,250 @@
-import { BookOpen, CalendarDays, Languages, Sparkles } from "lucide-react";
+"use client";
 
+import { Download } from "lucide-react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
+import { toCanvas, toJpeg } from "html-to-image";
+
+import {
+  dailyPromptActionButtonClassName,
+  dailyPromptCardClassName,
+  dailyPromptContentClassName,
+  dailyPromptTextClassName,
+} from "@/components/journal/daily-prompt-styles";
 import { getLanguageDisplayName } from "@/lib/languages/display-name";
 import type { JournalStats } from "@/lib/entries/service";
 import { cn } from "@/lib/utils";
 
 type JournalProgressStatsProps = {
   stats: JournalStats;
+  studentName: string;
   className?: string;
 };
 
-const statCardClass =
-  "rounded-xl border border-border bg-card/50 px-3 py-2.5 backdrop-blur-sm";
+function formatLevel(level: string): string {
+  const normalized = level.replace(/_/g, " ");
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
 
-const labelClass =
-  "min-w-0 truncate text-xs leading-tight font-medium text-muted-foreground";
+function reportCardFileSlug(studentName: string): string {
+  const slug = studentName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
-const iconClass = "size-3 shrink-0 text-sidebar-primary opacity-70";
+  return slug || "student";
+}
 
-type StatCardProps = {
+const REPORT_CARD_EXPORT_PIXEL_RATIO = 3;
+
+function parsePx(value: string): number {
+  const match = value.trim().match(/^([\d.]+)px$/);
+  return match ? Number.parseFloat(match[1]) : 0;
+}
+
+function shouldIncludeExportNode(element: Node): boolean {
+  if (!(element instanceof HTMLElement)) {
+    return true;
+  }
+
+  return element.dataset.exportIgnore !== "true";
+}
+
+async function captureReportCardImage(
+  node: HTMLElement,
+): Promise<{ dataUrl: string; extension: "png" | "jpg" }> {
+  await document.fonts.ready;
+
+  const styles = getComputedStyle(node);
+  const backgroundColor = styles.backgroundColor;
+  const cornerRadius = parsePx(styles.borderTopLeftRadius);
+
+  const exportOptions = {
+    cacheBust: true,
+    pixelRatio: REPORT_CARD_EXPORT_PIXEL_RATIO,
+    filter: shouldIncludeExportNode,
+    style: {
+      borderRadius: styles.borderRadius,
+      overflow: "hidden",
+    },
+  };
+
+  const snapshot = await toCanvas(node, exportOptions);
+
+  const output = document.createElement("canvas");
+  output.width = snapshot.width;
+  output.height = snapshot.height;
+
+  const ctx = output.getContext("2d");
+  if (!ctx) {
+    throw new Error("Could not create export canvas");
+  }
+
+  const radius = cornerRadius * REPORT_CARD_EXPORT_PIXEL_RATIO;
+
+  ctx.beginPath();
+  ctx.roundRect(0, 0, output.width, output.height, radius);
+  ctx.clip();
+
+  if (backgroundColor && backgroundColor !== "rgba(0, 0, 0, 0)") {
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, output.width, output.height);
+  }
+
+  ctx.drawImage(snapshot, 0, 0);
+
+  try {
+    return { dataUrl: output.toDataURL("image/png"), extension: "png" };
+  } catch {
+    return {
+      dataUrl: output.toDataURL("image/jpeg", 0.98),
+      extension: "jpg",
+    };
+  }
+}
+
+function ReportCardBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex shrink-0 items-center rounded-full border border-primary-foreground/25 bg-primary-foreground/15 px-2.5 py-0.5 text-xs font-medium tracking-wide text-primary-foreground">
+      {children}
+    </span>
+  );
+}
+
+function ReportCardStat({
+  label,
+  value,
+}: {
   label: string;
   value: number;
-  icon?: React.ReactNode;
-  className?: string;
-};
-
-function StatCard({ label, value, icon, className }: StatCardProps) {
+}) {
   return (
-    <div className={cn(statCardClass, className)}>
-      <div className="flex min-w-0 items-center gap-1">
-        {icon}
-        <span className={labelClass}>{label}</span>
-      </div>
-      <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+    <div className="rounded-lg border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-3 text-center">
+      <p className="text-xs font-medium text-primary-foreground/70">{label}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-primary-foreground">
         {value}
       </p>
     </div>
   );
 }
 
-function LearningLanguagesStat({
-  languages,
-}: {
-  languages: JournalStats["learningLanguages"];
-}) {
-  return (
-    <div className={cn(statCardClass, "flex w-full flex-col gap-1")}>
-      <div className="flex min-w-0 items-center gap-1">
-        <Languages className={iconClass} strokeWidth={1.5} />
-        <span className={labelClass}>Learning</span>
-      </div>
-      {languages.length > 0 ? (
-        <ul className="mt-1 flex w-full flex-col gap-1.5">
-          {languages.map((lang) => (
-            <li
-              key={lang.languageCode}
-              className="flex min-w-0 items-center justify-between gap-2 text-sm"
-            >
-              <span className="truncate font-medium text-foreground">
-                {getLanguageDisplayName(lang.languageCode)}
-              </span>
-              <span className="shrink-0 text-xs font-medium text-primary/70 capitalize">
-                {lang.level}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-sm text-muted-foreground">No languages yet</p>
-      )}
-    </div>
-  );
-}
-
 export function JournalProgressStats({
   stats,
+  studentName,
   className,
 }: JournalProgressStatsProps) {
+  const cardRef = useRef<HTMLElement>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = useCallback(async () => {
+    const node = cardRef.current;
+    if (!node || downloading) return;
+
+    setDownloading(true);
+
+    try {
+      const { dataUrl, extension } = await captureReportCardImage(node);
+
+      const link = document.createElement("a");
+      link.download = `folio-report-card-${reportCardFileSlug(studentName)}.${extension}`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      const styles = getComputedStyle(node);
+      const dataUrl = await toJpeg(node, {
+        cacheBust: true,
+        pixelRatio: REPORT_CARD_EXPORT_PIXEL_RATIO,
+        quality: 0.98,
+        backgroundColor: styles.backgroundColor,
+        filter: shouldIncludeExportNode,
+        style: {
+          borderRadius: styles.borderRadius,
+          overflow: "hidden",
+        },
+      });
+
+      const link = document.createElement("a");
+      link.download = `folio-report-card-${reportCardFileSlug(studentName)}.jpg`;
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      setDownloading(false);
+    }
+  }, [downloading, studentName]);
+
   return (
-    <div className={cn("flex flex-col gap-3", className)}>
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="Total entries"
-          value={stats.total}
-          icon={<BookOpen className={iconClass} strokeWidth={1.5} />}
-        />
-        <StatCard
-          label="New words"
-          value={stats.translationCount}
-          icon={<Sparkles className={iconClass} strokeWidth={1.5} />}
-        />
+    <section
+      ref={cardRef}
+      className={cn(
+        dailyPromptCardClassName,
+        "flex h-full flex-col shadow-none",
+        className,
+      )}
+      aria-label="Folio Report Card"
+    >
+      <div
+        className={cn(
+          dailyPromptContentClassName,
+          "flex-1 justify-center gap-6 sm:gap-7 lg:gap-8",
+        )}
+      >
+        <div className="flex w-full flex-col items-center gap-5 text-center">
+          <div className="flex w-full items-center justify-between gap-3">
+            <p className="text-sm font-medium text-primary-foreground/75">
+              Folio Report Card
+            </p>
+            <button
+              type="button"
+              data-export-ignore="true"
+              className={cn(
+                dailyPromptActionButtonClassName,
+                "inline-flex size-9 items-center justify-center px-0 disabled:opacity-60",
+              )}
+              disabled={downloading}
+              aria-label={
+                downloading ? "Saving report card" : "Download report card"
+              }
+              onClick={() => void handleDownload()}
+            >
+              <Download className="size-4" strokeWidth={1.5} aria-hidden />
+            </button>
+          </div>
+
+          <p className={dailyPromptTextClassName}>{studentName}</p>
+
+          <p className="text-sm text-primary-foreground/75">
+            Writing since {stats.writingSinceYear}
+          </p>
+
+          <div className="flex w-full flex-col items-center gap-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-primary-foreground/60">
+              Language(s) learning
+            </p>
+            {stats.learningLanguages.length > 0 ? (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {stats.learningLanguages.map((lang) => (
+                  <ReportCardBadge key={lang.languageCode}>
+                    {getLanguageDisplayName(lang.languageCode)} ·{" "}
+                    {formatLevel(lang.level)}
+                  </ReportCardBadge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-primary-foreground/60">
+                No languages yet
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid w-full grid-cols-2 gap-2.5">
+          <ReportCardStat label="Total entries" value={stats.total} />
+          <ReportCardStat
+            label="Flashcards created"
+            value={stats.flashcardCount}
+          />
+        </div>
       </div>
-      <LearningLanguagesStat languages={stats.learningLanguages} />
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="This week"
-          value={stats.thisWeek}
-          icon={<CalendarDays className={iconClass} strokeWidth={1.5} />}
-        />
-        <StatCard
-          label="This month"
-          value={stats.thisMonth}
-          icon={<CalendarDays className={iconClass} strokeWidth={1.5} />}
-        />
-      </div>
-    </div>
+    </section>
   );
 }

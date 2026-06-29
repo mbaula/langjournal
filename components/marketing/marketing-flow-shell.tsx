@@ -8,7 +8,6 @@ import {
   marketingFlowContentWidthClassName,
   marketingFlowTopPaddingClassName,
   marketingShellInsetClassName,
-  marketingWatermarkClassName,
 } from "@/components/marketing/marketing-flow-styles";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +24,7 @@ export function MarketingFlowShell({
     <div className={cn("flex min-h-dvh min-w-0 flex-col", className)}>
       <MarketingNav />
 
-      <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <section className="relative flex min-h-0 flex-1 flex-col">
         <main
           className={cn(
             "relative z-10 mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col items-start justify-start",
@@ -38,10 +37,6 @@ export function MarketingFlowShell({
             {children}
           </div>
         </main>
-
-        <p className={marketingWatermarkClassName} aria-hidden>
-          Folio
-        </p>
       </section>
     </div>
   );

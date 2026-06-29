@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 // Stub Next cache APIs used by lib/entries/service.ts
 vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
+  revalidatePath: vi.fn(),
   unstable_cache: (fn: unknown) => fn,
 }));
 
@@ -18,9 +19,21 @@ vi.mock("@/lib/db/prisma", () => ({
       delete: vi.fn(async () => ({ id: "e1" })),
       count: vi.fn(async () => 0),
     },
+    promptUsage: {
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
     userLanguage: {
       findMany: vi.fn(async () => []),
     },
+    flashcard: {
+      count: vi.fn(async () => 0),
+    },
+    user: {
+      findUnique: vi.fn(async () => ({
+        createdAt: new Date("2025-01-01T00:00:00.000Z"),
+      })),
+    },
+    $transaction: vi.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
   },
 }));
 

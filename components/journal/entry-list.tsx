@@ -57,7 +57,6 @@ type EntryListProps = {
   onEntrySaved?: (entry: EntryRow) => void;
   onEntryDeleted?: (entryId: string) => void;
   onRenameTitle?: JournalEntryCardProps["onRenameTitle"];
-  onDelete?: JournalEntryCardProps["onDelete"];
 };
 
 function formatEntryDay(d: Date | string) {
@@ -102,7 +101,6 @@ export function EntryList({
   onEntrySaved,
   onEntryDeleted,
   onRenameTitle,
-  onDelete,
 }: EntryListProps) {
   if (entries.length === 0) {
     return (
@@ -144,7 +142,6 @@ export function EntryList({
                   translations={entry.translations}
                   onOpen={onEditEntry ? () => onEditEntry(entry.id) : undefined}
                   onRenameTitle={onRenameTitle}
-                  onDelete={onDelete}
                   onDeleted={onEntryDeleted}
                 />
               </div>
@@ -159,7 +156,7 @@ export function EntryList({
                       translateTrigger={translateTrigger}
                       onLanguagesSaved={onLanguagesSaved}
                       onSaved={onEntrySaved}
-                      onDelete={onEntryDeleted}
+                      onDeleted={onEntryDeleted}
                     />
                   </PastEntryExpandPanel>
                 ) : null}

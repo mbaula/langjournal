@@ -5,6 +5,12 @@ import { Check, CircleHelp, Globe, Search, X } from "lucide-react";
 
 import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo";
 import { Button } from "@/components/ui/button";
+import {
+  formatLanguageCodeBadge,
+  languageBarIconButtonClassName,
+  languageBarLabelClassName,
+  languageBarTriggerClassName,
+} from "@/components/journal/language-bar-trigger-display";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import { resolveLanguageLabel } from "@/lib/languages/display-name";
 import { cn } from "@/lib/utils";
@@ -232,34 +238,13 @@ function SearchableLanguagePicker({
   );
 }
 
-function formatLanguageCodeBadge(code: string): string {
-  const base = code.split("-")[0]?.trim().toLowerCase() ?? code.trim().toLowerCase();
-  if (!base) return code.toUpperCase();
-
-  try {
-    const name = new Intl.DisplayNames(["en"], { type: "language" }).of(base);
-    const letters = name?.replace(/[^a-zA-Z]/g, "") ?? "";
-    if (letters.length >= 3) {
-      return letters.slice(0, 3).toUpperCase();
-    }
-  } catch {
-    // fall through
-  }
-
-  return base.slice(0, 3).toUpperCase();
-}
-
 const helpPopoverPanelClass =
   "absolute left-[calc(100%+0.5rem)] top-0 w-[min(100vw-2rem,28rem)] max-sm:left-0 max-sm:top-[calc(100%+0.5rem)]";
 
-const languageBarTriggerClassName =
-  "inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full bg-app-shell p-2 font-sans transition-opacity hover:opacity-95";
-
-const languageBarLabelClassName =
-  "flex h-9 min-w-0 items-center rounded-full bg-background px-4 text-sm font-medium tracking-[0.06em] whitespace-nowrap text-foreground uppercase";
-
-const languageBarIconButtonClassName =
-  "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground";
+const languageBarTriggerButtonClassName = cn(
+  languageBarTriggerClassName,
+  "transition-opacity hover:opacity-95",
+);
 
 export function LanguageBar({
   source: initialSource,
@@ -464,7 +449,7 @@ export function LanguageBar({
             setOpen((o) => !o);
             setHelpOpen(false);
           }}
-          className={languageBarTriggerClassName}
+          className={languageBarTriggerButtonClassName}
           aria-expanded={open}
           aria-haspopup="dialog"
           aria-label={`Change translation languages, currently ${sourceLabel} to ${targetLabel}`}
@@ -601,7 +586,7 @@ export function LanguageBar({
             setHelpOpen((h) => !h);
             setOpen(false);
           }}
-          className="inline-flex shrink-0 items-center gap-1.5 px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex shrink-0 items-center gap-1.5 px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground dark:text-foreground/82 dark:hover:text-foreground"
           aria-expanded={helpOpen}
           aria-haspopup="dialog"
           aria-label="How to translate"
@@ -650,10 +635,7 @@ export function LanguageBar({
             </header>
 
             <div className={languageBarPopoverBodyClassName}>
-              <SlashTranslateDemo
-                variant="compact"
-                translateTriggerKey={triggerKeyLabel}
-              />
+              <SlashTranslateDemo variant="compact" />
             </div>
           </div>
         ) : null}
