@@ -1,7 +1,8 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { safeNextPath } from "@/lib/auth/redirect";
 import {
   DEV_ACCOUNT_PREVIEW_COOKIE,
   getDevPreviewUser,
@@ -21,30 +22,14 @@ export const isAccountPreviewMode = cache(async (): Promise<boolean> => {
   );
 });
 
-export async function requireUser(redirectTo = "/app/journal"): Promise<AppUser> {
-  if (await isAccountPreviewMode()) {
-    return getDevPreviewUser();
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user?.id) {
-    redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
-  }
-
-  const email = user.email ?? "";
-  await ensureAppUser(user.id, email);
-
-  return { id: user.id, email };
+async function resolveRedirectTo(fallback: string): Promise<string> {
+  const headerStore = await headers();
+  const pathname = headerStore.get("x-pathname");
+  return safeNextPath(pathname ?? fallback);
 }
 
-/** Session check for /app routes — middleware already redirects unauthenticated users. */
 export const requireAppSession = cache(async (
-  redirectTo = "/app/journal",
+  fallback = "/app/journal",
 ): Promise<AppUser> => {
   if (await isAccountPreviewMode()) {
     return getDevPreviewUser();
@@ -57,8 +42,19 @@ export const requireAppSession = cache(async (
   } = await supabase.auth.getUser();
 
   if (error || !user?.id) {
+    const redirectTo = await resolveRedirectTo(fallback);
     redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
   }
 
   return { id: user.id, email: user.email ?? "" };
 });
+
+export async function requireUser(fallback = "/app/journal"): Promise<AppUser> {
+  const user = await requireAppSession(fallback);
+  if (await isAccountPreviewMode()) {
+    return user;
+  }
+
+  await ensureAppUser(user.id, user.email);
+  return user;
+}

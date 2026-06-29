@@ -2,10 +2,13 @@ import { redirect } from "next/navigation";
 
 import { AppLayoutClient } from "@/components/app/app-layout-client";
 import { AppTopNavClient } from "@/components/app/app-top-nav-client";
+import { AuthSessionSync } from "@/components/auth/auth-session-sync";
 import { isAccountPreviewMode, requireAppSession } from "@/lib/auth/session";
 import { getDevPreviewOnboardingState } from "@/lib/dev/preview-account";
 import { getOnboardingState } from "@/lib/db/onboarding";
 import { profileAvatarLetter } from "@/lib/user/profile-avatar-letter";
+
+export const dynamic = "force-dynamic";
 
 export default async function AppLayout({
   children,
@@ -29,7 +32,9 @@ export default async function AppLayout({
   }
 
   return (
-    <AppLayoutClient
+    <>
+      <AuthSessionSync />
+      <AppLayoutClient
       accountPreview={preview}
       topNav={
         <AppTopNavClient
@@ -41,5 +46,6 @@ export default async function AppLayout({
     >
       {children}
     </AppLayoutClient>
+    </>
   );
 }

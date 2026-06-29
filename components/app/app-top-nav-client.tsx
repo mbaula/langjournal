@@ -54,7 +54,6 @@ export function AppTopNavClient({
 
   useEffect(() => {
     router.prefetch("/app/journal");
-    router.prefetch("/app/progress");
     router.prefetch("/app/flashcards");
   }, [router]);
 
@@ -99,6 +98,7 @@ export function AppTopNavClient({
           </Link>
           <Link
             href="/app/progress"
+            prefetch={false}
             suppressHydrationWarning
             className={appNavTabClass(progressActive)}
           >
@@ -153,6 +153,7 @@ export function AppTopNavClient({
               >
                 <Link
                   href="/app/settings"
+                  prefetch={false}
                   role="menuitem"
                   className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted"
                   onClick={() => setUserMenuOpen(false)}

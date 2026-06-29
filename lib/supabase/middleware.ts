@@ -10,6 +10,31 @@ import { DEV_ACCOUNT_PREVIEW_COOKIE } from "@/lib/dev/preview-account";
 import { isDevEnvironment, isDevPreviewParam } from "@/lib/dev/preview";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
+function copySupabaseCookies(from: NextResponse, to: NextResponse) {
+  for (const cookie of from.cookies.getAll()) {
+    to.cookies.set(cookie);
+  }
+}
+
+function nextWithPathname(request: NextRequest, pathname: string) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+}
+
+function redirectWithSupabaseCookies(
+  url: URL,
+  supabaseResponse: NextResponse,
+) {
+  const redirect = NextResponse.redirect(url);
+  copySupabaseCookies(supabaseResponse, redirect);
+  return redirect;
+}
+
 export async function updateSession(request: NextRequest) {
   const env = getSupabasePublicEnv();
   if (!env) {
@@ -17,40 +42,36 @@ export async function updateSession(request: NextRequest) {
   }
 
   const { url: supabaseUrl, anonKey: supabaseAnonKey } = env;
+  const pathname = request.nextUrl.pathname;
 
-  let supabaseResponse = NextResponse.next({ request });
+  let supabaseResponse = nextWithPathname(request, pathname);
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value),
+        );
+        supabaseResponse = nextWithPathname(request, pathname);
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options),
+        );
       },
     },
-  );
+  });
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-
   const authError = getAuthCallbackErrorMessage(request.nextUrl.searchParams);
   if (authError && (pathname === "/" || pathname === "/auth/callback")) {
-    return NextResponse.redirect(
+    return redirectWithSupabaseCookies(
       loginUrlWithAuthError(request.nextUrl.origin, authError),
+      supabaseResponse,
     );
   }
 
@@ -63,7 +84,7 @@ export async function updateSession(request: NextRequest) {
     if (!previewMarketing) {
       const url = request.nextUrl.clone();
       url.pathname = "/app/journal";
-      return NextResponse.redirect(url);
+      return redirectWithSupabaseCookies(url, supabaseResponse);
     }
   }
 
@@ -71,7 +92,7 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = safeNextPath(request.nextUrl.searchParams.get("redirectTo"));
     url.search = "";
-    return NextResponse.redirect(url);
+    return redirectWithSupabaseCookies(url, supabaseResponse);
   }
 
   const accountPreviewActive =
@@ -99,17 +120,14 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  if (
-    !user &&
-    (pathname.startsWith("/app") || pathname === "/app")
-  ) {
+  if (!user && (pathname.startsWith("/app") || pathname === "/app")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set(
       "redirectTo",
       `${pathname}${request.nextUrl.search}`,
     );
-    return NextResponse.redirect(url);
+    return redirectWithSupabaseCookies(url, supabaseResponse);
   }
 
   return supabaseResponse;

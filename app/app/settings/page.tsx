@@ -33,7 +33,7 @@ export default async function SettingsPage() {
     );
   }
 
-  const user = await requireUser();
+  const user = await requireUser("/app/settings");
   const onboarding = await getOnboardingState(user.id);
 
   return (
