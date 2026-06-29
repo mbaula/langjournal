@@ -227,33 +227,33 @@ html.dark:not([data-force-light]) .app-grain {
  * Page layout uses --background (flat white / dark).
  * --app-shell tints compact controls (Write page language bar), not the page frame.
  */
-/* Green — brand #D6DC82 */
+/* Green — muted olive sage (warm gray-green, not blue-teal) */
 html[data-accent="green"],
 html[data-accent="sage"] {
-  --app-shell: #d6dc82;
+  --app-shell: #bbc9af;
   --sidebar: var(--app-shell);
-  --sidebar-accent: #c8cf72;
-  --sidebar-border: #b8c062;
-  --sidebar-ring: #98a048;
-  --sidebar-primary: #6b7340;
+  --sidebar-accent: #adbea3;
+  --sidebar-border: #9eae94;
+  --sidebar-ring: #789072;
+  --sidebar-primary: #4f6a56;
   --sidebar-primary-foreground: #fffdf8;
-  --primary: #6b7340;
+  --primary: #4f6a56;
   --primary-foreground: #fffdf8;
-  --contribution-fill: #98a048;
+  --contribution-fill: #789072;
 }
 
 html.dark:not([data-force-light])[data-accent="green"],
 html.dark:not([data-force-light])[data-accent="sage"] {
-  --app-shell: #2a302c;
+  --app-shell: #2c3028;
   --sidebar: var(--app-shell);
-  --sidebar-accent: #353d38;
-  --sidebar-border: #404a44;
-  --sidebar-ring: #7f9686;
-  --sidebar-primary: #a8bdb0;
+  --sidebar-accent: #383d34;
+  --sidebar-border: #43483e;
+  --sidebar-ring: #789072;
+  --sidebar-primary: #b0c0a8;
   --sidebar-primary-foreground: #1e2420;
-  --primary: #a8bdb0;
+  --primary: #b0c0a8;
   --primary-foreground: #1e2420;
-  --contribution-fill: #8fa899;
+  --contribution-fill: #789072;
 }
 
 

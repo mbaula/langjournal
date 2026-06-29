@@ -29,7 +29,7 @@ export type AccentOption = {
 
 export const ACCENT_OPTIONS: AccentOption[] = [
   { id: "gray", swatch: "#5c5c5c" },
-  { id: "green", swatch: "#D6DC82" },
+  { id: "green", swatch: "#789072" },
   { id: "blue", swatch: "#9FCEE4" },
   { id: "yellow", swatch: "#FFE790" },
   { id: "pink", swatch: "#b87a90" },
