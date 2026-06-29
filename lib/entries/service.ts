@@ -3,6 +3,10 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
+import { resolveFinishedEntryTranslations } from "@/lib/entries/finish-translations";
+import { isEntrySavedForFlashcards, savedJournalEntriesWhere } from "@/lib/entries/saved-entry";
+import { syncFlashcardsForEntry, countFlashcardsForUserDisplay } from "@/lib/flashcards/service";
+import { getLanguagePair } from "@/lib/db/language";
 import { translationCoveragePercent } from "@/lib/entries/translation-coverage";
 import type { InlineTranslation } from "@/lib/entries/translate";
 import {
@@ -38,6 +42,12 @@ export function isSavedJournalEntry(
   }
   return entry.completedAt != null || isPastJournalEntry(entry.entryDate);
 }
+
+export {
+  isEntrySavedForFlashcards,
+  savedFlashcardEntriesWhere,
+  savedJournalEntriesWhere,
+} from "@/lib/entries/saved-entry";
 
 const getCachedJournalEntriesList = unstable_cache(
   async (userId: string) => {
@@ -195,7 +205,7 @@ export async function updateJournalEntryTranslations(
 ) {
   const entry = await prisma.journalEntry.findFirst({
     where: { id: entryId, userId },
-    select: { id: true },
+    select: { id: true, completedAt: true, entryDate: true },
   });
 
   if (!entry) {
@@ -208,6 +218,11 @@ export async function updateJournalEntryTranslations(
       translations: translations as Prisma.InputJsonValue,
     },
   });
+
+  if (isEntrySavedForFlashcards(entry)) {
+    const { target } = await getLanguagePair(userId);
+    await syncFlashcardsForEntry(userId, entryId, target);
+  }
 
   revalidateTag("journal-entry", { expire: 0 });
   return { ok: true as const };
@@ -249,12 +264,10 @@ export async function finishJournalEntryForToday(
     snapshot?.body !== undefined
       ? snapshot.body.replace(/\r\n/g, "\n")
       : (entry.body ?? "");
-  const filteredTranslations =
-    snapshot?.translations !== undefined
-      ? snapshot.translations.filter(
-          (translation) => !translation.id.startsWith("opt-"),
-        )
-      : undefined;
+  const filteredTranslations = resolveFinishedEntryTranslations(
+    entry.translations,
+    snapshot?.translations,
+  );
 
   const hasContent = Boolean(title?.trim() || body.trim());
   if (!hasContent) {
@@ -307,7 +320,12 @@ export async function finishJournalEntryForToday(
     return { completedEntry, newEntry };
   });
 
+  const { target } = await getLanguagePair(userId);
+  await syncFlashcardsForEntry(userId, completedEntry.id, target);
+
   revalidateTag("journal-entry", { expire: 0 });
+  revalidatePath("/app/flashcards");
+  revalidatePath("/app/progress");
 
   const { _count, ...completedEntryRow } = completedEntry;
 
@@ -343,6 +361,10 @@ export async function deleteJournalEntryForUser(
     data: { entryId: null },
   });
 
+  await prisma.flashcard.deleteMany({
+    where: { userId, entryId },
+  });
+
   await prisma.journalEntry.delete({
     where: { id: entryId },
   });
@@ -366,35 +388,28 @@ export type JournalStats = {
 };
 
 export async function getJournalStats(userId: string): Promise<JournalStats> {
-  return getCachedJournalStats(userId);
+  const [total, flashcardCount, learningLanguages, user] = await Promise.all([
+    prisma.journalEntry.count({ where: savedJournalEntriesWhere(userId) }),
+    countFlashcardsForUserDisplay(userId),
+    prisma.userLanguage.findMany({
+      where: { userId },
+      orderBy: { createdAt: "asc" },
+      select: { languageCode: true, level: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { createdAt: true },
+    }),
+  ]);
+
+  return {
+    total,
+    flashcardCount,
+    writingSinceYear:
+      user?.createdAt.getUTCFullYear() ?? new Date().getUTCFullYear(),
+    learningLanguages,
+  };
 }
-
-const getCachedJournalStats = unstable_cache(
-  async (userId: string): Promise<JournalStats> => {
-    const [total, flashcardCount, learningLanguages, user] = await Promise.all([
-      prisma.journalEntry.count({ where: { userId } }),
-      prisma.flashcard.count({ where: { userId } }),
-      prisma.userLanguage.findMany({
-        where: { userId },
-        orderBy: { createdAt: "asc" },
-        select: { languageCode: true, level: true },
-      }),
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: { createdAt: true },
-      }),
-    ]);
-
-    return {
-      total,
-      flashcardCount,
-      writingSinceYear: user?.createdAt.getUTCFullYear() ?? new Date().getUTCFullYear(),
-      learningLanguages,
-    };
-  },
-  ["journal-stats"],
-  { revalidate: 30, tags: ["journal-entry"] },
-);
 
 export type ContributionDay = {
   date: string;
@@ -420,7 +435,7 @@ export async function getJournalTranslationProgress(
 const getCachedJournalTranslationProgress = unstable_cache(
   async (userId: string): Promise<EntryTranslationProgress[]> => {
     const entries = await prisma.journalEntry.findMany({
-      where: { userId },
+      where: savedJournalEntriesWhere(userId),
       orderBy: [{ entryDate: "asc" }, { createdAt: "asc" }],
       select: {
         id: true,
@@ -480,7 +495,7 @@ const getCachedContributionData = unstable_cache(
 
     const entries = await prisma.journalEntry.findMany({
       where: {
-        userId,
+        ...savedJournalEntriesWhere(userId),
         entryDate: { gte: startDate },
       },
       select: { entryDate: true },

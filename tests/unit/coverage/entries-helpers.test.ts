@@ -27,6 +27,7 @@ vi.mock("@/lib/db/prisma", () => ({
     },
     flashcard: {
       count: vi.fn(async () => 0),
+      deleteMany: vi.fn(async () => ({ count: 0 })),
     },
     user: {
       findUnique: vi.fn(async () => ({
@@ -48,6 +49,11 @@ vi.mock("@/lib/translate/memory-cache", () => {
     memoryCacheSet: (k: string, v: string) => void mem.set(k, v),
   };
 });
+
+vi.mock("@/lib/flashcards/service", () => ({
+  syncFlashcardsForEntry: vi.fn(),
+  countFlashcardsForUserDisplay: vi.fn(async () => 0),
+}));
 
 import {
   bodySnippetForSidebar,

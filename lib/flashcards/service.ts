@@ -1,7 +1,13 @@
-import type { FlashcardProficiency, Prisma } from "@prisma/client";
+import { Prisma, type FlashcardProficiency } from "@prisma/client";
 
 import { extractExampleSentence } from "@/lib/flashcards/example-sentence";
 import { proficiencyAfterPracticeResponse } from "@/lib/flashcards/proficiency";
+import {
+  collectPersistedTranslations,
+  isPersistedJournalTranslation,
+} from "@/lib/flashcards/sync-translations";
+import { getLanguagePair } from "@/lib/db/language";
+import { savedFlashcardEntriesWhere } from "@/lib/entries/saved-entry";
 import {
   type FlashcardPracticeStats,
   type FlashcardRecord,
@@ -26,6 +32,7 @@ function serializeFlashcard(card: FlashcardWithEntry): FlashcardRecord {
     proficiency: card.proficiency,
     entryId: card.entryId,
     entryTitle: card.entry?.title ?? null,
+    translationId: card.translationId,
     createdAt: card.createdAt.toISOString(),
     updatedAt: card.updatedAt.toISOString(),
   };
@@ -84,10 +91,106 @@ export async function listFlashcardsForUser(
   const cards = await prisma.flashcard.findMany({
     where,
     include: { entry: { select: { title: true } } },
-    orderBy: [{ createdAt: "desc" }],
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
   });
 
   return cards.map(serializeFlashcard);
+}
+
+function flashcardFromJournalTranslation(
+  entry: {
+    id: string;
+    title: string | null;
+    updatedAt: Date;
+  },
+  translation: InlineTranslation,
+  languageCode: string,
+): FlashcardRecord {
+  return {
+    id: `journal-${entry.id}-${translation.id}`,
+    word: translation.translatedText.trim(),
+    translation: translation.sourceText.trim(),
+    exampleSentence: null,
+    hasAudio: false,
+    audioMimeType: null,
+    languageCode,
+    proficiency: "NEW",
+    entryId: entry.id,
+    entryTitle: entry.title,
+    translationId: translation.id,
+    createdAt: entry.updatedAt.toISOString(),
+    updatedAt: entry.updatedAt.toISOString(),
+  };
+}
+
+/** Lists flashcards from saved journal entries, merged with DB rows when present. */
+export async function listFlashcardsForUserDisplay(
+  userId: string,
+  targetLanguage: string,
+  filters: ListFlashcardsFilters = {},
+): Promise<FlashcardRecord[]> {
+  const [dbCards, savedEntries] = await Promise.all([
+    listFlashcardsForUser(userId, filters).catch((error) => {
+      console.error("Flashcard table query failed:", error);
+      return [] as FlashcardRecord[];
+    }),
+    prisma.journalEntry
+      .findMany({
+        where: savedFlashcardEntriesWhere(userId),
+        select: {
+          id: true,
+          title: true,
+          translations: true,
+          updatedAt: true,
+        },
+        orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }, { id: "asc" }],
+      })
+      .catch((error) => {
+        console.error("Saved journal entry query failed for flashcards:", error);
+        return [];
+      }),
+  ]);
+
+  const savedEntryIds = new Set(savedEntries.map((entry) => entry.id));
+  const dbByTranslationId = new Map<string, FlashcardRecord>();
+  for (const card of dbCards) {
+    if (card.translationId) {
+      dbByTranslationId.set(card.translationId, card);
+    }
+  }
+
+  const merged: FlashcardRecord[] = [];
+  const seenTranslationIds = new Set<string>();
+
+  for (const entry of savedEntries) {
+    for (const translation of collectPersistedTranslations(entry.translations)) {
+      seenTranslationIds.add(translation.id);
+      merged.push(
+        dbByTranslationId.get(translation.id) ??
+          flashcardFromJournalTranslation(entry, translation, targetLanguage),
+      );
+    }
+  }
+
+  for (const card of dbCards) {
+    if (card.translationId && seenTranslationIds.has(card.translationId)) {
+      continue;
+    }
+    if (card.entryId && savedEntryIds.has(card.entryId)) {
+      merged.push(card);
+    }
+  }
+
+  return merged;
+}
+
+/** Same count shown on Practice and Progress — translations from saved entries. */
+export async function countFlashcardsForUserDisplay(
+  userId: string,
+): Promise<number> {
+  const { target } = await getLanguagePair(userId);
+  const cards = await listFlashcardsForUserDisplay(userId, target);
+  return cards.length;
 }
 
 export async function getFlashcardForUser(
@@ -165,36 +268,155 @@ export async function upsertFlashcardFromTranslation(input: {
   translation: InlineTranslation;
   body?: string | null;
 }): Promise<void> {
+  if (!isPersistedJournalTranslation(input.translation)) {
+    return;
+  }
+
+  const translationId = input.translation.id.trim();
+  const word = input.translation.translatedText.trim();
+  const translation = input.translation.sourceText.trim();
   const exampleSentence = extractExampleSentence(
     input.body,
     input.translation.spans?.[0],
   );
 
-  await prisma.flashcard.upsert({
+  const payload = {
+    entryId: input.entryId,
+    translationId,
+    languageCode: input.languageCode,
+    word,
+    translation,
+    exampleSentence,
+  };
+
+  async function updateFlashcardRecord(cardId: string) {
+    try {
+      await prisma.flashcard.update({
+        where: { id: cardId },
+        data: {
+          ...payload,
+          exampleSentence: exampleSentence ?? undefined,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const conflict = await prisma.flashcard.findFirst({
+          where: {
+            userId: input.userId,
+            languageCode: input.languageCode,
+            word,
+          },
+          select: { id: true },
+        });
+
+        if (conflict && conflict.id !== cardId) {
+          await prisma.flashcard.delete({ where: { id: conflict.id } });
+          await prisma.flashcard.update({
+            where: { id: cardId },
+            data: {
+              ...payload,
+              exampleSentence: exampleSentence ?? undefined,
+            },
+          });
+          return;
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  const byTranslationId = await prisma.flashcard.findFirst({
+    where: { userId: input.userId, translationId },
+    select: { id: true },
+  });
+
+  if (byTranslationId) {
+    await updateFlashcardRecord(byTranslationId.id);
+    return;
+  }
+
+  const byEntryWord = await prisma.flashcard.findFirst({
     where: {
-      userId_languageCode_word: {
-        userId: input.userId,
-        languageCode: input.languageCode,
-        word: input.translation.translatedText.trim(),
-      },
-    },
-    create: {
       userId: input.userId,
       entryId: input.entryId,
-      translationId: input.translation.id,
       languageCode: input.languageCode,
-      word: input.translation.translatedText.trim(),
-      translation: input.translation.sourceText.trim(),
-      exampleSentence,
-      proficiency: "NEW",
+      word,
     },
-    update: {
-      entryId: input.entryId,
-      translationId: input.translation.id,
-      translation: input.translation.sourceText.trim(),
-      exampleSentence: exampleSentence ?? undefined,
-    },
+    select: { id: true },
   });
+
+  if (byEntryWord) {
+    await updateFlashcardRecord(byEntryWord.id);
+    return;
+  }
+
+  try {
+    await prisma.flashcard.create({
+      data: {
+        userId: input.userId,
+        proficiency: "NEW",
+        ...payload,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const byWord = await prisma.flashcard.findFirst({
+        where: {
+          userId: input.userId,
+          languageCode: input.languageCode,
+          word,
+        },
+        select: { id: true },
+      });
+
+      if (byWord) {
+        await updateFlashcardRecord(byWord.id);
+      }
+      return;
+    }
+
+    throw error;
+  }
+}
+
+export async function syncFlashcardsForEntry(
+  userId: string,
+  entryId: string,
+  targetLanguage: string,
+): Promise<number> {
+  const entry = await prisma.journalEntry.findFirst({
+    where: { id: entryId, userId },
+    select: { id: true, body: true, translations: true },
+  });
+
+  if (!entry) {
+    return 0;
+  }
+
+  let synced = 0;
+  for (const translation of collectPersistedTranslations(entry.translations)) {
+    try {
+      await upsertFlashcardFromTranslation({
+        userId,
+        entryId: entry.id,
+        languageCode: targetLanguage,
+        translation,
+        body: entry.body,
+      });
+      synced += 1;
+    } catch (error) {
+      console.error("Failed to sync flashcard from journal translation:", error);
+    }
+  }
+
+  return synced;
 }
 
 export async function syncFlashcardsFromJournalEntries(
@@ -204,31 +426,25 @@ export async function syncFlashcardsFromJournalEntries(
   const entries = await prisma.journalEntry.findMany({
     where: { userId },
     select: { id: true, body: true, translations: true },
+    orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }, { id: "asc" }],
   });
 
   let createdOrUpdated = 0;
 
   for (const entry of entries) {
-    const translations = Array.isArray(entry.translations)
-      ? (entry.translations as InlineTranslation[])
-      : [];
-
-    for (const translation of translations) {
-      if (
-        !translation.translatedText?.trim() ||
-        !translation.sourceText?.trim()
-      ) {
-        continue;
+    for (const translation of collectPersistedTranslations(entry.translations)) {
+      try {
+        await upsertFlashcardFromTranslation({
+          userId,
+          entryId: entry.id,
+          languageCode: targetLanguage,
+          translation,
+          body: entry.body,
+        });
+        createdOrUpdated += 1;
+      } catch (error) {
+        console.error("Failed to sync flashcard from journal translation:", error);
       }
-
-      await upsertFlashcardFromTranslation({
-        userId,
-        entryId: entry.id,
-        languageCode: targetLanguage,
-        translation,
-        body: entry.body,
-      });
-      createdOrUpdated += 1;
     }
   }
 

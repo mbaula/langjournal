@@ -15,7 +15,6 @@ import { FlashcardLibraryCard } from "@/components/flashcards/flashcard-library-
 import { FlashcardLibraryEntrySections } from "@/components/flashcards/flashcard-library-entry-sections";
 import {
   FlashcardLibraryGrid,
-  FlashcardLibraryGridSkeleton,
 } from "@/components/flashcards/flashcard-library-grid";
 import { FlashcardPracticeStage } from "@/components/flashcards/flashcard-practice-stage";
 import { FlashcardSortSelector } from "@/components/flashcards/flashcard-sort-selector";
@@ -89,41 +88,25 @@ export function FlashcardsView({
   }, []);
 
   useEffect(() => {
-    practiceIndexRef.current = practiceIndex;
-  }, [practiceIndex]);
+    if (initialFlashcards.length > 0) {
+      setFlashcards(initialFlashcards);
+    }
+  }, [initialFlashcards]);
 
   useEffect(() => {
-    if (previewMode) return;
-
-    void fetch("/api/flashcards?sync=1")
-      .then((res) => res.json())
-      .then(
-        (data: {
-          flashcards?: FlashcardRecord[];
-          stats?: FlashcardPracticeStats;
-        }) => {
-          if (Array.isArray(data.flashcards)) setFlashcards(data.flashcards);
-          if (data.stats) setStats(data.stats);
-        },
-      )
-      .catch(() => {
-        // keep initial server data
-      });
-  }, [previewMode]);
+    practiceIndexRef.current = practiceIndex;
+  }, [practiceIndex]);
 
   const filteredCards = useMemo(() => {
     const q = search.trim().toLowerCase();
     return flashcards.filter((card) => {
-      if (targetLanguage && card.languageCode !== targetLanguage) {
-        return false;
-      }
       if (!q) return true;
       return (
         card.word.toLowerCase().includes(q) ||
         card.translation.toLowerCase().includes(q)
       );
     });
-  }, [flashcards, search, targetLanguage]);
+  }, [flashcards, search]);
 
   const entryGroups = useMemo(
     () => groupFlashcardsByEntry(filteredCards),
@@ -477,8 +460,6 @@ export function FlashcardsView({
             <p className="text-sm text-muted-foreground">
               No items match your filters.
             </p>
-          ) : !hasMounted ? (
-            <FlashcardLibraryGridSkeleton itemCount={filteredCards.length} />
           ) : librarySort === "entry" ? (
             <FlashcardLibraryEntrySections
               groups={entryGroups}

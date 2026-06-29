@@ -205,6 +205,7 @@ export function JournalWriteBody({
     setSuccessMessage(null);
 
     try {
+      await editorRef.current?.flushSave();
       const draft = editorRef.current?.getDraftContent();
 
       const res = await fetch(`/api/entries/${activeEntryId}/finish`, {
@@ -247,6 +248,8 @@ export function JournalWriteBody({
       setActivePromptText(data.dailyPrompt?.text ?? "");
       setSuccessMessage(FINISH_SUCCESS_MESSAGE);
 
+      router.refresh();
+
       pastEntriesSectionRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
@@ -254,7 +257,7 @@ export function JournalWriteBody({
     } finally {
       setFinishPending(false);
     }
-  }, [activeEntryId, draftBody, entryTitle, finishPending]);
+  }, [activeEntryId, draftBody, entryTitle, finishPending, router]);
 
   const isPromptAdopted =
     activePromptText.trim().length > 0 &&

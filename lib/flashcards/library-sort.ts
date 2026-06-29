@@ -26,7 +26,11 @@ function compareDesc(aTime: number, bTime: number): number {
 }
 
 function cardTimestamp(card: FlashcardRecord): number {
-  return Date.parse(card.updatedAt);
+  return Date.parse(card.createdAt);
+}
+
+function compareAsc(aTime: number, bTime: number): number {
+  return aTime - bTime;
 }
 
 export function entryGroupLabel(group: FlashcardEntryGroup): string {
@@ -70,13 +74,19 @@ export function groupFlashcardsByEntry(
   const result = Array.from(groups.values());
 
   for (const group of result) {
-    group.cards.sort((a, b) => compareDesc(cardTimestamp(a), cardTimestamp(b)));
+    group.cards.sort((a, b) => {
+      const timeDiff = compareAsc(cardTimestamp(a), cardTimestamp(b));
+      if (timeDiff !== 0) return timeDiff;
+      return a.id.localeCompare(b.id);
+    });
   }
 
   result.sort((a, b) => {
     const aTime = Math.max(...a.cards.map(cardTimestamp));
     const bTime = Math.max(...b.cards.map(cardTimestamp));
-    return compareDesc(aTime, bTime);
+    const timeDiff = compareDesc(aTime, bTime);
+    if (timeDiff !== 0) return timeDiff;
+    return (a.entryId ?? a.key).localeCompare(b.entryId ?? b.key);
   });
 
   return result;

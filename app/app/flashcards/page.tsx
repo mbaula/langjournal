@@ -8,14 +8,13 @@ import {
 import { getLanguagePair } from "@/lib/db/language";
 import {
   getPracticeStatsForUser,
-  listFlashcardsForUser,
+  listFlashcardsForUserDisplay,
 } from "@/lib/flashcards/service";
 
-function countItemsForLanguage(
-  flashcards: Awaited<ReturnType<typeof listFlashcardsForUser>>,
-  languageCode: string,
+function countItems(
+  flashcards: Awaited<ReturnType<typeof listFlashcardsForUserDisplay>>,
 ): number {
-  return flashcards.filter((card) => card.languageCode === languageCode).length;
+  return flashcards.length;
 }
 
 export default async function FlashcardsPage() {
@@ -28,7 +27,7 @@ export default async function FlashcardsPage() {
         <FlashcardsView
           initialFlashcards={previewFlashcards}
           initialStats={getDevPreviewFlashcardStats()}
-          initialItemCount={countItemsForLanguage(previewFlashcards, "fr")}
+          initialItemCount={countItems(previewFlashcards)}
           nativeLanguage="en"
           targetLanguage="fr"
           previewMode
@@ -40,7 +39,7 @@ export default async function FlashcardsPage() {
   const user = await requireAppSession();
   const { source, target } = await getLanguagePair(user.id);
 
-  let flashcards: Awaited<ReturnType<typeof listFlashcardsForUser>> = [];
+  let flashcards: Awaited<ReturnType<typeof listFlashcardsForUserDisplay>> = [];
   let stats: Awaited<ReturnType<typeof getPracticeStatsForUser>> = {
     currentStreak: 0,
     lastPracticeDate: null,
@@ -48,11 +47,11 @@ export default async function FlashcardsPage() {
 
   try {
     [flashcards, stats] = await Promise.all([
-      listFlashcardsForUser(user.id),
+      listFlashcardsForUserDisplay(user.id, target),
       getPracticeStatsForUser(user.id),
     ]);
-  } catch {
-    // Tables may be missing until migrations run; client fetch will retry.
+  } catch (error) {
+    console.error("Flashcard page load failed:", error);
   }
 
   return (
@@ -60,7 +59,7 @@ export default async function FlashcardsPage() {
       <FlashcardsView
         initialFlashcards={flashcards}
         initialStats={stats}
-        initialItemCount={countItemsForLanguage(flashcards, target)}
+        initialItemCount={countItems(flashcards)}
         nativeLanguage={source}
         targetLanguage={target}
       />

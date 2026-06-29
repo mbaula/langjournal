@@ -44,6 +44,30 @@ async function userFromMiddlewareHeaders(): Promise<AppUser | null> {
   };
 }
 
+/** Resolve the signed-in app user without redirecting (for API routes and loaders). */
+export async function resolveAppUser(): Promise<AppUser | null> {
+  if (await isAccountPreviewMode()) {
+    return getDevPreviewUser();
+  }
+
+  const middlewareUser = await userFromMiddlewareHeaders();
+  if (middlewareUser) {
+    return middlewareUser;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user?.id) {
+    return null;
+  }
+
+  return { id: user.id, email: user.email ?? "" };
+}
+
 export const requireAppSession = cache(async (
   fallback = "/app/journal",
 ): Promise<AppUser> => {

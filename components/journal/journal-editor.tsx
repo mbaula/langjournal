@@ -156,6 +156,25 @@ function translationsForPersistence(
   return translations.filter((t) => !t.id.startsWith("opt-"));
 }
 
+const COMMIT_WAIT_MS = 3000;
+const COMMIT_POLL_MS = 100;
+
+function hasPendingTranslationCommits(translations: InlineTranslation[]): boolean {
+  return translations.some((translation) => translation.id.startsWith("opt-"));
+}
+
+async function waitForPendingTranslationCommits(
+  readTranslations: () => InlineTranslation[],
+): Promise<void> {
+  const deadline = Date.now() + COMMIT_WAIT_MS;
+  while (
+    hasPendingTranslationCommits(readTranslations()) &&
+    Date.now() < deadline
+  ) {
+    await new Promise((resolve) => window.setTimeout(resolve, COMMIT_POLL_MS));
+  }
+}
+
 function mergeTranslationState(
   prev: InlineTranslation[],
   t: InlineTranslation,
@@ -376,6 +395,10 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
 
   const saveTranslations = useCallback(
     async (next: InlineTranslation[]) => {
+      if (next.some((t) => t.id.startsWith("opt-"))) {
+        return;
+      }
+
       const toPersist = translationsForPersistence(next);
       if (
         JSON.stringify(toPersist) ===
@@ -401,11 +424,23 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
   const saveTranslationsRef = useRef(saveTranslations);
   saveTranslationsRef.current = saveTranslations;
 
+  const applyCommittedTranslation = useCallback(
+    (committed: InlineTranslation) => {
+      const next = mergeTranslationState(translationsRef.current, committed);
+      setTranslations(next);
+      void saveTranslationsRef.current(next);
+    },
+    [],
+  );
+  const applyCommittedTranslationRef = useRef(applyCommittedTranslation);
+  applyCommittedTranslationRef.current = applyCommittedTranslation;
+
   useImperativeHandle(
     ref,
     () => ({
       flushSave: async () => {
         await saveBodyRef.current(bodyRef.current);
+        await waitForPendingTranslationCommits(() => translationsRef.current);
         await saveTranslationsRef.current(translationsRef.current);
       },
       getDraftContent: () => ({
@@ -729,7 +764,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
             appliedText,
           ).then((t) => {
             if (t) {
-              setTranslations((prev) => mergeTranslationState(prev, t));
+              applyCommittedTranslationRef.current(t);
             }
           });
           requestAnimationFrame(() => textareaRef.current?.focus());
@@ -797,7 +832,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           appliedText,
         ).then((t) => {
           if (!t) return;
-          setTranslations((prev) => mergeTranslationState(prev, t));
+          applyCommittedTranslationRef.current(t);
           clientSessionCacheRef.current.set(cacheKey, {
             sourceText: t.sourceText,
             translatedText: t.translatedText,
