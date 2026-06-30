@@ -13,6 +13,7 @@ import {
   User,
 } from "lucide-react";
 
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { CustomizeMenu } from "@/components/app/customize-menu";
 import { appNavTabClass, appNavTabGroupClass, appNavTabIconClass, appNavUtilityButtonClass } from "@/components/app/app-nav-styles";
 import { FolioWordmark } from "@/components/app/folio-wordmark";
@@ -161,19 +162,15 @@ export function AppTopNavClient({
                   <Settings className="size-4 opacity-70" strokeWidth={1.5} />
                   Settings
                 </Link>
-                <Link
-                  href={
-                    previewMode
-                      ? "/api/dev/exit-account-preview"
-                      : "/auth/signout"
-                  }
+                <SignOutButton
+                  previewMode={previewMode}
                   role="menuitem"
-                  className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted"
-                  onClick={() => setUserMenuOpen(false)}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+                  onSignedOut={() => setUserMenuOpen(false)}
                 >
                   <LogOut className="size-4 opacity-70" strokeWidth={1.5} />
                   {previewMode ? "Exit preview" : "Sign out"}
-                </Link>
+                </SignOutButton>
               </div>
             ) : null}
           </div>
