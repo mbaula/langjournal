@@ -54,7 +54,16 @@ export async function updateSession(request: NextRequest) {
 
   const {
     data: { user },
+    error: getUserError,
   } = await supabase.auth.getUser();
+
+  // Debug production auth issues
+  if (!user && pathname.startsWith("/app")) {
+    console.warn("[middleware] No user for protected route:", {
+      pathname,
+      error: getUserError?.message,
+    });
+  }
 
   supabaseResponse = attachForwardedRequest(
     supabaseResponse,

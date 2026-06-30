@@ -33,16 +33,27 @@ async function resolveRedirectTo(fallback: string): Promise<string> {
   return safeNextPath(pathname ?? fallback);
 }
 
-async function userFromMiddlewareHeaders(): Promise<AppUser | null> {
+const userFromMiddlewareHeaders = cache(async (): Promise<AppUser | null> => {
   const headerStore = await headers();
   const userId = headerStore.get(MIDDLEWARE_USER_ID_HEADER);
-  if (!userId) return null;
+  const pathname = headerStore.get(PATHNAME_HEADER);
+  
+  if (!userId) {
+    // Only log in production to help debug the settings redirect issue
+    if (process.env.NODE_ENV === "production") {
+      console.warn("[userFromMiddlewareHeaders] No user ID header found", {
+        pathname,
+        hasPathHeader: !!pathname,
+      });
+    }
+    return null;
+  }
 
   return {
     id: userId,
     email: headerStore.get(MIDDLEWARE_USER_EMAIL_HEADER) ?? "",
   };
-}
+});
 
 /** Resolve the signed-in app user without redirecting (for API routes and loaders). */
 export async function resolveAppUser(): Promise<AppUser | null> {
@@ -68,9 +79,8 @@ export async function resolveAppUser(): Promise<AppUser | null> {
   return { id: user.id, email: user.email ?? "" };
 }
 
-export const requireAppSession = cache(async (
-  fallback = "/app/journal",
-): Promise<AppUser> => {
+/** Cached resolution of the current user - no redirect, just returns null if not found */
+const resolveCurrentUser = cache(async (): Promise<AppUser | null> => {
   if (await isAccountPreviewMode()) {
     return getDevPreviewUser();
   }
@@ -80,6 +90,7 @@ export const requireAppSession = cache(async (
     return middlewareUser;
   }
 
+  // If middleware headers missing, fall back to Supabase auth check
   const supabase = await createClient();
   const {
     data: { user },
@@ -87,12 +98,28 @@ export const requireAppSession = cache(async (
   } = await supabase.auth.getUser();
 
   if (error || !user?.id) {
-    const redirectTo = await resolveRedirectTo(fallback);
-    redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
+    console.error("[resolveCurrentUser] Auth failed:", {
+      error: error?.message,
+      hasUser: !!user,
+    });
+    return null;
   }
 
   return { id: user.id, email: user.email ?? "" };
 });
+
+export async function requireAppSession(
+  fallback = "/app/journal",
+): Promise<AppUser> {
+  const user = await resolveCurrentUser();
+  
+  if (!user) {
+    const redirectTo = await resolveRedirectTo(fallback);
+    redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
+  }
+
+  return user;
+}
 
 export async function requireUser(fallback = "/app/journal"): Promise<AppUser> {
   const user = await requireAppSession(fallback);
