@@ -1,6 +1,7 @@
 "use client";
 
 import type { CardLanguageView } from "@/components/flashcards/card-language-view-selector";
+import { InlineListenButton } from "@/components/speech/inline-listen-button";
 import type { FlashcardRecord } from "@/lib/flashcards/types";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +10,7 @@ type FlashcardPracticeStageProps = {
   cardLanguageView: CardLanguageView;
   flipped: boolean;
   slideDirection: 1 | -1;
+  nativeLanguage?: string;
   onFlip: () => void;
 };
 
@@ -17,6 +19,7 @@ export function FlashcardPracticeStage({
   cardLanguageView,
   flipped,
   slideDirection,
+  nativeLanguage,
   onFlip,
 }: FlashcardPracticeStageProps) {
   const slideClassName =
@@ -31,42 +34,86 @@ export function FlashcardPracticeStage({
           slideClassName,
         )}
       >
-        <p className="text-3xl font-semibold tracking-[-0.02em] text-foreground">
-          {card.word}
-        </p>
-        <p className="text-xl font-medium text-muted-foreground">
-          {card.translation}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-3xl font-semibold tracking-[-0.02em] text-foreground">
+            {card.word}
+          </p>
+          <InlineListenButton
+            text={card.word}
+            languageCode={card.languageCode}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <p className="text-xl font-medium text-muted-foreground">
+            {card.translation}
+          </p>
+          {nativeLanguage ? (
+            <InlineListenButton
+              text={card.translation}
+              languageCode={nativeLanguage}
+              size="sm"
+            />
+          ) : null}
+        </div>
       </div>
     );
   }
 
+  const frontText =
+    cardLanguageView === "native" ? card.translation : card.word;
+  const backText =
+    cardLanguageView === "native" ? card.word : card.translation;
+  const frontLanguage =
+    cardLanguageView === "native" ? nativeLanguage : card.languageCode;
+  const backLanguage =
+    cardLanguageView === "native" ? card.languageCode : nativeLanguage;
+
   return (
-    <button
+    <div
       key={card.id}
-      type="button"
       className={cn(
-        "min-h-[280px] w-full rounded-2xl border border-border bg-card p-8 text-left shadow-sm transition-transform active:scale-[0.99]",
+        "min-h-[280px] w-full rounded-2xl border border-border bg-card p-8 shadow-sm",
         slideClassName,
       )}
-      onClick={onFlip}
     >
       {!flipped ? (
-        <div className="flex h-full flex-col justify-center gap-4">
-          <p className="text-center text-3xl font-semibold tracking-[-0.02em] text-foreground">
-            {cardLanguageView === "native" ? card.translation : card.word}
-          </p>
+        <button
+          type="button"
+          className="flex h-full w-full flex-col items-center justify-center gap-4 transition-transform active:scale-[0.99]"
+          onClick={onFlip}
+        >
+          <div className="flex items-center gap-2">
+            <p className="text-center text-3xl font-semibold tracking-[-0.02em] text-foreground">
+              {frontText}
+            </p>
+            {frontLanguage ? (
+              <InlineListenButton
+                text={frontText}
+                languageCode={frontLanguage}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : null}
+          </div>
           <p className="text-center text-sm text-muted-foreground">
             Tap or press ↑ ↓ Space to reveal
           </p>
-        </div>
+        </button>
       ) : (
-        <div className="flashcard-reveal-fade flex h-full flex-col justify-center gap-4">
-          <p className="text-center text-xl font-medium text-foreground">
-            {cardLanguageView === "native" ? card.word : card.translation}
-          </p>
+        <div className="flashcard-reveal-fade flex h-full flex-col items-center justify-center gap-4">
+          <div className="flex items-center gap-2">
+            <p className="text-center text-xl font-medium text-foreground">
+              {backText}
+            </p>
+            {backLanguage ? (
+              <InlineListenButton
+                text={backText}
+                languageCode={backLanguage}
+                size="sm"
+              />
+            ) : null}
+          </div>
         </div>
       )}
-    </button>
+    </div>
   );
 }

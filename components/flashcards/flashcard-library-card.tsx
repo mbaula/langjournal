@@ -6,6 +6,7 @@ import { ChevronDown, ExternalLink, Trash2 } from "lucide-react";
 
 import { FlashcardAudioControls } from "@/components/flashcards/flashcard-audio-controls";
 import type { CardLanguageView } from "@/components/flashcards/card-language-view-selector";
+import { InlineListenButton } from "@/components/speech/inline-listen-button";
 import { Button } from "@/components/ui/button";
 import type { FlashcardRecord } from "@/lib/flashcards/types";
 import { cn } from "@/lib/utils";
@@ -149,6 +150,7 @@ export type FlashcardLibraryCardProps = {
   expanded: boolean;
   deleteConfirming: boolean;
   previewMode?: boolean;
+  nativeLanguage?: string;
   onToggleExpand: () => void;
   onPrimaryChange: (value: string) => void;
   onSecondaryChange: (value: string) => void;
@@ -164,6 +166,7 @@ export function FlashcardLibraryCard({
   expanded,
   deleteConfirming,
   previewMode = false,
+  nativeLanguage,
   onToggleExpand,
   onPrimaryChange,
   onSecondaryChange,
@@ -179,6 +182,13 @@ export function FlashcardLibraryCard({
   const primaryText = showTranslationOnly ? card.word : card.translation;
   const secondaryText = showTranslationOnly ? card.translation : card.word;
 
+  const primaryLanguage = showTranslationOnly
+    ? card.languageCode
+    : nativeLanguage;
+  const secondaryLanguage = showTranslationOnly
+    ? nativeLanguage
+    : card.languageCode;
+
   const collapsedMinHeight = showBoth ? "min-h-[6.75rem]" : "min-h-[5.75rem]";
 
   const phraseContent = (
@@ -188,25 +198,46 @@ export function FlashcardLibraryCard({
         showBoth && "text-center",
       )}
     >
-      <InlineEditableText
-        value={primaryText}
-        onChange={onPrimaryChange}
-        editable={expanded}
-        truncate={!expanded}
-        className={cn(
-          "w-full text-base font-medium leading-snug",
-          showBoth && "text-center",
-        )}
-      />
-      {showSecondary ? (
+      <div className="flex w-full items-center justify-center gap-1">
         <InlineEditableText
-          value={secondaryText}
-          onChange={onSecondaryChange}
+          value={primaryText}
+          onChange={onPrimaryChange}
           editable={expanded}
           truncate={!expanded}
-          className={cn("w-full text-sm leading-snug", showBoth && "text-center")}
-          muted
+          className={cn(
+            "min-w-0 flex-1 text-base font-medium leading-snug",
+            showBoth && "text-center",
+          )}
         />
+        {expanded && primaryLanguage ? (
+          <InlineListenButton
+            text={primaryText}
+            languageCode={primaryLanguage}
+            size="sm"
+          />
+        ) : null}
+      </div>
+      {showSecondary ? (
+        <div className="flex w-full items-center justify-center gap-1">
+          <InlineEditableText
+            value={secondaryText}
+            onChange={onSecondaryChange}
+            editable={expanded}
+            truncate={!expanded}
+            className={cn(
+              "min-w-0 flex-1 text-sm leading-snug",
+              showBoth && "text-center",
+            )}
+            muted
+          />
+          {expanded && secondaryLanguage ? (
+            <InlineListenButton
+              text={secondaryText}
+              languageCode={secondaryLanguage}
+              size="sm"
+            />
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

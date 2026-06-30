@@ -292,6 +292,7 @@ export function FlashcardsView({
         expanded={expanded}
         deleteConfirming={deleteConfirmId === card.id}
         previewMode={previewMode}
+        nativeLanguage={nativeLanguage}
         onToggleExpand={() =>
           setExpandedId((current) => (current === card.id ? null : card.id))
         }
@@ -376,6 +377,7 @@ export function FlashcardsView({
           cardLanguageView={cardLanguageView}
           flipped={practiceFlipped}
           slideDirection={practiceSlideDirection}
+          nativeLanguage={nativeLanguage}
           onFlip={togglePracticeFlip}
         />
 
