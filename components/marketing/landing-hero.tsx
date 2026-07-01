@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import {
   marketingHeroCtaClassName,
@@ -13,7 +14,9 @@ import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo"
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function LandingHero() {
+export async function LandingHero() {
+  const t = await getTranslations("marketing.hero");
+
   return (
     <section className={marketingHeroSectionClassName}>
       <div className={marketingHeroPanelClassName}>
@@ -25,7 +28,7 @@ export function LandingHero() {
                 "landing-enter landing-enter-delay-1",
               )}
             >
-              Language Learning
+              {t("eyebrow")}
             </p>
             <h1
               className={cn(
@@ -33,7 +36,7 @@ export function LandingHero() {
                 "landing-enter landing-enter-delay-2 whitespace-nowrap text-[clamp(1.5rem,4.5vw,3.875rem)]",
               )}
             >
-              Write It. Translate It. Learn It.
+              {t("title")}
             </h1>
             <div className="landing-enter landing-enter-delay-3 mt-5">
               <Link
@@ -43,7 +46,7 @@ export function LandingHero() {
                   marketingHeroCtaClassName,
                 )}
               >
-                Try Folio free
+                {t("cta")}
                 <ArrowUpRight className="size-4" strokeWidth={1.5} />
               </Link>
             </div>

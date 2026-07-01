@@ -1,0 +1,325 @@
+{
+  "marketing": {
+    "nav": {
+      "features": "Features",
+      "faq": "FAQ",
+      "tryFree": "Try Folio free",
+      "folioHome": "Folio home",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    },
+    "hero": {
+      "eyebrow": "Language Learning",
+      "title": "Write It. Translate It. Learn It.",
+      "cta": "Try Folio free"
+    },
+    "demo": {
+      "prefix": "No more switching between apps to write and lose your flow. Just translate ",
+      "windowTitle": "Folio — Today's entry"
+    },
+    "featuresOverview": {
+      "title": "Learn language writing hassle free",
+      "description": "Stop opening a <highlight>thousand different websites</highlight> just to write one sentence. Folio is the app to replace all apps.",
+      "write": "write",
+      "translate": "translate",
+      "practice": "practice",
+      "track": "track"
+    },
+    "featuresDetail": {
+      "writeTitle": "Write",
+      "writeDescription": "Practice your writing with <strong>prompts built for your level</strong>, from A1 to C2.",
+      "translateTitle": "Translate",
+      "translateDescription": "Stop opening a thousand apps. <strong>Find words you need</strong> right inside Folio.",
+      "practiceTitle": "Practice",
+      "practiceDescription": "Folio automatically saves your <strong>new words into flashcards</strong>, so you can practice!",
+      "trackTitle": "Track",
+      "trackDescription": "Watch your streak, your words, and <strong>your progress grow</strong> over time."
+    },
+    "languagesShowcase": {
+      "title": "Support over 160+ languages"
+    },
+    "problemSolution": {
+      "title": "Folio keeps you in the flow.",
+      "subtitle": "Here's how we're solving the problem.",
+      "problemLabel": "The problem",
+      "solutionLabel": "The solution",
+      "problems": {
+        "0": "More time switching apps than writing",
+        "1": "Vocab lists you never actually use",
+        "2": "Momentum lost every time you're stuck on a word",
+        "3": "Textbook phrases — not how you really talk"
+      },
+      "solutions": {
+        "0": "Translate mid-sentence using // command",
+        "1": "Learn words in context from your life",
+        "2": "Track your streak, words, and progress",
+        "3": "Save words to flashcards for practice"
+      }
+    },
+    "users": {
+      "intro": "if you've said this more than once...",
+      "headline": "Wait, what's the word?",
+      "closing": "then folio is for you",
+      "scenarios": {
+        "romeTag": "when travelling",
+        "romeQuote": "This dish looks great, but I'm allergic to... wait, what's that word?",
+        "homeTag": "when at home",
+        "homeQuote": "At work, we're doing a type of... — wait, how do you say this?",
+        "studyingTag": "when studying",
+        "studyingQuote": "The reading kept using this term for... actually, what's the word for it?",
+        "friendsTag": "when with friends",
+        "friendsQuote": "It's so funny because — wait, nvm, I forgot the word.",
+        "travelingTag": "when traveling",
+        "travelingQuote": "Can we get off at the... the stop before the airport? I forgot what it's called.",
+        "textingTag": "when texting",
+        "textingQuote": "See you at that place on... ugh, you know the street — I lost the word."
+      }
+    },
+    "joinCta": {
+      "label": "Join Folio"
+    },
+    "faq": {
+      "title": "Join a community of language learners",
+      "items": {
+        "slashCommand": {
+          "question": "What's the // command?",
+          "answer": "Type // anywhere in your journal and write in your own words — Folio translates it inline, right where you're writing. No tab-switching, no breaking your flow."
+        },
+        "privacy": {
+          "question": "Is my journal private?",
+          "answer": "Absolutely. Your entries are yours alone. We don't share your writing with anyone, and nothing is used to train AI models."
+        },
+        "report": {
+          "question": "How do I report a problem on Folio?",
+          "answer": "We're here to help! Tap <feedbackLink>click here</feedbackLink> or the Feedback button anytime — whether you've hit a bug, have a feature idea, or just need a hand."
+        },
+        "beta": {
+          "question": "What's a beta version?",
+          "answer": "Folio is in early access, which means we're still actively building and improving things. It's completely free right now, and you might run into the occasional bug — if you do, tell us and we'll get on it."
+        },
+        "cancel": {
+          "question": "Can I cancel anytime?",
+          "answer": "Yes, no strings attached. You can cancel your subscription whenever you like, or delete your account entirely from Settings."
+        },
+        "startLevel": {
+          "question": "Do I need to know the language to start?",
+          "answer": "Not at all — you're welcome to start from scratch. That said, Folio is best if you already know a few basics and want to practice putting sentences together."
+        }
+      }
+    },
+    "footer": {
+      "tagline": "Write It. Translate It. Learn It.",
+      "features": "Features",
+      "faq": "FAQ",
+      "copyright": "© {year} Folio"
+    }
+  },
+  "login": {
+    "eyebrow": "Sign in",
+    "title": "Continue with email",
+    "description": "We'll email you a magic link — no password to remember.",
+    "backToHome": "Back to home",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "submit": "Email me a magic link",
+    "submitting": "Sending link…",
+    "checkEmail": "Check your email for a sign-in link."
+  },
+  "settings": {
+    "pageTitle": "Settings",
+    "pageDescription": "Update your profile and preferences.",
+    "displayLanguage": {
+      "title": "Display language",
+      "description": "Change language here.",
+      "label": "Interface language",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "error": "Could not update language"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "body": "Your journal entries, flashcards, and profile data are private to your account. We do not share your writing with third parties and we do not train our own models on your content."
+    },
+    "profile": {
+      "title": "Profile",
+      "name": "Name",
+      "namePlaceholder": "Your name or nickname",
+      "languages": "Languages",
+      "languagesHelp": "The first language is used as your default learning target in the journal.",
+      "noLanguages": "No languages added yet.",
+      "selectLanguage": "Select language…",
+      "selectLevel": "Select level…",
+      "addLanguage": "Add language",
+      "add": "Add",
+      "saveProfile": "Save profile",
+      "loadLanguagesError": "Could not load languages",
+      "addLanguageError": "Add at least one language with a level.",
+      "saveFailed": "Save failed"
+    },
+    "more": {
+      "title": "More",
+      "logOut": "Log out",
+      "deleteAccount": "Delete account",
+      "deleteConfirm": "Delete your account permanently? All journal entries, flashcards, and profile data will be removed. This cannot be undone.",
+      "deleting": "Deleting…",
+      "previewDeleteUnavailable": "Account deletion is unavailable in preview mode.",
+      "deleteFailed": "Could not delete account"
+    }
+  },
+  "app": {
+    "nav": {
+      "write": "Write",
+      "practice": "Practice",
+      "progress": "Progress",
+      "settings": "Settings",
+      "signOut": "Sign out",
+      "exitPreview": "Exit preview",
+      "account": "Account",
+      "folioHome": "Folio home",
+      "mainNav": "Main",
+      "accountMenu": "Account menu"
+    },
+    "loading": "Loading"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "loading": "Loading…",
+    "saved": "Saved.",
+    "saving": "Saving…",
+    "account": "Account",
+    "exitPreview": "Exit preview",
+    "logOut": "Log out",
+    "previewAccount": "Alex (preview)"
+  },
+  "customize": {
+    "label": "Customize",
+    "ariaLabel": "Customize appearance",
+    "color": "Color",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "theme": "Theme"
+  },
+  "feedback": {
+    "label": "Feedback",
+    "clickHere": "click here"
+  },
+  "journal": {
+    "greeting": "Hi, {name} 👋",
+    "greetingFallback": "there",
+    "subtitles": {
+      "0": "Meow meow, have you written anything today?",
+      "1": "You should write something today (or else).",
+      "2": "Yo yo, have you written anything today?",
+      "3": "Who's a language nerd? You are!",
+      "4": "You should probably write something today (side-eye)"
+    },
+    "scrollPastEntries": "Scroll down for past entries",
+    "entrySaved": "Entry saved! Great job finishing your entry today.",
+    "entrySaveFailed": "Couldn't save your entry. Try again.",
+    "writePlaceholder": "When you're stuck, type // to translate in-line",
+    "entryTitle": "Entry title",
+    "pastEntries": "Past entries",
+    "noEntries": "No entries yet.",
+    "flashcardCount": "{count, plural, one {# flashcard} other {# flashcards}}",
+    "saveEntry": "Save entry",
+    "pageOn": "Page {page} of {total}",
+    "onThisPage": "On this page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "pressTabTranslate": "Press Tab to translate",
+    "pressEnterTranslate": "Press Enter to translate",
+    "translationFailed": "Translation failed",
+    "translating": "Translating…",
+    "help": "Help",
+    "howToTranslate": "How to translate",
+    "howToTranslateInstructions": "Type <slash></slash> followed by the word or phrase you want, then press <key></key>.",
+    "closeHelp": "Close help",
+    "dailyPrompt": {
+      "label": "Writing prompt",
+      "usePrompt": "Use prompt",
+      "added": "Added",
+      "refresh": "Refresh",
+      "easier": "Easier",
+      "harder": "Harder",
+      "saveError": "Couldn't save that prompt. Try again.",
+      "ariaToday": "Today's writing prompt",
+      "ariaRefresh": "Refresh prompt"
+    },
+    "noTextYet": "No text yet — open this entry to write.",
+    "entryTitlePlaceholder": "Entry title…",
+    "renameEntryTitle": "Rename entry title",
+    "cancel": "Cancel",
+    "save": "Save",
+    "editEntryAria": "Edit entry: {title}",
+    "editEntryAriaWithSubtitle": "Edit entry: {title}, {subtitle}",
+    "openEntryAria": "Open entry to edit: {title}",
+    "openEntryAriaWithSubtitle": "Open entry to edit: {title}, {subtitle}",
+    "pastEntriesToc": "Past entries table of contents",
+    "translationBadge": "+ {count}"
+  },
+  "progress": {
+    "title": "Progress",
+    "subtitle": "Track your journaling streaks, vocabulary growth, and activity over time.",
+    "activity": "Activity",
+    "chartTitle": "How much translation did you use?",
+    "chartEmpty": "Write a journal entry to see your translation progress here.",
+    "reportCard": "Folio Report Card",
+    "reportCardAria": "Folio Report Card",
+    "downloadReport": "Download report card",
+    "savingReport": "Saving report card",
+    "writingSince": "Writing since {year}",
+    "languagesLearning": "Language(s) learning",
+    "noLanguagesYet": "No languages yet",
+    "totalEntries": "Total entries",
+    "flashcardsCreated": "Flashcards created"
+  },
+  "flashcards": {
+    "title": "Practice",
+    "description": "Review words saved from your journal and keep what you're learning fresh.",
+    "practiceButton": "Practice",
+    "itemCount": "{count, plural, one {# item} other {# items}}",
+    "emptyLibrary": "No words saved yet. Start journaling and use // to translate. Words you look up will show up here.",
+    "searchPlaceholder": "Search items…",
+    "noFilterMatch": "No items match your filters.",
+    "practiceCaughtUp": "You're all caught up. Come back after your next journal entry.",
+    "backToLibrary": "Back to library",
+    "exit": "Exit",
+    "keyboardHint": "← → previous / next card · ↑ ↓ Space reveal answer",
+    "sort": {
+      "entry": "Entry",
+      "recent": "Recent",
+      "ariaLabel": "Sort flashcards"
+    },
+    "view": {
+      "translation": "Translation",
+      "native": "Native",
+      "both": "Both",
+      "ariaLabel": "Card language view"
+    },
+    "groups": {
+      "untitledEntry": "Untitled entry",
+      "noLinkedEntry": "No linked entry",
+      "flashcardCount": "{count, plural, one {# flashcard} other {# flashcards}}"
+    }
+  },
+  "onboarding": {
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "proficient": "Proficient"
+    },
+    "ageRanges": {
+      "under_18": "Under 18",
+      "18_24": "18-24",
+      "25_34": "25-34",
+      "35_64": "35-64",
+      "65_plus": "65+",
+      "prefer_not_to_say": "Prefer not to say"
+    }
+  },
+  "locale": {
+    "switcherLabel": "Language"
+  }
+}

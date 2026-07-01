@@ -1,16 +1,17 @@
+import { getTranslations } from "next-intl/server";
+
 import {
   SettingsPanelRow,
   SettingsSection,
 } from "@/components/settings/settings-panel";
 
-export function SettingsPrivacySection() {
+export async function SettingsPrivacySection() {
+  const t = await getTranslations("settings.privacy");
+
   return (
-    <SettingsSection title="Privacy">
+    <SettingsSection title={t("title")}>
       <SettingsPanelRow>
-        <p className="text-sm text-muted-foreground">
-          Your journal entries, flashcards, and profile data are private to your
-          account. We do not share your writing with third parties and we do not train our own models on your content.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("body")}</p>
       </SettingsPanelRow>
     </SettingsSection>
   );

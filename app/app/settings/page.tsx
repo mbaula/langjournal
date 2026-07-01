@@ -1,3 +1,6 @@
+import { getTranslations } from "next-intl/server";
+
+import { DisplayLanguageSection } from "@/components/settings/display-language-section";
 import { ProfileSettingsForm } from "@/components/settings/profile-settings-form";
 import { SettingsMoreSection } from "@/components/settings/settings-more-section";
 import { SettingsPrivacySection } from "@/components/settings/settings-privacy-section";
@@ -10,6 +13,7 @@ import { getDevPreviewOnboardingState } from "@/lib/dev/preview-account";
 import { getOnboardingState } from "@/lib/db/onboarding";
 
 export default async function SettingsPage() {
+  const t = await getTranslations("settings");
   const preview = await isAccountPreviewMode();
 
   if (preview) {
@@ -18,13 +22,13 @@ export default async function SettingsPage() {
     return (
       <div className={appPageShellClassName}>
         <header className="space-y-1">
-          <h1 className={journalPageTitleClassName}>Settings</h1>
-          <p className="text-sm text-muted-foreground">
-            Update your profile and preferences.
-          </p>
+          <h1 className={journalPageTitleClassName}>{t("pageTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("pageDescription")}</p>
         </header>
 
         <SettingsPrivacySection />
+
+        <DisplayLanguageSection />
 
         <ProfileSettingsForm initialState={onboarding} />
 
@@ -39,13 +43,13 @@ export default async function SettingsPage() {
   return (
     <div className={appPageShellClassName}>
       <header className="space-y-1">
-        <h1 className={journalPageTitleClassName}>Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Update your profile and preferences.
-        </p>
+        <h1 className={journalPageTitleClassName}>{t("pageTitle")}</h1>
+        <p className="text-sm text-muted-foreground">{t("pageDescription")}</p>
       </header>
 
       <SettingsPrivacySection />
+
+      <DisplayLanguageSection />
 
       <ProfileSettingsForm initialState={onboarding} />
 

@@ -1,22 +1,18 @@
+import { getTranslations } from "next-intl/server";
+
 import { LandingBulletList } from "@/components/marketing/landing-section";
 import { landingColoredSectionYClassName, landingSectionXClassName } from "@/components/marketing/landing-spacing";
 import { cn } from "@/lib/utils";
 
-const problemItems = [
-  "More time switching apps than writing",
-  "Vocab lists you never actually use",
-  "Momentum lost every time you're stuck on a word",
-  "Textbook phrases — not how you really talk",
-];
+const problemKeys = ["0", "1", "2", "3"] as const;
+const solutionKeys = ["0", "1", "2", "3"] as const;
 
-const solutionItems = [
-  "Translate mid-sentence using // command",
-  "Learn words in context from your life",
-  "Track your streak, words, and progress",
-  "Save words to flashcards for practice",
-];
+export async function LandingProblemSolution() {
+  const t = await getTranslations("marketing.problemSolution");
 
-export function LandingProblemSolution() {
+  const problemItems = problemKeys.map((key) => t(`problems.${key}`));
+  const solutionItems = solutionKeys.map((key) => t(`solutions.${key}`));
+
   return (
     <section
       id="how-it-works"
@@ -31,17 +27,17 @@ export function LandingProblemSolution() {
       >
         <div className="max-w-2xl">
           <h2 className="font-[family-name:var(--font-folio)] text-[clamp(1.875rem,4.5vw,3rem)] font-semibold leading-[1.05] tracking-[-0.03em]">
-            Folio keeps you in the flow.
+            {t("title")}
           </h2>
           <p className="mt-4 text-base leading-relaxed text-[#2C2C2C]/85 sm:text-[17px]">
-            Here&apos;s how we&apos;re solving the problem.
+            {t("subtitle")}
           </p>
         </div>
 
         <div className="mt-10 grid gap-10 sm:mt-12 lg:grid-cols-2 lg:gap-16">
           <div>
             <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-[#2C2C2C]/70">
-              The problem
+              {t("problemLabel")}
             </p>
             <LandingBulletList
               items={problemItems}
@@ -51,7 +47,7 @@ export function LandingProblemSolution() {
 
           <div>
             <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-[#2C2C2C]/70">
-              The solution
+              {t("solutionLabel")}
             </p>
             <LandingBulletList
               items={solutionItems}

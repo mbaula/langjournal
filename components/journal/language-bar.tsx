@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CircleHelp, Globe, Search, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo";
 import { Button } from "@/components/ui/button";
@@ -253,6 +254,7 @@ export function LanguageBar({
   translateTrigger = "enter",
   onLanguagesSaved,
 }: LanguageBarProps) {
+  const t = useTranslations("journal");
   const triggerKeyLabel = translateTrigger === "tab" ? "Tab" : "Enter";
   const [source, setSource] = useState(initialSource);
   const [target, setTarget] = useState(initialTarget);
@@ -600,10 +602,10 @@ export function LanguageBar({
           className="inline-flex shrink-0 items-center gap-1.5 px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground dark:text-foreground/82 dark:hover:text-foreground"
           aria-expanded={helpOpen}
           aria-haspopup="dialog"
-          aria-label="How to translate"
+          aria-label={t("howToTranslate")}
         >
           <CircleHelp className="size-5 shrink-0" strokeWidth={1.5} />
-          <span>Help</span>
+          <span>{t("help")}</span>
         </button>
 
         {helpOpen ? (
@@ -621,28 +623,31 @@ export function LanguageBar({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p id="translation-help-title" className={languageBarPopoverTitleClassName}>
-                    How to translate
+                    {t("howToTranslate")}
                   </p>
                   <p
                     id="translation-help-instructions"
                     className={languageBarPopoverDescriptionClassName}
                   >
-                    Type{" "}
-                    <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">
-                      {"//"}
-                    </code>{" "}
-                    followed by the word or phrase you want, then press{" "}
-                    <kbd className="rounded border border-border bg-muted px-1 font-sans text-xs text-foreground">
-                      {triggerKeyLabel}
-                    </kbd>
-                    .
+                    {t.rich("howToTranslateInstructions", {
+                      slash: () => (
+                        <code className="rounded bg-muted px-1 text-[0.75rem] text-foreground">
+                          {"//"}
+                        </code>
+                      ),
+                      key: () => (
+                        <kbd className="rounded border border-border bg-muted px-1 font-sans text-xs text-foreground">
+                          {triggerKeyLabel}
+                        </kbd>
+                      ),
+                    })}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setHelpOpen(false)}
                   className={languageBarPopoverCloseClassName}
-                  aria-label="Close help"
+                  aria-label={t("closeHelp")}
                 >
                   <X className="size-4" strokeWidth={1.5} />
                 </button>

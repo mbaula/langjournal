@@ -2,6 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import { Languages, MessageSquare, Rows2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   flashcardToolbarIconButtonActiveClassName,
@@ -25,15 +26,13 @@ type CardLanguageViewSelectorProps = {
   variant?: "default" | "toolbar";
 };
 
-const OPTIONS: Array<{
-  value: CardLanguageView;
-  label: string;
-  icon: LucideIcon;
-}> = [
-  { value: "translation", label: "Translation", icon: Languages },
-  { value: "native", label: "Native", icon: MessageSquare },
-  { value: "both", label: "Both", icon: Rows2 },
-];
+const OPTION_ICONS: Record<CardLanguageView, LucideIcon> = {
+  translation: Languages,
+  native: MessageSquare,
+  both: Rows2,
+};
+
+const OPTION_VALUES: CardLanguageView[] = ["translation", "native", "both"];
 
 export function CardLanguageViewSelector({
   value,
@@ -41,6 +40,7 @@ export function CardLanguageViewSelector({
   className,
   variant = "default",
 }: CardLanguageViewSelectorProps) {
+  const t = useTranslations("flashcards.view");
   const isToolbar = variant === "toolbar";
 
   return (
@@ -50,18 +50,19 @@ export function CardLanguageViewSelector({
         className,
       )}
       role="group"
-      aria-label="Card language view"
+      aria-label={t("ariaLabel")}
     >
-      {OPTIONS.map((option) => {
-        const Icon = option.icon;
-        const active = value === option.value;
+      {OPTION_VALUES.map((optionValue) => {
+        const Icon = OPTION_ICONS[optionValue];
+        const label = t(optionValue);
+        const active = value === optionValue;
         return (
           <Button
-            key={option.value}
+            key={optionValue}
             type="button"
             variant={active ? "default" : "ghost"}
-            title={option.label}
-            aria-label={option.label}
+            title={label}
+            aria-label={label}
             aria-pressed={active}
             className={cn(
               isToolbar
@@ -72,7 +73,7 @@ export function CardLanguageViewSelector({
                   ? cn(primaryPillIconButtonClassName, "border-0 shadow-none")
                   : secondaryPillButtonClassName,
             )}
-            onClick={() => onChange(option.value)}
+            onClick={() => onChange(optionValue)}
           >
             <Icon className={cn(isToolbar ? "size-3" : "size-3.5")} strokeWidth={1.5} />
           </Button>

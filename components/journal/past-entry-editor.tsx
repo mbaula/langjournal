@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
@@ -53,6 +54,7 @@ export function PastEntryEditor({
   onSaved,
   onDeleted,
 }: PastEntryEditorProps) {
+  const t = useTranslations("journal");
   const editorRef = useRef<JournalEditorHandle>(null);
   const [entryTitle, setEntryTitle] = useState(entry.title?.trim() ?? "");
   const [draftBody, setDraftBody] = useState(entry.body ?? "");
@@ -81,11 +83,11 @@ export function PastEntryEditor({
         updatedAt: new Date(),
       });
     } catch {
-      setSaveError("Couldn't save your entry. Try again.");
+      setSaveError(t("entrySaveFailed"));
     } finally {
       setSavePending(false);
     }
-  }, [draftBody, entry, entryTitle, initialTranslations, onSaved, savePending]);
+  }, [draftBody, entry, entryTitle, initialTranslations, onSaved, savePending, t]);
 
   const canSave = Boolean(entryTitle.trim() || draftBody.trim());
 

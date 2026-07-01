@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { MarketingFlowShell } from "@/components/marketing/marketing-flow-shell";
@@ -22,6 +23,7 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error, redirectTo } = await searchParams;
+  const t = await getTranslations("login");
 
   return (
     <MarketingFlowShell>
@@ -31,7 +33,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           "landing-enter landing-enter-delay-1 mb-0",
         )}
       >
-        Sign in
+        {t("eyebrow")}
       </p>
       <h1
         className={cn(
@@ -39,7 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           "landing-enter landing-enter-delay-2 mt-3 max-w-none text-[clamp(1.875rem,4.5vw,2.75rem)]",
         )}
       >
-        Continue with email
+        {t("title")}
       </h1>
       <p
         className={cn(
@@ -47,7 +49,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           "landing-enter landing-enter-delay-3 text-[#2C2C2C]/60",
         )}
       >
-        We&apos;ll email you a magic link — no password to remember.
+        {t("description")}
       </p>
       <LoginForm
         redirectTo={redirectTo}
@@ -59,7 +61,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           href="/"
           className="inline-flex items-center gap-1.5 font-sans text-[15px] font-medium text-[#2C2C2C]/60 transition-colors hover:text-[#2C2C2C]"
         >
-          Back to home
+          {t("backToHome")}
           <ArrowUpRight className="size-4" strokeWidth={1.5} />
         </Link>
       </div>

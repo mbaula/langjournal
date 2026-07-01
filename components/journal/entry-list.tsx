@@ -1,3 +1,5 @@
+"use client";
+
 import {
   JournalEntryCard,
   type JournalEntryCardProps,
@@ -10,6 +12,7 @@ import {
 import { getLanguageDisplayName } from "@/lib/languages/display-name";
 import type { TranslateTrigger } from "@/components/journal/journal-editor";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export type EntryRow = {
   id: string;
@@ -31,6 +34,7 @@ export function formatEntrySubtitle(
   options?: {
     languageLabel?: string | null;
     flashcardCount?: number;
+    formatFlashcard?: (count: number) => string;
   },
 ): string {
   const parts = [dateLabel];
@@ -40,7 +44,11 @@ export function formatEntrySubtitle(
   }
 
   if (options?.flashcardCount && options.flashcardCount > 0) {
-    parts.push(formatFlashcardLabel(options.flashcardCount));
+    parts.push(
+      options.formatFlashcard
+        ? options.formatFlashcard(options.flashcardCount)
+        : formatFlashcardLabel(options.flashcardCount),
+    );
   }
 
   return parts.join(" | ");
@@ -102,15 +110,18 @@ export function EntryList({
   onEntryDeleted,
   onRenameTitle,
 }: EntryListProps) {
+  const t = useTranslations("journal");
+
   if (entries.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">No entries yet.</p>
+      <p className="text-sm text-muted-foreground">{t("noEntries")}</p>
     );
   }
 
   const languageLabel = targetLanguage
     ? getLanguageDisplayName(targetLanguage)
     : null;
+  const formatFlashcard = (count: number) => t("flashcardCount", { count });
 
   return (
     <ul className="flex w-full flex-col gap-10">
@@ -138,6 +149,7 @@ export function EntryList({
                   dateLabel={formatEntryDay(entry.entryDate)}
                   languageLabel={languageLabel}
                   flashcardCount={entry.flashcardCount}
+                  formatFlashcard={formatFlashcard}
                   body={entry.body}
                   translations={entry.translations}
                   onOpen={onEditEntry ? () => onEditEntry(entry.id) : undefined}

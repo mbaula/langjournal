@@ -1,0 +1,325 @@
+{
+  "marketing": {
+    "nav": {
+      "features": "Tính năng",
+      "faq": "Câu hỏi thường gặp",
+      "tryFree": "Dùng Folio miễn phí",
+      "folioHome": "Trang chủ Folio",
+      "openMenu": "Mở menu",
+      "closeMenu": "Đóng menu"
+    },
+    "hero": {
+      "eyebrow": "Học ngoại ngữ",
+      "title": "Viết. Dịch. Học.",
+      "cta": "Try Folio free"
+    },
+    "demo": {
+      "prefix": "Không còn phải chuyển qua lại giữa các ứng dụng và mất nhịp viết. Chỉ cần dịch ",
+      "windowTitle": "Folio — Bài viết hôm nay"
+    },
+    "featuresOverview": {
+      "title": "Học viết ngoại ngữ một cách dễ dàng",
+      "description": "Đừng mở <highlight>hàng nghìn trang web khác nhau</highlight> chỉ để viết một câu. Folio là ứng dụng thay thế mọi ứng dụng.",
+      "write": "viết",
+      "translate": "dịch",
+      "practice": "luyện tập",
+      "track": "theo dõi"
+    },
+    "featuresDetail": {
+      "writeTitle": "Viết",
+      "writeDescription": "Luyện viết với <strong>gợi ý phù hợp trình độ</strong>, từ A1 đến C2.",
+      "translateTitle": "Dịch",
+      "translateDescription": "Không còn mở hàng tá ứng dụng. <strong>Tìm từ bạn cần</strong> ngay trong Folio.",
+      "practiceTitle": "Luyện tập",
+      "practiceDescription": "Folio tự động lưu <strong>từ mới vào thẻ ghi nhớ</strong> để bạn luyện tập!",
+      "trackTitle": "Theo dõi",
+      "trackDescription": "Theo dõi chuỗi ngày, từ vựng và <strong>sự tiến bộ của bạn</strong> theo thời gian."
+    },
+    "languagesShowcase": {
+      "title": "Hỗ trợ hơn 160+ ngôn ngữ"
+    },
+    "problemSolution": {
+      "title": "Folio giúp bạn giữ nhịp viết.",
+      "subtitle": "Đây là cách chúng tôi giải quyết vấn đề.",
+      "problemLabel": "Vấn đề",
+      "solutionLabel": "Giải pháp",
+      "problems": {
+        "0": "Dành nhiều thời gian chuyển app hơn là viết",
+        "1": "Danh sách từ vựng không bao giờ dùng đến",
+        "2": "Mất đà mỗi khi kẹt ở một từ",
+        "3": "Cụm từ sách giáo khoa — không giống cách bạn nói thật"
+      },
+      "solutions": {
+        "0": "Dịch ngay giữa câu bằng lệnh //",
+        "1": "Học từ trong ngữ cảnh cuộc sống của bạn",
+        "2": "Theo dõi chuỗi ngày, từ vựng và tiến độ",
+        "3": "Lưu từ vào thẻ ghi nhớ để luyện tập"
+      }
+    },
+    "users": {
+      "intro": "nếu bạn đã từng nói câu này hơn một lần...",
+      "headline": "Ủa, từ đó là gì nhỉ?",
+      "closing": "thì folio là ứng dụng dành cho bạn",
+      "scenarios": {
+        "romeTag": "khi đi du lịch",
+        "romeQuote": "Món này trông ngon, nhưng tôi dị ứng với... khoan, từ đó là gì nhỉ?",
+        "homeTag": "khi ở nhà",
+        "homeQuote": "Ở công ty, chúng tôi đang làm loại... — khoan, nói thế nào nhỉ?",
+        "studyingTag": "khi học",
+        "studyingQuote": "Bài đọc cứ dùng thuật ngữ này cho... thực ra, từ đó là gì nhỉ?",
+        "friendsTag": "khi ở với bạn",
+        "friendsQuote": "Buồn cười ghê vì — khoan, thôi, tôi quên mất từ rồi.",
+        "travelingTag": "khi đi lại",
+        "travelingQuote": "Chúng ta xuống ở... trạm trước sân bay được không? Tôi quên tên gọi rồi.",
+        "textingTag": "khi nhắn tin",
+        "textingQuote": "Gặp ở chỗ đó trên... ugh, bạn biết con phố — tôi quên mất từ rồi."
+      }
+    },
+    "joinCta": {
+      "label": "Tham gia Folio"
+    },
+    "faq": {
+      "title": "Tham gia cộng đồng người học ngôn ngữ",
+      "items": {
+        "slashCommand": {
+          "question": "Lệnh // là gì?",
+          "answer": "Gõ // ở bất kỳ đâu trong nhật ký và viết bằng từ của bạn — Folio dịch ngay tại chỗ, ngay nơi bạn đang viết. Không chuyển tab, không làm gián đoạn dòng chảy."
+        },
+        "privacy": {
+          "question": "Nhật ký của tôi có riêng tư không?",
+          "answer": "Hoàn toàn. Bài viết là của riêng bạn. Chúng tôi không chia sẻ nội dung với ai và không dùng để huấn luyện mô hình AI."
+        },
+        "report": {
+          "question": "Làm sao báo lỗi trên Folio?",
+          "answer": "Chúng tôi sẵn sàng hỗ trợ! Nhấn <feedbackLink>vào đây</feedbackLink> hoặc nút Phản hồi bất cứ lúc nào — dù bạn gặp lỗi, có ý tưởng tính năng, hay cần trợ giúp."
+        },
+        "beta": {
+          "question": "Phiên bản beta là gì?",
+          "answer": "Folio đang ở giai đoạn truy cập sớm, nghĩa là chúng tôi vẫn đang xây dựng và cải thiện. Hiện hoàn toàn miễn phí, và bạn có thể gặp lỗi thỉnh thoảng — nếu có, hãy báo cho chúng tôi."
+        },
+        "cancel": {
+          "question": "Tôi có thể hủy bất cứ lúc nào không?",
+          "answer": "Có, không ràng buộc. Bạn có thể hủy đăng ký bất cứ lúc nào, hoặc xóa tài khoản hoàn toàn trong Cài đặt."
+        },
+        "startLevel": {
+          "question": "Tôi có cần biết ngôn ngữ trước khi bắt đầu không?",
+          "answer": "Không hề — bạn có thể bắt đầu từ con số không. Tuy nhiên, Folio phù hợp nhất nếu bạn đã biết vài kiến thức cơ bản và muốn luyện ghép câu."
+        }
+      }
+    },
+    "footer": {
+      "tagline": "Viết. Dịch. Học.",
+      "features": "Tính năng",
+      "faq": "Câu hỏi thường gặp",
+      "copyright": "© {year} Folio"
+    }
+  },
+  "login": {
+    "eyebrow": "Đăng nhập",
+    "title": "Tiếp tục bằng email",
+    "description": "Chúng tôi sẽ gửi liên kết magic link — không cần mật khẩu.",
+    "backToHome": "Về trang chủ",
+    "emailLabel": "Email",
+    "emailPlaceholder": "ban@example.com",
+    "submit": "Gửi magic link qua email",
+    "submitting": "Đang gửi…",
+    "checkEmail": "Kiểm tra email để lấy liên kết đăng nhập."
+  },
+  "settings": {
+    "pageTitle": "Cài đặt",
+    "pageDescription": "Cập nhật hồ sơ và tùy chọn của bạn.",
+    "displayLanguage": {
+      "title": "Ngôn ngữ giao diện",
+      "description": "Thay đổi ngôn ngữ tại đây.",
+      "label": "Ngôn ngữ hiển thị",
+      "saving": "Đang lưu…",
+      "saved": "Đã lưu.",
+      "error": "Không thể cập nhật ngôn ngữ"
+    },
+    "privacy": {
+      "title": "Quyền riêng tư",
+      "body": "Nhật ký, thẻ ghi nhớ và dữ liệu hồ sơ của bạn là riêng tư. Chúng tôi không chia sẻ bài viết với bên thứ ba và không dùng nội dung của bạn để huấn luyện mô hình."
+    },
+    "profile": {
+      "title": "Hồ sơ",
+      "name": "Tên",
+      "namePlaceholder": "Tên hoặc biệt danh của bạn",
+      "languages": "Ngôn ngữ",
+      "languagesHelp": "Ngôn ngữ đầu tiên được dùng làm mục tiêu học mặc định trong nhật ký.",
+      "noLanguages": "Chưa thêm ngôn ngữ nào.",
+      "selectLanguage": "Chọn ngôn ngữ…",
+      "selectLevel": "Chọn trình độ…",
+      "addLanguage": "Thêm ngôn ngữ",
+      "add": "Thêm",
+      "saveProfile": "Lưu hồ sơ",
+      "loadLanguagesError": "Không thể tải danh sách ngôn ngữ",
+      "addLanguageError": "Thêm ít nhất một ngôn ngữ kèm trình độ.",
+      "saveFailed": "Lưu thất bại"
+    },
+    "more": {
+      "title": "Khác",
+      "logOut": "Đăng xuất",
+      "deleteAccount": "Xóa tài khoản",
+      "deleteConfirm": "Xóa tài khoản vĩnh viễn? Mọi nhật ký, thẻ ghi nhớ và dữ liệu hồ sơ sẽ bị xóa. Không thể hoàn tác.",
+      "deleting": "Đang xóa…",
+      "previewDeleteUnavailable": "Không thể xóa tài khoản ở chế độ xem trước.",
+      "deleteFailed": "Không thể xóa tài khoản"
+    }
+  },
+  "app": {
+    "nav": {
+      "write": "Viết",
+      "practice": "Luyện tập",
+      "progress": "Tiến độ",
+      "settings": "Cài đặt",
+      "signOut": "Đăng xuất",
+      "exitPreview": "Thoát xem trước",
+      "account": "Tài khoản",
+      "folioHome": "Trang chủ Folio",
+      "mainNav": "Chính",
+      "accountMenu": "Menu tài khoản"
+    },
+    "loading": "Đang tải"
+  },
+  "common": {
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "save": "Lưu",
+    "loading": "Đang tải…",
+    "saved": "Đã lưu.",
+    "saving": "Đang lưu…",
+    "account": "Tài khoản",
+    "exitPreview": "Thoát xem trước",
+    "logOut": "Đăng xuất",
+    "previewAccount": "Alex (xem trước)"
+  },
+  "customize": {
+    "label": "Tùy chỉnh",
+    "ariaLabel": "Tùy chỉnh giao diện",
+    "color": "Màu",
+    "lightMode": "Sáng",
+    "darkMode": "Tối",
+    "theme": "Giao diện"
+  },
+  "feedback": {
+    "label": "Phản hồi",
+    "clickHere": "nhấn vào đây"
+  },
+  "journal": {
+    "greeting": "Chào {name} 👋",
+    "greetingFallback": "bạn",
+    "subtitles": {
+      "0": "Meo meo, hôm nay bạn đã viết gì chưa?",
+      "1": "Hôm nay bạn nên viết gì đó (không thì…).",
+      "2": "Yo yo, hôm nay bạn đã viết gì chưa?",
+      "3": "Ai là mọt ngôn ngữ? Là bạn đó!",
+      "4": "Hôm nay bạn có lẽ nên viết gì đó (liếc mắt)"
+    },
+    "scrollPastEntries": "Cuộn xuống để xem bài cũ",
+    "entrySaved": "Đã lưu bài! Làm tốt lắm.",
+    "entrySaveFailed": "Không lưu được bài. Thử lại nhé.",
+    "writePlaceholder": "Khi kẹt, gõ // để dịch ngay trong câu",
+    "entryTitle": "Tiêu đề bài",
+    "pastEntries": "Bài trước",
+    "noEntries": "Chưa có bài nào.",
+    "flashcardCount": "{count, plural, one {# thẻ} other {# thẻ}}",
+    "saveEntry": "Lưu bài",
+    "pageOn": "Trang {page} / {total}",
+    "onThisPage": "Trên trang này",
+    "previousPage": "Trang trước",
+    "nextPage": "Trang sau",
+    "pressTabTranslate": "Nhấn Tab để dịch",
+    "pressEnterTranslate": "Nhấn Enter để dịch",
+    "translationFailed": "Dịch thất bại",
+    "translating": "Đang dịch…",
+    "help": "Trợ giúp",
+    "howToTranslate": "Cách dịch",
+    "howToTranslateInstructions": "Gõ <slash></slash> rồi từ hoặc cụm từ bạn muốn, sau đó nhấn <key></key>.",
+    "closeHelp": "Đóng trợ giúp",
+    "dailyPrompt": {
+      "label": "Gợi ý chủ đề",
+      "usePrompt": "Dùng",
+      "added": "Đã thêm",
+      "refresh": "Mới",
+      "easier": "Dễ hơn",
+      "harder": "Khó hơn",
+      "saveError": "Không lưu được gợi ý. Thử lại nhé.",
+      "ariaToday": "Gợi ý viết hôm nay",
+      "ariaRefresh": "Làm mới gợi ý"
+    },
+    "noTextYet": "Chưa có nội dung — mở bài để viết.",
+    "entryTitlePlaceholder": "Tiêu đề bài…",
+    "renameEntryTitle": "Đổi tiêu đề bài",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "editEntryAria": "Sửa bài: {title}",
+    "editEntryAriaWithSubtitle": "Sửa bài: {title}, {subtitle}",
+    "openEntryAria": "Mở bài để sửa: {title}",
+    "openEntryAriaWithSubtitle": "Mở bài để sửa: {title}, {subtitle}",
+    "pastEntriesToc": "Mục lục bài trước",
+    "translationBadge": "+ {count}"
+  },
+  "progress": {
+    "title": "Tiến độ",
+    "subtitle": "Theo dõi chuỗi ngày, từ vựng và hoạt động theo thời gian.",
+    "activity": "Hoạt động",
+    "chartTitle": "Bạn đã dùng bao nhiêu bản dịch?",
+    "chartEmpty": "Viết một bài nhật ký để xem tiến độ dịch tại đây.",
+    "reportCard": "Báo cáo Folio",
+    "reportCardAria": "Báo cáo Folio",
+    "downloadReport": "Tải báo cáo",
+    "savingReport": "Đang lưu báo cáo",
+    "writingSince": "Viết từ năm {year}",
+    "languagesLearning": "Ngôn ngữ đang học",
+    "noLanguagesYet": "Chưa có ngôn ngữ",
+    "totalEntries": "Tổng số bài",
+    "flashcardsCreated": "Thẻ đã tạo"
+  },
+  "flashcards": {
+    "title": "Luyện tập",
+    "description": "Ôn từ đã lưu từ nhật ký và giữ vững những gì bạn đang học.",
+    "practiceButton": "Luyện tập",
+    "itemCount": "{count, plural, one {# mục} other {# mục}}",
+    "emptyLibrary": "Chưa có từ nào. Bắt đầu viết nhật ký và dùng // để dịch. Từ bạn tra sẽ hiện ở đây.",
+    "searchPlaceholder": "Tìm mục…",
+    "noFilterMatch": "Không có mục nào khớp bộ lọc.",
+    "practiceCaughtUp": "Bạn đã xong hết. Quay lại sau bài nhật ký tiếp theo.",
+    "backToLibrary": "Về thư viện",
+    "exit": "Thoát",
+    "keyboardHint": "← → bài trước / sau · ↑ ↓ Space lật đáp án",
+    "sort": {
+      "entry": "Bài",
+      "recent": "Gần đây",
+      "ariaLabel": "Sắp xếp thẻ"
+    },
+    "view": {
+      "translation": "Bản dịch",
+      "native": "Gốc",
+      "both": "Cả hai",
+      "ariaLabel": "Chế độ xem thẻ"
+    },
+    "groups": {
+      "untitledEntry": "Bài chưa đặt tên",
+      "noLinkedEntry": "Không liên kết bài",
+      "flashcardCount": "{count, plural, one {# thẻ} other {# thẻ}}"
+    }
+  },
+  "onboarding": {
+    "levels": {
+      "beginner": "Sơ cấp",
+      "intermediate": "Trung cấp",
+      "proficient": "Thành thạo"
+    },
+    "ageRanges": {
+      "under_18": "Dưới 18",
+      "18_24": "18-24",
+      "25_34": "25-34",
+      "35_64": "35-64",
+      "65_plus": "65+",
+      "prefer_not_to_say": "Không muốn nói"
+    }
+  },
+  "locale": {
+    "switcherLabel": "Ngôn ngữ"
+  }
+}

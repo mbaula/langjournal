@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { FolioWordmark } from "@/components/app/folio-wordmark";
 import { FeedbackButton } from "@/components/feedback/feedback-button";
+import { LocaleSwitcher } from "@/components/locale/locale-switcher";
 import {
   marketingNavCtaClassName,
   marketingNavLinkClassName,
@@ -13,21 +15,22 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
-  { href: "/#solution", label: "Features" },
-  { href: "/#faq", label: "FAQ" },
-] as const;
-
 export function MarketingNav() {
+  const t = useTranslations("marketing.nav");
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/#solution", label: t("features") },
+    { href: "/#faq", label: t("faq") },
+  ] as const;
 
   return (
     <header className="sticky top-0 z-50 bg-background/75 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center lg:px-8">
         <Link
           href="/"
-          className="shrink-0 rounded-md transition-opacity hover:opacity-90"
-          aria-label="Folio home"
+          className="shrink-0 justify-self-start rounded-md transition-opacity hover:opacity-90"
+          aria-label={t("folioHome")}
           onClick={() => setMobileOpen(false)}
         >
           <FolioWordmark />
@@ -48,7 +51,8 @@ export function MarketingNav() {
           />
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center justify-self-end gap-2 sm:gap-3">
+          <LocaleSwitcher variant="marketing" className="hidden sm:block" />
           <Link
             href="/login"
             className={cn(
@@ -57,7 +61,7 @@ export function MarketingNav() {
               "hidden sm:inline-flex",
             )}
           >
-            Try Folio free
+            {t("tryFree")}
           </Link>
 
           <button
@@ -65,7 +69,7 @@ export function MarketingNav() {
             className="inline-flex size-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted/60 md:hidden"
             aria-expanded={mobileOpen}
             aria-controls="marketing-mobile-nav"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-label={mobileOpen ? t("closeMenu") : t("openMenu")}
             onClick={() => setMobileOpen((open) => !open)}
           >
             {mobileOpen ? (
@@ -108,6 +112,9 @@ export function MarketingNav() {
               "w-full justify-start px-2 py-3 text-left",
             )}
           />
+          <div className="px-2 py-3">
+            <LocaleSwitcher variant="marketing" className="w-full" />
+          </div>
           <Link
             href="/login"
             className={cn(
@@ -117,7 +124,7 @@ export function MarketingNav() {
             )}
             onClick={() => setMobileOpen(false)}
           >
-            Try Folio free
+            {t("tryFree")}
           </Link>
         </nav>
       </div>

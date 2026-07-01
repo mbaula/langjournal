@@ -1,14 +1,15 @@
 import type { CefrLevel } from "@prisma/client";
 
+import type { UiLocale } from "@/lib/i18n/locales";
 import {
   bumpCefrLevel,
   canBumpCefrLevel,
   canLowerCefrLevel,
   lowerCefrLevel,
 } from "@/lib/prompts/cefr";
+import { getLocalizedPromptText } from "@/lib/prompts/localized-prompts";
 import {
   getPromptCount,
-  getPromptText,
   type PromptCefrLevel,
 } from "@/lib/prompts/prompts";
 
@@ -64,9 +65,10 @@ export function buildPromptState(
   index: number,
   tooEasyStreak: number,
   tooHardStreak: number,
+  locale: UiLocale = "en",
 ): DailyPromptState {
   return {
-    text: getPromptText(level as PromptCefrLevel, index),
+    text: getLocalizedPromptText(level as PromptCefrLevel, index, locale),
     level,
     index,
     canVoteTooEasy: canBumpCefrLevel(level),
@@ -80,6 +82,7 @@ export function buildPromptState(
 export function previewNextPrompt(
   current: DailyPromptState,
   feedback?: PromptFeedback,
+  locale: UiLocale = "en",
 ): DailyPromptState {
   let nextLevel = current.level;
   let tooEasyStreak = current.tooEasyStreak;
@@ -99,5 +102,5 @@ export function previewNextPrompt(
   const excludeIndex = level === current.level ? current.index : undefined;
   const { index } = pickRandomUnseenIndex(level, [], excludeIndex);
 
-  return buildPromptState(level, index, tooEasyStreak, tooHardStreak);
+  return buildPromptState(level, index, tooEasyStreak, tooHardStreak, locale);
 }

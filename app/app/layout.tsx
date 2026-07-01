@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+import { getTranslations } from "next-intl/server";
+
 import { AppLayoutClient } from "@/components/app/app-layout-client";
 import { AppTopNavClient } from "@/components/app/app-top-nav-client";
 import { AuthSessionSync } from "@/components/auth/auth-session-sync";
@@ -17,18 +19,19 @@ export default async function AppLayout({
 }>) {
   const preview = await isAccountPreviewMode();
   const user = await requireAppSession();
+  const tCommon = await getTranslations("common");
 
   let userLabel: string;
   if (preview) {
     const onboarding = getDevPreviewOnboardingState();
-    userLabel = onboarding.displayName?.trim() || "Alex (preview)";
+    userLabel = onboarding.displayName?.trim() || tCommon("previewAccount");
   } else {
     const onboarding = await getOnboardingState(user.id);
     if (!onboarding.isComplete) {
       redirect("/onboarding");
     }
     userLabel =
-      onboarding.displayName?.trim() || user.email.trim() || "Account";
+      onboarding.displayName?.trim() || user.email.trim() || tCommon("account");
   }
 
   return (

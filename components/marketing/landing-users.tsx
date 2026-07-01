@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { LandingReveal } from "@/components/marketing/landing-reveal";
 import { cn } from "@/lib/utils";
@@ -11,46 +12,8 @@ type Scenario = {
   quote: string;
 };
 
-const leftScenarios: Scenario[] = [
-  {
-    id: "rome",
-    tag: "when travelling",
-    quote:
-      "This dish looks great, but I'm allergic to... wait, what's that word?",
-  },
-  {
-    id: "home",
-    tag: "when at home",
-    quote:
-      "At work, we're doing a type of... — wait, how do you say this?",
-  },
-  {
-    id: "studying",
-    tag: "when studying",
-    quote:
-      "The reading kept using this term for... actually, what's the word for it?",
-  },
-];
-
-const rightScenarios: Scenario[] = [
-  {
-    id: "friends",
-    tag: "when with friends",
-    quote: "It's so funny because — wait, nvm, I forgot the word.",
-  },
-  {
-    id: "traveling",
-    tag: "when traveling",
-    quote:
-      "Can we get off at the... the stop before the airport? I forgot what it's called.",
-  },
-  {
-    id: "texting",
-    tag: "when texting",
-    quote:
-      "See you at that place on... ugh, you know the street — I lost the word.",
-  },
-];
+const leftScenarioIds = ["rome", "home", "studying"] as const;
+const rightScenarioIds = ["friends", "traveling", "texting"] as const;
 
 /** Left and right alternate: L0, R0, L1, R1, L2, R2 */
 const SEQUENCE = [
@@ -66,7 +29,29 @@ const SCROLL_VH_PER_STEP = 55;
 const SECTION_HEIGHT_VH =
   100 + (SEQUENCE.length - 1) * SCROLL_VH_PER_STEP;
 
-function getScenarioForStep(step: number): (Scenario & { side: "left" | "right" }) | null {
+function useScenarios() {
+  const t = useTranslations("marketing.users.scenarios");
+
+  const leftScenarios: Scenario[] = leftScenarioIds.map((id) => ({
+    id,
+    tag: t(`${id}Tag`),
+    quote: t(`${id}Quote`),
+  }));
+
+  const rightScenarios: Scenario[] = rightScenarioIds.map((id) => ({
+    id,
+    tag: t(`${id}Tag`),
+    quote: t(`${id}Quote`),
+  }));
+
+  return { leftScenarios, rightScenarios };
+}
+
+function getScenarioForStep(
+  step: number,
+  leftScenarios: Scenario[],
+  rightScenarios: Scenario[],
+): (Scenario & { side: "left" | "right" }) | null {
   const item = SEQUENCE[step];
   if (!item) return null;
 
@@ -176,6 +161,8 @@ function ScrollProgressLine({ progress }: { progress: number }) {
 
 function useScrollScenarioProgress(
   sectionRef: React.RefObject<HTMLElement | null>,
+  leftScenarios: Scenario[],
+  rightScenarios: Scenario[],
 ) {
   const [step, setStep] = useState(0);
   const [stepProgress, setStepProgress] = useState(0);
@@ -236,15 +223,21 @@ function useScrollScenarioProgress(
     };
   }, [reducedMotion, sectionRef]);
 
-  const activeScenario = getScenarioForStep(step);
+  const activeScenario = getScenarioForStep(
+    step,
+    leftScenarios,
+    rightScenarios,
+  );
 
   return { step, stepProgress, scrollProgress, activeScenario };
 }
 
 export function LandingUsers() {
+  const t = useTranslations("marketing.users");
   const sectionRef = useRef<HTMLElement>(null);
+  const { leftScenarios, rightScenarios } = useScenarios();
   const { step, stepProgress, scrollProgress, activeScenario } =
-    useScrollScenarioProgress(sectionRef);
+    useScrollScenarioProgress(sectionRef, leftScenarios, rightScenarios);
 
   return (
     <section
@@ -282,17 +275,17 @@ export function LandingUsers() {
 
               <LandingReveal className="order-1 mx-auto flex w-full max-w-[18rem] flex-col items-center text-center lg:order-2 lg:justify-self-center">
                 <p className="font-sans text-[15px] leading-relaxed text-[#2C2C2C]/60 sm:text-base">
-                  if you&apos;ve said this more than once...
+                  {t("intro")}
                 </p>
 
                 <h2 className="mt-4 font-[family-name:var(--font-folio)] text-[clamp(1.875rem,4.5vw,3rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-[#2C2C2C]">
-                  Wait, what&apos;s the word?
+                  {t("headline")}
                 </h2>
 
                 <ScrollProgressLine progress={scrollProgress} />
 
                 <p className="font-[family-name:var(--font-folio)] text-[clamp(1.375rem,2.75vw,2rem)] font-semibold leading-[1.08] tracking-[-0.02em] text-[#2C2C2C]">
-                  then folio is for you
+                  {t("closing")}
                 </p>
               </LandingReveal>
 

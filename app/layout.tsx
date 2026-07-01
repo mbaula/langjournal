@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, IM_Fell_DW_Pica, Inclusive_Sans } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 import { AccentProvider } from "@/components/accent-provider";
 import { ThemeBootScript } from "@/components/theme-boot-script";
@@ -48,14 +50,17 @@ export const metadata: Metadata = {
     "Practice any language for free. Write daily, translate inline, and build a journal habit with Folio.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={`${inclusiveSans.variable} ${inclusiveSans.className} ${geistMono.variable} ${folioDisplay.variable} h-full antialiased`}
     >
@@ -63,7 +68,11 @@ export default function RootLayout({
         <ThemeBootScript script={themeBootScript} />
         <div className="app-grain" aria-hidden />
         <ThemeProvider>
-          <AccentProvider>{children}</AccentProvider>
+          <AccentProvider>
+            <NextIntlClientProvider locale={locale} messages={messages}>
+              {children}
+            </NextIntlClientProvider>
+          </AccentProvider>
         </ThemeProvider>
       </body>
     </html>

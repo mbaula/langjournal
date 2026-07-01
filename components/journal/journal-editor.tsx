@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "next-intl";
 
 import { journalEntryBodyClassName } from "@/components/journal/field-styles";
 import { JournalEditingBackdropContent } from "@/components/journal/journal-editing-backdrop-content";
@@ -207,6 +208,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     },
     ref,
   ) {
+  const t = useTranslations("journal");
   const [body, setBody] = useState(initialBody);
   const [translations, setTranslations] =
     useState<InlineTranslation[]>(initialTranslations);
@@ -343,13 +345,14 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     if (!slashHighlight) return null;
     if (textareaSelection.start < slashHighlight.start + 2) return null;
     return translateTrigger === "tab"
-      ? "Press Tab to translate"
-      : "Press Enter to translate";
+      ? t("pressTabTranslate")
+      : t("pressEnterTranslate");
   }, [
     slashHighlight,
     textareaSelection.start,
     translationLoading?.showSpinner,
     translateTrigger,
+    t,
   ]);
 
   const editingBackdrop = useMemo(
@@ -360,9 +363,10 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
         slashHighlight={slashHighlight}
         translationLoading={translationLoading}
         slashTranslateHint={slashTranslateHint}
+        translatingLabel={t("translating")}
       />
     ),
-    [body, translations, slashHighlight, translationLoading, slashTranslateHint],
+    [body, translations, slashHighlight, translationLoading, slashTranslateHint, t],
   );
 
   const syncCaretFromTextarea = useCallback((ta: HTMLTextAreaElement) => {
@@ -514,16 +518,16 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           translation?: InlineTranslation;
         };
         if (!res.ok) {
-          setError(data.error ?? "Translation failed");
+          setError(data.error ?? t("translationFailed"));
           return null;
         }
         return data.translation ?? null;
       } catch {
-        setError("Translation failed");
+        setError(t("translationFailed"));
         return null;
       }
     },
-    [entryId],
+    [entryId, t],
   );
 
   const startPrefetch = useCallback(
@@ -785,7 +789,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
         clearTranslationLoading();
 
         if (!fetched) {
-          setError("Translation failed");
+          setError(t("translationFailed"));
           return;
         }
 

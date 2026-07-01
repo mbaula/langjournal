@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { FolioWordmark } from "@/components/app/folio-wordmark";
 import { FeedbackButton } from "@/components/feedback/feedback-button";
@@ -8,7 +9,9 @@ import { cn } from "@/lib/utils";
 const footerLinkClassName =
   "rounded-md text-[15px] font-medium text-[#262628]/70 transition-colors hover:text-[#262628] sm:text-base";
 
-export function LandingFooter() {
+export async function LandingFooter() {
+  const t = await getTranslations("marketing.footer");
+
   return (
     <footer className="w-full bg-[#D6DC82] text-[#262628]">
       <div
@@ -20,7 +23,7 @@ export function LandingFooter() {
         <div className="flex flex-col gap-4">
           <FolioWordmark showBeta={false} />
           <p className="whitespace-nowrap font-[family-name:var(--font-folio)] text-[clamp(1.125rem,3.5vw,1.75rem)] font-semibold leading-none tracking-[-0.02em]">
-            Write It. Translate It. Learn It.
+            {t("tagline")}
           </p>
         </div>
 
@@ -30,10 +33,10 @@ export function LandingFooter() {
             aria-label="Footer navigation"
           >
             <Link href="/#solution" className={footerLinkClassName}>
-              Features
+              {t("features")}
             </Link>
             <Link href="/#faq" className={footerLinkClassName}>
-              FAQ
+              {t("faq")}
             </Link>
             <FeedbackButton
               variant="marketing"
@@ -42,7 +45,7 @@ export function LandingFooter() {
           </nav>
 
           <p className="text-[13px] text-[#262628]/65">
-            © {new Date().getFullYear()} Folio
+            {t("copyright", { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>

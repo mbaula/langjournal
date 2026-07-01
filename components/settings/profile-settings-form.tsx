@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,11 +18,9 @@ import {
   settingsSelectClassName,
 } from "@/components/settings/settings-field-styles";
 import type { OnboardingState, UserLanguageEntry } from "@/lib/db/onboarding";
+import { useOnboardingLabels } from "@/lib/i18n/hooks";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
-import {
-  LANGUAGE_LEVEL_LABELS,
-  ONBOARDING_LANGUAGE_LEVELS,
-} from "@/lib/onboarding/labels";
+import { ONBOARDING_LANGUAGE_LEVELS } from "@/lib/onboarding/labels";
 import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
 
 type Lang = { code: string; name: string };
@@ -31,6 +30,9 @@ type ProfileSettingsFormProps = {
 };
 
 export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) {
+  const t = useTranslations("settings.profile");
+  const tCommon = useTranslations("common");
+  const { languageLevelLabels } = useOnboardingLabels();
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initialState.displayName ?? "");
   const [userLanguages, setUserLanguages] = useState<UserLanguageEntry[]>(
@@ -58,7 +60,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
           languages?: Lang[];
         };
         if (!res.ok) {
-          if (!cancelled) setError(data.error ?? "Could not load languages");
+          if (!cancelled) setError(data.error ?? t("loadLanguagesError"));
           return;
         }
         const merged = mergeProfileCodes(data.languages ?? [], "en", "fr");
@@ -67,7 +69,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
         );
         if (!cancelled) setAvailableLanguages(sorted);
       } catch {
-        if (!cancelled) setError("Could not load languages");
+        if (!cancelled) setError(t("loadLanguagesError"));
       } finally {
         if (!cancelled) setLoadingLanguages(false);
       }
@@ -75,7 +77,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const getLanguageName = useCallback(
     (code: string) => {
@@ -113,7 +115,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
 
   const save = useCallback(async () => {
     if (userLanguages.length === 0) {
-      setError("Add at least one language you are learning.");
+      setError(t("addLanguageError"));
       return;
     }
 
@@ -131,7 +133,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
       });
       const data = (await res.json()) as OnboardingState & { error?: string };
       if (!res.ok) {
-        setError(data.error ?? "Save failed");
+        setError(data.error ?? t("saveFailed"));
         return;
       }
       setDisplayName(data.displayName ?? "");
@@ -140,23 +142,23 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
       router.refresh();
       window.setTimeout(() => setSaved(false), 2500);
     } catch {
-      setError("Save failed");
+      setError(t("saveFailed"));
     } finally {
       setSaving(false);
     }
-  }, [displayName, router, userLanguages]);
+  }, [displayName, router, t, userLanguages]);
 
   return (
-    <SettingsSection title="Profile">
+    <SettingsSection title={t("title")}>
       <SettingsPanelRow>
         <div className={settingsFieldRowClassName}>
-          <Label htmlFor="profile-display-name">Name</Label>
+          <Label htmlFor="profile-display-name">{t("name")}</Label>
           <input
             id="profile-display-name"
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Your name or nickname"
+            placeholder={t("namePlaceholder")}
             className={settingsInputClassName}
           />
         </div>
@@ -164,12 +166,9 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
 
       <SettingsPanelRow>
         <div className={settingsFieldRowStartClassName}>
-          <Label className="pt-2">Languages</Label>
+          <Label className="pt-2">{t("languages")}</Label>
           <div className="min-w-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              The first language is used as your default learning target in the
-              journal.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("languagesHelp")}</p>
 
             {userLanguages.length > 0 ? (
               <ul className="space-y-2">
@@ -193,7 +192,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                     >
                       {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
                         <option key={level} value={level}>
-                          {LANGUAGE_LEVEL_LABELS[level]}
+                          {languageLevelLabels[level]}
                         </option>
                       ))}
                     </select>
@@ -209,9 +208,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No languages added yet.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("noLanguages")}</p>
             )}
 
             {addingLanguage ? (
@@ -224,7 +221,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                     className={settingsSelectClassName}
                   >
                     <option value="">
-                      {loadingLanguages ? "Loading…" : "Select language…"}
+                      {loadingLanguages ? tCommon("loading") : t("selectLanguage")}
                     </option>
                     {unusedLanguages.map((language) => (
                       <option key={language.code} value={language.code}>
@@ -239,10 +236,10 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                     }
                     className={settingsSelectClassName}
                   >
-                    <option value="">Select level…</option>
+                    <option value="">{t("selectLevel")}</option>
                     {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
                       <option key={level} value={level}>
-                        {LANGUAGE_LEVEL_LABELS[level]}
+                        {languageLevelLabels[level]}
                       </option>
                     ))}
                   </select>
@@ -254,7 +251,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                     disabled={!newLangCode || !newLangLevel}
                     onClick={addLanguage}
                   >
-                    Add
+                    {t("add")}
                   </Button>
                   <Button
                     type="button"
@@ -266,7 +263,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                       setNewLangLevel("");
                     }}
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </Button>
                 </div>
               </div>
@@ -279,7 +276,7 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
                 onClick={() => setAddingLanguage(true)}
               >
                 <Plus className="size-4" strokeWidth={1.5} />
-                Add language
+                {t("addLanguage")}
               </Button>
             )}
           </div>
@@ -291,10 +288,10 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
           <div aria-hidden="true" />
           <div className="flex flex-wrap items-center justify-end gap-3">
             {saved && (
-              <span className="text-sm text-muted-foreground">Saved.</span>
+              <span className="text-sm text-muted-foreground">{tCommon("saved")}</span>
             )}
             <Button type="button" onClick={() => void save()} disabled={saving}>
-              {saving ? "Saving…" : "Save profile"}
+              {saving ? tCommon("saving") : t("saveProfile")}
             </Button>
           </div>
         </div>

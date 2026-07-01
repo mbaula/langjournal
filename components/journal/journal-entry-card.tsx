@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import {
@@ -41,6 +42,7 @@ export type JournalEntryCardProps = {
   dateLabel: string;
   languageLabel?: string | null;
   flashcardCount?: number;
+  formatFlashcard?: (count: number) => string;
   body: string | null;
   translations: unknown;
   onRenameTitle?: (entryId: string) => void;
@@ -51,8 +53,13 @@ function formatEntryMetaLabel(
   dateLabel: string,
   languageLabel?: string | null,
   flashcardCount?: number,
+  formatFlashcard?: (count: number) => string,
 ) {
-  return formatEntrySubtitle(dateLabel, { languageLabel, flashcardCount });
+  return formatEntrySubtitle(dateLabel, {
+    languageLabel,
+    flashcardCount,
+    formatFlashcard,
+  });
 }
 
 export function JournalEntryCard({
@@ -63,11 +70,13 @@ export function JournalEntryCard({
   dateLabel,
   languageLabel,
   flashcardCount,
+  formatFlashcard,
   body,
   translations,
   onRenameTitle,
   onDeleted,
 }: JournalEntryCardProps) {
+  const t = useTranslations("journal");
   const router = useRouter();
   const { removeEntryFromCache, updateEntryInCache } = useEntry();
   const [titleValue, setTitleValue] = useState<string | null>(title);
@@ -83,6 +92,7 @@ export function JournalEntryCard({
     dateLabel,
     languageLabel,
     flashcardCount,
+    formatFlashcard,
   );
   const displayTitle = trimmedTitle || entryMetaLabel;
   const subtitle = trimmedTitle ? entryMetaLabel : null;
@@ -184,7 +194,7 @@ export function JournalEntryCard({
                 "text-muted-foreground",
               )}
             >
-              No text yet — open this entry to write.
+              {t("noTextYet")}
             </p>
           ) : (
             lines.map((line, idx) => {
@@ -247,8 +257,8 @@ export function JournalEntryCard({
                 }}
                 onBlur={() => void saveRename()}
                 disabled={renamePending}
-                placeholder="Entry title…"
-                aria-label="Rename entry title"
+                placeholder={t("entryTitlePlaceholder")}
+                aria-label={t("renameEntryTitle")}
                 className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-ring"
               />
               <div className="flex shrink-0 items-center gap-1">
@@ -259,7 +269,7 @@ export function JournalEntryCard({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={cancelRename}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="button"
@@ -268,7 +278,7 @@ export function JournalEntryCard({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => void saveRename()}
                 >
-                  {renamePending ? "…" : "Save"}
+                  {renamePending ? "…" : t("save")}
                 </button>
               </div>
             </div>
@@ -281,8 +291,11 @@ export function JournalEntryCard({
             className="min-w-0 flex-1 cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={
               subtitle
-                ? `Edit entry: ${displayTitle}, ${subtitle}`
-                : `Edit entry: ${displayTitle}`
+                ? t("editEntryAriaWithSubtitle", {
+                    title: displayTitle,
+                    subtitle,
+                  })
+                : t("editEntryAria", { title: displayTitle })
             }
           >
             {entryHeader}
@@ -294,8 +307,11 @@ export function JournalEntryCard({
             className="min-w-0 flex-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={
               subtitle
-                ? `Open entry to edit: ${displayTitle}, ${subtitle}`
-                : `Open entry to edit: ${displayTitle}`
+                ? t("openEntryAriaWithSubtitle", {
+                    title: displayTitle,
+                    subtitle,
+                  })
+                : t("openEntryAria", { title: displayTitle })
             }
           >
             {entryHeader}

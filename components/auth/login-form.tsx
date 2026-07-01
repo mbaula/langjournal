@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   marketingFlowCardClassName,
@@ -23,6 +24,7 @@ export function LoginForm({
   error: initialError,
   className,
 }: LoginFormProps) {
+  const t = useTranslations("login");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
     "idle",
@@ -53,7 +55,7 @@ export function LoginForm({
     }
 
     setStatus("sent");
-    setMessage("Check your email for a sign-in link.");
+    setMessage(t("checkEmail"));
   }
 
   return (
@@ -63,7 +65,7 @@ export function LoginForm({
         className={cn(marketingFlowCardClassName, "flex flex-col gap-4")}
       >
         <label htmlFor="email" className="sr-only">
-          Email
+          {t("emailLabel")}
         </label>
         <input
           id="email"
@@ -71,7 +73,7 @@ export function LoginForm({
           type="email"
           autoComplete="email"
           required
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={status === "loading" || status === "sent"}
@@ -99,7 +101,7 @@ export function LoginForm({
             status === "sent" && "opacity-80",
           )}
         >
-          {status === "loading" ? "Sending link…" : "Email me a magic link"}
+          {status === "loading" ? t("submitting") : t("submit")}
         </Button>
       </form>
     </div>

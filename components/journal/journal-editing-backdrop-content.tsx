@@ -91,12 +91,14 @@ export function JournalEditingBackdropContent({
   slashHighlight,
   translationLoading = null,
   slashTranslateHint = null,
+  translatingLabel = "Translating…",
 }: {
   body: string;
   translations: InlineTranslation[];
   slashHighlight: SlashRange;
   translationLoading?: TranslationLoadingState | null;
   slashTranslateHint?: string | null;
+  translatingLabel?: string;
 }) {
   const keyCounter = { n: 0 };
   const pieces: ReactNode[] = [];
@@ -148,7 +150,7 @@ export function JournalEditingBackdropContent({
   return (
     <>
       {translationLoading?.showSpinner ? (
-        <span className="sr-only">Translating…</span>
+        <span className="sr-only">{translatingLabel}</span>
       ) : null}
       {pieces}
     </>

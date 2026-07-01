@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { journalEditorTranslationHighlightClassName } from "@/components/journal/field-styles";
 import { cn } from "@/lib/utils";
-
-const PLACEHOLDER_TEXT =
-  "When you're stuck, type // to translate in-line";
-
-const HIGHLIGHT_START = PLACEHOLDER_TEXT.indexOf("//");
 
 const TYPING_INTERVAL_MS = 42;
 const PAUSE_AT_END_MS = 2400;
@@ -19,6 +15,13 @@ type JournalWritePlaceholderProps = {
 };
 
 export function JournalWritePlaceholder({ className }: JournalWritePlaceholderProps) {
+  const t = useTranslations("journal");
+  const placeholderText = t("writePlaceholder");
+  const highlightStart = useMemo(
+    () => placeholderText.indexOf("//"),
+    [placeholderText],
+  );
+
   const [visibleLength, setVisibleLength] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -32,7 +35,7 @@ export function JournalWritePlaceholder({ className }: JournalWritePlaceholderPr
 
   useEffect(() => {
     if (prefersReducedMotion) {
-      setVisibleLength(PLACEHOLDER_TEXT.length);
+      setVisibleLength(placeholderText.length);
       return;
     }
 
@@ -42,7 +45,7 @@ export function JournalWritePlaceholder({ className }: JournalWritePlaceholderPr
     const tick = (nextLength: number) => {
       if (cancelled) return;
 
-      if (nextLength > PLACEHOLDER_TEXT.length) {
+      if (nextLength > placeholderText.length) {
         timeoutId = window.setTimeout(() => {
           setVisibleLength(0);
           timeoutId = window.setTimeout(() => tick(1), PAUSE_AT_START_MS);
@@ -52,7 +55,7 @@ export function JournalWritePlaceholder({ className }: JournalWritePlaceholderPr
 
       setVisibleLength(nextLength);
 
-      if (nextLength === PLACEHOLDER_TEXT.length) {
+      if (nextLength === placeholderText.length) {
         timeoutId = window.setTimeout(() => tick(nextLength + 1), PAUSE_AT_END_MS);
         return;
       }
@@ -66,16 +69,16 @@ export function JournalWritePlaceholder({ className }: JournalWritePlaceholderPr
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [prefersReducedMotion]);
+  }, [placeholderText, prefersReducedMotion]);
 
-  const visibleText = PLACEHOLDER_TEXT.slice(0, visibleLength);
+  const visibleText = placeholderText.slice(0, visibleLength);
   const plainPrefix =
-    HIGHLIGHT_START >= 0
-      ? visibleText.slice(0, Math.min(visibleLength, HIGHLIGHT_START))
+    highlightStart >= 0
+      ? visibleText.slice(0, Math.min(visibleLength, highlightStart))
       : visibleText;
   const highlightedPart =
-    HIGHLIGHT_START >= 0 && visibleLength > HIGHLIGHT_START
-      ? visibleText.slice(HIGHLIGHT_START)
+    highlightStart >= 0 && visibleLength > highlightStart
+      ? visibleText.slice(highlightStart)
       : "";
 
   return (
@@ -92,7 +95,7 @@ export function JournalWritePlaceholder({ className }: JournalWritePlaceholderPr
           {highlightedPart}
         </mark>
       ) : null}
-      {!prefersReducedMotion && visibleLength < PLACEHOLDER_TEXT.length ? (
+      {!prefersReducedMotion && visibleLength < placeholderText.length ? (
         <span className="ml-px inline-block h-[1.1em] w-px translate-y-px animate-[slash-demo-cursor_1s_ease-in-out_infinite] bg-muted-foreground/50 dark:bg-foreground/55" />
       ) : null}
     </p>

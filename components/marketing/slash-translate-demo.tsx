@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { journalEditorTranslationHighlightClassName } from "@/components/journal/field-styles";
 import { cn } from "@/lib/utils";
-
-const DEMO_STATIC_PREFIX =
-  "No more switching between apps to write and lose your flow. Just translate ";
 
 type DemoScenario = {
   id: string;
@@ -70,6 +68,7 @@ export function SlashTranslateDemo({
   variant = "default",
   className,
 }: SlashTranslateDemoProps) {
+  const t = useTranslations("marketing.demo");
   const isEmbedded = variant === "hero" || variant === "compact";
   const [scenarioIndex, setScenarioIndex] = useState(0);
   const [phase, setPhase] = useState<DemoPhase>("slash");
@@ -133,7 +132,7 @@ export function SlashTranslateDemo({
           : "text-base leading-[1.65] text-muted-foreground/70",
       )}
     >
-      {DEMO_STATIC_PREFIX}
+      {t("prefix")}
       {phase === "done" ? (
         <mark
           className={journalEditorTranslationHighlightClassName}
@@ -176,7 +175,7 @@ export function SlashTranslateDemo({
           <span className="size-2 rounded-full bg-sidebar-primary/25" />
           <span className="size-2 rounded-full bg-sidebar-primary/15" />
           <span className="ml-2 text-[11px] font-medium text-muted-foreground">
-            Folio — Today's entry
+            {t("windowTitle")}
           </span>
         </div>
 

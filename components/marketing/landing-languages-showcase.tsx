@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { LandingReveal } from "@/components/marketing/landing-reveal";
 import { landingSectionXClassName } from "@/components/marketing/landing-spacing";
 import { GOOGLE_TRANSLATE_LANGUAGE_FLAGS } from "@/lib/marketing/google-translate-language-flags";
@@ -28,13 +30,15 @@ function LanguageFlagMarquee() {
   );
 }
 
-export function LandingLanguagesShowcase() {
+export async function LandingLanguagesShowcase() {
+  const t = await getTranslations("marketing.languagesShowcase");
+
   return (
     <section className="overflow-hidden bg-background">
       <div className={cn("mx-auto max-w-6xl", landingSectionXClassName)}>
         <LandingReveal className="text-center">
           <h2 className="font-[family-name:var(--font-folio)] text-[clamp(1.875rem,4vw,2.75rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground">
-            Support over 160+ languages
+            {t("title")}
           </h2>
         </LandingReveal>
       </div>

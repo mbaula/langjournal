@@ -2,6 +2,7 @@
 
 import { ArrowDown } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { journalWriteAreaShellClassName, journalWriteEditorContainerClassName, journalWriteEditorMinHeightClassName, journalWritePageShellClassName, journalWriteTitleClassName, journalWriteViewportClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
@@ -22,7 +23,7 @@ import type { DailyPromptState } from "@/lib/prompts/prompt-core";
 import { cn } from "@/lib/utils";
 
 type JournalWriteBodyProps = {
-  greetingName: string;
+  greeting: string;
   subtitle: string;
   sourceLanguage: string;
   targetLanguage: string;
@@ -38,9 +39,6 @@ type JournalWriteBodyProps = {
 
 export type { JournalWriteBodyProps };
 
-const FINISH_SUCCESS_MESSAGE =
-  "Entry saved! Great job practicing your writing today.";
-
 function PastEntriesScrollHint({
   visible,
   pastEntriesSectionRef,
@@ -48,6 +46,7 @@ function PastEntriesScrollHint({
   visible: boolean;
   pastEntriesSectionRef: React.RefObject<HTMLElement | null>;
 }) {
+  const t = useTranslations("journal");
   const [mounted, setMounted] = useState(false);
   const [showHint, setShowHint] = useState(true);
 
@@ -87,7 +86,7 @@ function PastEntriesScrollHint({
     >
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
         <ArrowDown className="size-3.5 shrink-0 sm:size-4" />
-        <span className="leading-snug">Scroll down for past entries</span>
+        <span className="leading-snug">{t("scrollPastEntries")}</span>
       </p>
     </div>
   );
@@ -116,7 +115,7 @@ function toEntryRow(entry: {
 }
 
 export function JournalWriteBody({
-  greetingName,
+  greeting,
   subtitle,
   sourceLanguage,
   targetLanguage,
@@ -129,6 +128,7 @@ export function JournalWriteBody({
   dailyPrompt: initialDailyPrompt,
   initialEditEntryId,
 }: JournalWriteBodyProps) {
+  const t = useTranslations("journal");
   const router = useRouter();
   const [source, setSource] = useState(sourceLanguage);
   const [target, setTarget] = useState(targetLanguage);
@@ -246,7 +246,7 @@ export function JournalWriteBody({
       setEditorSeed((value) => value + 1);
       setDailyPrompt(data.dailyPrompt);
       setActivePromptText(data.dailyPrompt?.text ?? "");
-      setSuccessMessage(FINISH_SUCCESS_MESSAGE);
+      setSuccessMessage(t("entrySaved"));
 
       router.refresh();
 
@@ -257,7 +257,7 @@ export function JournalWriteBody({
     } finally {
       setFinishPending(false);
     }
-  }, [activeEntryId, draftBody, entryTitle, finishPending, router]);
+  }, [activeEntryId, draftBody, entryTitle, finishPending, router, t]);
 
   const isPromptAdopted =
     activePromptText.trim().length > 0 &&
@@ -329,7 +329,7 @@ export function JournalWriteBody({
 
   return (
     <div className={journalWritePageShellClassName}>
-      <JournalHomeHeader greetingName={greetingName} subtitle={subtitle} />
+      <JournalHomeHeader greeting={greeting} subtitle={subtitle} />
 
       {dailyPrompt ? (
         <div

@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   EntryList,
@@ -75,6 +76,7 @@ export function PastEntriesSection({
   initialEditingEntryId,
   sectionRef,
 }: PastEntriesSectionProps) {
+  const t = useTranslations("journal");
   const totalPages = Math.max(1, Math.ceil(entries.length / PAST_ENTRIES_PAGE_SIZE));
   const [page, setPage] = useState(0);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(
@@ -240,17 +242,17 @@ export function PastEntriesSection({
     >
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-xl font-semibold tracking-tight text-foreground">
-          Past entries
+          {t("pastEntries")}
         </h2>
         {showPagination ? (
           <div className="flex items-center gap-2">
             <span className="hidden text-sm text-muted-foreground sm:inline">
-              Page {page + 1} of {totalPages}
+              {t("pageOn", { page: page + 1, total: totalPages })}
             </span>
             <button
               type="button"
               className={paginationNavButtonClassName}
-              aria-label="Previous page"
+              aria-label={t("previousPage")}
               disabled={page === 0}
               onClick={goToPreviousPage}
             >
@@ -259,7 +261,7 @@ export function PastEntriesSection({
             <button
               type="button"
               className={paginationNavButtonClassName}
-              aria-label="Next page"
+              aria-label={t("nextPage")}
               disabled={page >= totalPages - 1}
               onClick={goToNextPage}
             >
@@ -271,11 +273,11 @@ export function PastEntriesSection({
 
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12 xl:gap-16">
         <nav
-          aria-label="Past entries table of contents"
+          aria-label={t("pastEntriesToc")}
           className="lg:sticky lg:top-24 lg:w-44 lg:shrink-0 xl:w-52"
         >
           <p className="mb-3 hidden text-xs font-semibold tracking-wide text-muted-foreground uppercase lg:block">
-            On this page
+            {t("onThisPage")}
           </p>
           <ul className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0">
             {tocItems.map((item) => {
@@ -300,7 +302,7 @@ export function PastEntriesSection({
                       </span>
                       {item.translationCount > 0 ? (
                         <span className="shrink-0 rounded-full border border-border bg-background px-1.5 py-px text-xs font-medium tabular-nums text-muted-foreground">
-                          + {item.translationCount}
+                          {t("translationBadge", { count: item.translationCount })}
                         </span>
                       ) : null}
                     </div>

@@ -6,6 +6,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   CardLanguageViewSelector,
@@ -52,10 +53,6 @@ type FlashcardsViewProps = {
 
 const AUTOSAVE_MS = 700;
 
-function itemCountLabel(count: number): string {
-  return `${count} ${count === 1 ? "item" : "items"}`;
-}
-
 export function FlashcardsView({
   initialFlashcards,
   initialStats,
@@ -64,6 +61,7 @@ export function FlashcardsView({
   targetLanguage,
   previewMode = false,
 }: FlashcardsViewProps) {
+  const t = useTranslations("flashcards");
   const [flashcards, setFlashcards] = useState(initialFlashcards);
   const [stats, setStats] = useState(initialStats);
   const [viewMode, setViewMode] = useState<ViewMode>("library");
@@ -342,10 +340,10 @@ export function FlashcardsView({
       return (
         <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 text-center">
           <p className="max-w-md text-base text-muted-foreground">
-            You&apos;re all caught up. Come back after your next journal entry.
+            {t("practiceCaughtUp")}
           </p>
           <Button type="button" variant="outline" onClick={() => setViewMode("library")}>
-            Back to library
+            {t("backToLibrary")}
           </Button>
         </div>
       );
@@ -356,7 +354,7 @@ export function FlashcardsView({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button type="button" variant="ghost" size="sm" onClick={() => setViewMode("library")}>
             <X className="size-4" />
-            Exit
+            {t("exit")}
           </Button>
           <div className="flex items-center gap-3">
             {nativeLanguage && targetLanguage ? (
@@ -380,7 +378,7 @@ export function FlashcardsView({
         />
 
         <p className="text-center text-xs text-muted-foreground">
-          ← → previous / next card · ↑ ↓ Space reveal answer
+          {t("keyboardHint")}
         </p>
       </div>
     );
@@ -391,14 +389,13 @@ export function FlashcardsView({
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className={journalPageTitleClassName}>Practice</h1>
+            <h1 className={journalPageTitleClassName}>{t("title")}</h1>
             <span className="inline-flex items-center rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-              {itemCountLabel(displayedItemCount)}
+              {t("itemCount", { count: displayedItemCount })}
             </span>
           </div>
           <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Review words saved from your journal and keep what you&apos;re learning
-            fresh.
+            {t("description")}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -415,7 +412,7 @@ export function FlashcardsView({
             ) : (
               <span className="inline-block size-4 shrink-0" aria-hidden />
             )}
-            Practice
+            {t("practiceButton")}
           </Button>
         </div>
       </header>
@@ -423,8 +420,7 @@ export function FlashcardsView({
       {flashcards.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
           <p className="mx-auto max-w-md text-base leading-relaxed text-muted-foreground">
-            No words saved yet. Start journaling and use // to translate. Words you
-            look up will show up here.
+            {t("emptyLibrary")}
           </p>
         </div>
       ) : (
@@ -450,16 +446,14 @@ export function FlashcardsView({
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search items…"
+                placeholder={t("searchPlaceholder")}
                 className={flashcardToolbarSearchClassName}
               />
             </div>
           </div>
 
           {filteredCards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No items match your filters.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("noFilterMatch")}</p>
           ) : librarySort === "entry" ? (
             <FlashcardLibraryEntrySections
               groups={entryGroups}

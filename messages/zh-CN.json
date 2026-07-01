@@ -1,0 +1,325 @@
+{
+  "marketing": {
+    "nav": {
+      "features": "功能",
+      "faq": "常见问题",
+      "tryFree": "免费试用 Folio",
+      "folioHome": "Folio 首页",
+      "openMenu": "打开菜单",
+      "closeMenu": "关闭菜单"
+    },
+    "hero": {
+      "eyebrow": "语言学习",
+      "title": "写。译。学。",
+      "cta": "免费试用 Folio"
+    },
+    "demo": {
+      "prefix": "不必在多个应用之间切换而打断写作节奏。只需翻译 ",
+      "windowTitle": "Folio — 今日日记"
+    },
+    "featuresOverview": {
+      "title": "轻松学习语言写作",
+      "description": "别再为了写一句话而打开<highlight>无数个网站</highlight>。Folio 一个应用就够了。",
+      "write": "写",
+      "translate": "译",
+      "practice": "练",
+      "track": "追"
+    },
+    "featuresDetail": {
+      "writeTitle": "写",
+      "writeDescription": "通过<strong>适合你水平的提示</strong>练习写作，从 A1 到 C2。",
+      "translateTitle": "译",
+      "translateDescription": "不必再打开无数应用。<strong>在 Folio 内找到需要的词</strong>。",
+      "practiceTitle": "练",
+      "practiceDescription": "Folio 会自动把<strong>新词保存为闪卡</strong>，方便你练习！",
+      "trackTitle": "追",
+      "trackDescription": "跟踪你的连续天数、词汇量和<strong>长期进步</strong>。"
+    },
+    "languagesShowcase": {
+      "title": "支持 160+ 种语言"
+    },
+    "problemSolution": {
+      "title": "Folio 让你保持写作心流。",
+      "subtitle": "以下是我们如何解决问题。",
+      "problemLabel": "问题",
+      "solutionLabel": "解决方案",
+      "problems": {
+        "0": "切换应用的时间比写作还多",
+        "1": "词汇表学了却从不用",
+        "2": "每次卡在单词上就失去动力",
+        "3": "教科书式表达——不像真实对话"
+      },
+      "solutions": {
+        "0": "用 // 命令在句中即时翻译",
+        "1": "从生活语境中学习词汇",
+        "2": "跟踪连续天数、词汇和进度",
+        "3": "保存单词到闪卡进行练习"
+      }
+    },
+    "users": {
+      "intro": "如果你不止一次说过这句话……",
+      "headline": "等等，那个词怎么说？",
+      "closing": "那 Folio 就是为你准备的",
+      "scenarios": {
+        "romeTag": "旅行时",
+        "romeQuote": "这道菜看起来不错，但我对……等等，那个词怎么说？",
+        "homeTag": "在家时",
+        "homeQuote": "工作上我们在做一种……——等等，这怎么说？",
+        "studyingTag": "学习时",
+        "studyingQuote": "阅读里一直用这个术语表示……其实，那个词怎么说？",
+        "friendsTag": "和朋友在一起时",
+        "friendsQuote": "太好笑了因为——等等，算了，我忘了那个词。",
+        "travelingTag": "出行时",
+        "travelingQuote": "我们能在……机场前一站下车吗？我忘了叫什么。",
+        "textingTag": "发消息时",
+        "textingQuote": "在那条……呃，你知道的那条街见——我把词忘了。"
+      }
+    },
+    "joinCta": {
+      "label": "加入 Folio"
+    },
+    "faq": {
+      "title": "加入语言学习者社区",
+      "items": {
+        "slashCommand": {
+          "question": "// 命令是什么？",
+          "answer": "在日记任意位置输入 // 并用你自己的话书写——Folio 会在原地即时翻译。无需切换标签页，不打断心流。"
+        },
+        "privacy": {
+          "question": "我的日记是私密的吗？",
+          "answer": "当然。你的内容只属于你。我们不会与任何人分享，也不会用于训练 AI 模型。"
+        },
+        "report": {
+          "question": "如何报告 Folio 的问题？",
+          "answer": "我们随时为你提供帮助！点击<feedbackLink>这里</feedbackLink>或随时使用反馈按钮——无论是遇到错误、功能建议还是需要帮助。"
+        },
+        "beta": {
+          "question": "什么是测试版？",
+          "answer": "Folio 处于早期访问阶段，我们仍在积极构建和改进。目前完全免费，你可能会偶尔遇到错误——如有问题请告诉我们。"
+        },
+        "cancel": {
+          "question": "可以随时取消吗？",
+          "answer": "可以，没有任何约束。你可以随时取消订阅，或在设置中完全删除账户。"
+        },
+        "startLevel": {
+          "question": "开始前需要会这门语言吗？",
+          "answer": "完全不需要——你可以从零开始。不过，如果你已有一些基础并想练习造句，Folio 会更合适。"
+        }
+      }
+    },
+    "footer": {
+      "tagline": "写。译。学。",
+      "features": "功能",
+      "faq": "常见问题",
+      "copyright": "© {year} Folio"
+    }
+  },
+  "login": {
+    "eyebrow": "登录",
+    "title": "使用邮箱继续",
+    "description": "我们会发送 magic link——无需记住密码。",
+    "backToHome": "返回首页",
+    "emailLabel": "邮箱",
+    "emailPlaceholder": "you@example.com",
+    "submit": "发送 magic link",
+    "submitting": "发送中…",
+    "checkEmail": "请查收邮件中的登录链接。"
+  },
+  "settings": {
+    "pageTitle": "设置",
+    "pageDescription": "更新你的个人资料和偏好。",
+    "displayLanguage": {
+      "title": "显示语言",
+      "description": "在此更改语言。",
+      "label": "界面语言",
+      "saving": "保存中…",
+      "saved": "已保存。",
+      "error": "无法更新语言"
+    },
+    "privacy": {
+      "title": "隐私",
+      "body": "你的日记、闪卡和个人资料数据仅属于你。我们不会与第三方分享你的写作内容，也不会用你的内容训练模型。"
+    },
+    "profile": {
+      "title": "个人资料",
+      "name": "姓名",
+      "namePlaceholder": "你的姓名或昵称",
+      "languages": "语言",
+      "languagesHelp": "列表中的第一种语言将作为日记中的默认学习目标。",
+      "noLanguages": "尚未添加语言。",
+      "selectLanguage": "选择语言…",
+      "selectLevel": "选择水平…",
+      "addLanguage": "添加语言",
+      "add": "添加",
+      "saveProfile": "保存资料",
+      "loadLanguagesError": "无法加载语言列表",
+      "addLanguageError": "请至少添加一种语言并选择水平。",
+      "saveFailed": "保存失败"
+    },
+    "more": {
+      "title": "更多",
+      "logOut": "退出登录",
+      "deleteAccount": "删除账户",
+      "deleteConfirm": "永久删除账户？所有日记、闪卡和个人资料将被移除，且无法恢复。",
+      "deleting": "删除中…",
+      "previewDeleteUnavailable": "预览模式下无法删除账户。",
+      "deleteFailed": "无法删除账户"
+    }
+  },
+  "app": {
+    "nav": {
+      "write": "写作",
+      "practice": "练习",
+      "progress": "进度",
+      "settings": "设置",
+      "signOut": "退出登录",
+      "exitPreview": "退出预览",
+      "account": "账户",
+      "folioHome": "Folio 首页",
+      "mainNav": "主导航",
+      "accountMenu": "账户菜单"
+    },
+    "loading": "加载中"
+  },
+  "common": {
+    "cancel": "取消",
+    "delete": "删除",
+    "save": "保存",
+    "loading": "加载中…",
+    "saved": "已保存。",
+    "saving": "保存中…",
+    "account": "账户",
+    "exitPreview": "退出预览",
+    "logOut": "退出登录",
+    "previewAccount": "Alex（预览）"
+  },
+  "customize": {
+    "label": "自定义",
+    "ariaLabel": "自定义外观",
+    "color": "颜色",
+    "lightMode": "浅色模式",
+    "darkMode": "深色模式",
+    "theme": "主题"
+  },
+  "feedback": {
+    "label": "反馈",
+    "clickHere": "点击这里"
+  },
+  "journal": {
+    "greeting": "你好，{name} 👋",
+    "greetingFallback": "朋友",
+    "subtitles": {
+      "0": "喵喵，今天写点什么了吗？",
+      "1": "今天该写点什么了（不然…）。",
+      "2": "哟，今天写了吗？",
+      "3": "谁是语言迷？就是你！",
+      "4": "你今天大概该写点什么（斜眼）"
+    },
+    "scrollPastEntries": "向下滚动查看往期日记",
+    "entrySaved": "已保存！今天完成得很好。",
+    "entrySaveFailed": "无法保存，请重试。",
+    "writePlaceholder": "卡住时输入 // 即可行内翻译",
+    "entryTitle": "日记标题",
+    "pastEntries": "往期日记",
+    "noEntries": "还没有日记。",
+    "flashcardCount": "{count, plural, one {# 张闪卡} other {# 张闪卡}}",
+    "saveEntry": "保存日记",
+    "pageOn": "第 {page} 页，共 {total} 页",
+    "onThisPage": "本页",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "pressTabTranslate": "按 Tab 翻译",
+    "pressEnterTranslate": "按 Enter 翻译",
+    "translationFailed": "翻译失败",
+    "translating": "翻译中…",
+    "help": "帮助",
+    "howToTranslate": "如何翻译",
+    "howToTranslateInstructions": "输入 <slash></slash> 后跟要翻译的词或短语，然后按 <key></key>。",
+    "closeHelp": "关闭帮助",
+    "dailyPrompt": {
+      "label": "写作提示",
+      "usePrompt": "使用提示",
+      "added": "已添加",
+      "refresh": "刷新",
+      "easier": "更简单",
+      "harder": "更难",
+      "saveError": "无法保存该提示，请重试。",
+      "ariaToday": "今日写作提示",
+      "ariaRefresh": "刷新提示"
+    },
+    "noTextYet": "暂无内容 — 打开这篇日记开始写作。",
+    "entryTitlePlaceholder": "日记标题…",
+    "renameEntryTitle": "重命名日记标题",
+    "cancel": "取消",
+    "save": "保存",
+    "editEntryAria": "编辑日记：{title}",
+    "editEntryAriaWithSubtitle": "编辑日记：{title}，{subtitle}",
+    "openEntryAria": "打开日记编辑：{title}",
+    "openEntryAriaWithSubtitle": "打开日记编辑：{title}，{subtitle}",
+    "pastEntriesToc": "往期日记目录",
+    "translationBadge": "+ {count}"
+  },
+  "progress": {
+    "title": "进度",
+    "subtitle": "跟踪连续天数、词汇量和长期活动。",
+    "activity": "活动",
+    "chartTitle": "你使用了多少翻译？",
+    "chartEmpty": "写一篇日记后即可在此查看翻译进度。",
+    "reportCard": "Folio 成绩单",
+    "reportCardAria": "Folio 成绩单",
+    "downloadReport": "下载成绩单",
+    "savingReport": "正在保存成绩单",
+    "writingSince": "自 {year} 年起写作",
+    "languagesLearning": "正在学习的语言",
+    "noLanguagesYet": "尚无语言",
+    "totalEntries": "日记总数",
+    "flashcardsCreated": "已创建闪卡"
+  },
+  "flashcards": {
+    "title": "练习",
+    "description": "复习从日记中保存的单词，巩固所学。",
+    "practiceButton": "练习",
+    "itemCount": "{count, plural, one {# 项} other {# 项}}",
+    "emptyLibrary": "还没有保存的单词。开始写日记并用 // 翻译，查过的词会出现在这里。",
+    "searchPlaceholder": "搜索…",
+    "noFilterMatch": "没有符合筛选条件的项目。",
+    "practiceCaughtUp": "已全部完成。写完下一篇日记后再来吧。",
+    "backToLibrary": "返回词库",
+    "exit": "退出",
+    "keyboardHint": "← → 上/下一张 · ↑ ↓ 空格显示答案",
+    "sort": {
+      "entry": "日记",
+      "recent": "最近",
+      "ariaLabel": "排序闪卡"
+    },
+    "view": {
+      "translation": "译文",
+      "native": "原文",
+      "both": "双语",
+      "ariaLabel": "卡片语言视图"
+    },
+    "groups": {
+      "untitledEntry": "未命名日记",
+      "noLinkedEntry": "未关联日记",
+      "flashcardCount": "{count, plural, one {# 张闪卡} other {# 张闪卡}}"
+    }
+  },
+  "onboarding": {
+    "levels": {
+      "beginner": "初级",
+      "intermediate": "中级",
+      "proficient": "高级"
+    },
+    "ageRanges": {
+      "under_18": "18 岁以下",
+      "18_24": "18-24",
+      "25_34": "25-34",
+      "35_64": "35-64",
+      "65_plus": "65+",
+      "prefer_not_to_say": "不愿透露"
+    }
+  },
+  "locale": {
+    "switcherLabel": "语言"
+  }
+}

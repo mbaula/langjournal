@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import {
   ChartColumnIncreasing,
@@ -30,6 +31,8 @@ export function AppTopNavClient({
   avatarLetter = null,
   previewMode = false,
 }: AppTopNavClientProps) {
+  const t = useTranslations("app.nav");
+  const tCommon = useTranslations("common");
   const pathname = usePathname();
   const router = useRouter();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -49,12 +52,11 @@ export function AppTopNavClient({
     pathname === "/app/journal" || pathname.startsWith("/app/journal?");
   const progressActive = pathname.startsWith("/app/progress");
   const flashcardsActive = pathname.startsWith("/app/flashcards");
-  const displayUser = userLabel.trim() || "Account";
+  const displayUser = userLabel.trim() || tCommon("account");
   const profileInitials = avatarLetter;
 
   useEffect(() => {
     router.prefetch("/app/journal");
-    router.prefetch("/app/flashcards");
   }, [router]);
 
   return (
@@ -63,13 +65,13 @@ export function AppTopNavClient({
         <Link
           href="/app/journal"
           className="justify-self-start shrink-0 rounded-md transition-opacity hover:opacity-90"
-          aria-label="Folio home"
+          aria-label={t("folioHome")}
         >
           <FolioWordmark />
         </Link>
 
         <nav
-          aria-label="Main"
+          aria-label={t("mainNav")}
           className={appNavTabGroupClass}
         >
           <Link
@@ -82,10 +84,11 @@ export function AppTopNavClient({
               strokeWidth={1.5}
               aria-hidden={!writeActive}
             />
-            <span>Write</span>
+            <span>{t("write")}</span>
           </Link>
           <Link
             href="/app/flashcards"
+            prefetch={false}
             suppressHydrationWarning
             className={appNavTabClass(flashcardsActive)}
           >
@@ -94,7 +97,7 @@ export function AppTopNavClient({
               strokeWidth={1.5}
               aria-hidden={!flashcardsActive}
             />
-            <span>Practice</span>
+            <span>{t("practice")}</span>
           </Link>
           <Link
             href="/app/progress"
@@ -107,7 +110,7 @@ export function AppTopNavClient({
               strokeWidth={1.5}
               aria-hidden={!progressActive}
             />
-            <span>Progress</span>
+            <span>{t("progress")}</span>
           </Link>
         </nav>
 
@@ -126,7 +129,7 @@ export function AppTopNavClient({
               )}
               aria-expanded={userMenuOpen}
               aria-haspopup="menu"
-              aria-label="Account menu"
+              aria-label={t("accountMenu")}
             >
               <span className="flex size-7 items-center justify-center overflow-hidden rounded-full border border-border bg-muted/50 text-xs font-medium text-foreground/85">
                 {profileInitials ? (
@@ -159,7 +162,7 @@ export function AppTopNavClient({
                   onClick={() => setUserMenuOpen(false)}
                 >
                   <Settings className="size-4 opacity-70" strokeWidth={1.5} />
-                  Settings
+                  {t("settings")}
                 </Link>
                 <Link
                   href={
@@ -172,7 +175,7 @@ export function AppTopNavClient({
                   onClick={() => setUserMenuOpen(false)}
                 >
                   <LogOut className="size-4 opacity-70" strokeWidth={1.5} />
-                  {previewMode ? "Exit preview" : "Sign out"}
+                  {previewMode ? t("exitPreview") : t("signOut")}
                 </Link>
               </div>
             ) : null}
