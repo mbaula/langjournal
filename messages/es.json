@@ -10,11 +10,14 @@
     },
     "hero": {
       "eyebrow": "Aprendizaje de idiomas",
-      "title": "Escríbelo. Tradúcelo. Aprende.",
+      "title": "folio te mantiene en el flujo",
+      "titleBrand": "folio",
+      "titleRest": "te mantiene en el flujo.",
+      "subtitle": "Escribe en tu idioma objetivo en una sola app. Se acabó cambiar de pestaña para traducir una palabra.",
       "cta": "Prueba Folio gratis"
     },
     "demo": {
-      "prefix": "No más cambiar entre apps y perder el ritmo al escribir. Solo traduce ",
+      "prefix": "Practica armar frases sin cambiar de app ni perder el hilo de tus ideas. Solo traduce ",
       "windowTitle": "Folio — Entrada de hoy"
     },
     "featuresOverview": {
@@ -39,21 +42,21 @@
       "title": "Compatible con más de 160 idiomas"
     },
     "problemSolution": {
-      "title": "Folio te mantiene en el flujo.",
+      "title": "Aprender idiomas, más fácil",
       "subtitle": "Así estamos resolviendo el problema.",
       "problemLabel": "El problema",
       "solutionLabel": "La solución",
       "problems": {
-        "0": "Más tiempo cambiando apps que escribiendo",
-        "1": "Listas de vocabulario que nunca usas",
-        "2": "Pierdes el impulso cada vez que te atas en una palabra",
-        "3": "Frases de libro de texto — no como hablas de verdad"
+        "0": "Cambiar de app a mitad de frase para traducir",
+        "1": "Listas de vocabulario que nunca vuelves a abrir",
+        "2": "Apps demasiado fáciles o demasiado difíciles",
+        "3": "Difícil saber cuánto avanzas cuando aprendes por tu cuenta"
       },
       "solutions": {
         "0": "Traduce en mitad de la frase con el comando //",
-        "1": "Aprende palabras en contexto de tu vida",
-        "2": "Sigue tu racha, palabras y progreso",
-        "3": "Guarda palabras en flashcards para practicar"
+        "1": "Palabras guardadas en flashcards automáticamente",
+        "2": "Consignas diarias con el reto justo — ni fácil ni imposible",
+        "3": "Rachas y progreso mientras escribes"
       }
     },
     "users": {

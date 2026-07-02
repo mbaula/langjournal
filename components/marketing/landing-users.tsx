@@ -15,14 +15,11 @@ type Scenario = {
 const leftScenarioIds = ["rome", "home", "studying"] as const;
 const rightScenarioIds = ["friends", "traveling", "texting"] as const;
 
-/** Left and right alternate: L0, R0, L1, R1, L2, R2 */
+/** Left and right alternate: L0, R0, L1 — first three scenarios only */
 const SEQUENCE = [
   { side: "left" as const, index: 0 },
   { side: "right" as const, index: 0 },
   { side: "left" as const, index: 1 },
-  { side: "right" as const, index: 1 },
-  { side: "left" as const, index: 2 },
-  { side: "right" as const, index: 2 },
 ];
 
 const SCROLL_VH_PER_STEP = 55;
@@ -78,34 +75,15 @@ function SpeechBubbleTail({ side }: { side: "left" | "right" }) {
   );
 }
 
-function TypingScenarioBubble({
+function ScenarioBubble({
   scenario,
   side,
-  stepProgress,
   stepKey,
 }: {
   scenario: Scenario;
   side: "left" | "right";
-  stepProgress: number;
   stepKey: number;
 }) {
-  const typingStart = 0.12;
-  const typingEnd = 0.88;
-  const typingRange = typingEnd - typingStart;
-  const typingProgress =
-    stepProgress <= typingStart
-      ? 0
-      : Math.min(1, (stepProgress - typingStart) / typingRange);
-
-  const visibleChars = Math.max(
-    0,
-    Math.min(scenario.quote.length, Math.ceil(typingProgress * scenario.quote.length)),
-  );
-  const displayText = scenario.quote.slice(0, visibleChars);
-  const isTyping =
-    typingProgress > 0 && typingProgress < 1 && visibleChars < scenario.quote.length;
-  const showTypingDots = stepProgress < typingStart;
-
   return (
     <div
       key={stepKey}
@@ -119,24 +97,8 @@ function TypingScenarioBubble({
       </p>
       <div className="relative rounded-[1.35rem] bg-background px-4 py-3.5 shadow-[0_2px_12px_rgba(44,44,44,0.08)] sm:px-5 sm:py-4">
         <SpeechBubbleTail side={side} />
-        <p className="min-h-[3.25rem] font-sans text-[15px] font-normal leading-[1.45] text-[#2C2C2C] sm:text-[16px]">
-          {showTypingDots ? (
-            <span className="landing-scenario-typing-dots inline-flex gap-1 py-0.5">
-              <span />
-              <span />
-              <span />
-            </span>
-          ) : (
-            <>
-              {displayText}
-              {isTyping ? (
-                <span
-                  className="landing-text-cursor ml-px inline-block h-[1.05em] w-[2px] translate-y-[2px] bg-[#2C2C2C]/70 align-middle"
-                  aria-hidden
-                />
-              ) : null}
-            </>
-          )}
+        <p className="font-sans text-[15px] font-normal leading-[1.45] text-[#2C2C2C] sm:text-[16px]">
+          {scenario.quote}
         </p>
       </div>
     </div>
@@ -165,7 +127,6 @@ function useScrollScenarioProgress(
   rightScenarios: Scenario[],
 ) {
   const [step, setStep] = useState(0);
-  const [stepProgress, setStepProgress] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -178,7 +139,6 @@ function useScrollScenarioProgress(
   useEffect(() => {
     if (reducedMotion) {
       setStep(SEQUENCE.length - 1);
-      setStepProgress(1);
       setScrollProgress(1);
       return;
     }
@@ -192,7 +152,6 @@ function useScrollScenarioProgress(
 
       if (scrollRange <= 0) {
         setStep(0);
-        setStepProgress(0);
         setScrollProgress(0);
         return;
       }
@@ -204,14 +163,9 @@ function useScrollScenarioProgress(
         SEQUENCE.length - 1,
         Math.max(0, Math.floor(stepFloat)),
       );
-      const nextStepProgress =
-        nextStep >= SEQUENCE.length - 1 && progress >= 1
-          ? 1
-          : stepFloat - nextStep;
 
       setScrollProgress(progress);
       setStep(nextStep);
-      setStepProgress(nextStepProgress);
     };
 
     updateProgress();
@@ -229,15 +183,18 @@ function useScrollScenarioProgress(
     rightScenarios,
   );
 
-  return { step, stepProgress, scrollProgress, activeScenario };
+  return { step, scrollProgress, activeScenario };
 }
 
 export function LandingUsers() {
   const t = useTranslations("marketing.users");
   const sectionRef = useRef<HTMLElement>(null);
   const { leftScenarios, rightScenarios } = useScenarios();
-  const { step, stepProgress, scrollProgress, activeScenario } =
-    useScrollScenarioProgress(sectionRef, leftScenarios, rightScenarios);
+  const { step, scrollProgress, activeScenario } = useScrollScenarioProgress(
+    sectionRef,
+    leftScenarios,
+    rightScenarios,
+  );
 
   return (
     <section
@@ -263,11 +220,10 @@ export function LandingUsers() {
                   )}
                 >
                   {activeScenario?.side === "left" ? (
-                    <TypingScenarioBubble
+                    <ScenarioBubble
                       stepKey={step}
                       scenario={activeScenario}
                       side="left"
-                      stepProgress={stepProgress}
                     />
                   ) : null}
                 </div>
@@ -302,25 +258,14 @@ export function LandingUsers() {
                   )}
                 >
                   {activeScenario?.side === "right" ? (
-                    <TypingScenarioBubble
+                    <ScenarioBubble
                       stepKey={step}
                       scenario={activeScenario}
                       side="right"
-                      stepProgress={stepProgress}
                     />
                   ) : null}
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div
-            className="shrink-0 bg-marketing-hero-panel pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 sm:pb-8 sm:pt-5"
-            aria-hidden
-          >
-            <div className="mx-auto flex h-14 flex-col items-center justify-start gap-2 sm:h-16">
-              <div className="h-6 w-px rounded-full bg-[#2C2C2C]/10 sm:h-8" />
-              <div className="h-1.5 w-1.5 rounded-full bg-[#2C2C2C]/20" />
             </div>
           </div>
         </div>

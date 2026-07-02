@@ -9,12 +9,15 @@
       "closeMenu": "Close menu"
     },
     "hero": {
-      "eyebrow": "Language Learning",
-      "title": "Write It. Translate It. Learn It.",
+      "eyebrow": "Language learning",
+      "title": "folio keeps you in the flow",
+      "titleBrand": "folio",
+      "titleRest": "keeps you in the flow.",
+      "subtitle": "Stay in one app while you journal in your target language. No more tab-switching to translate a word.",
       "cta": "Try Folio free"
     },
     "demo": {
-      "prefix": "No more switching between apps to write and lose your flow. Just translate ",
+      "prefix": "Practice putting sentences together without switching apps and losing your train of thoughts. Just translate ",
       "windowTitle": "Folio — Today's entry"
     },
     "featuresOverview": {
@@ -39,21 +42,21 @@
       "title": "Support over 160+ languages"
     },
     "problemSolution": {
-      "title": "Folio keeps you in the flow.",
+      "title": "Language learning, made easy",
       "subtitle": "Here's how we're solving the problem.",
       "problemLabel": "The problem",
       "solutionLabel": "The solution",
       "problems": {
-        "0": "More time switching apps than writing",
-        "1": "Vocab lists you never actually use",
-        "2": "Momentum lost every time you're stuck on a word",
-        "3": "Textbook phrases — not how you really talk"
+        "0": "Switching apps mid-sentence to translate",
+        "1": "Vocab lists you never open again",
+        "2": "Apps that feel too easy or way too hard",
+        "3": "Hard to track your progress when learning solo"
       },
       "solutions": {
-        "0": "Translate mid-sentence using // command",
-        "1": "Learn words in context from your life",
-        "2": "Track your streak, words, and progress",
-        "3": "Save words to flashcards for practice"
+        "0": "Translate mid-sentence with // command",
+        "1": "Words saved to flashcards automatically",
+        "2": "Daily prompts that challenge you just enough",
+        "3": "Streaks and progress tracked as you write"
       }
     },
     "users": {

@@ -10,11 +10,14 @@
     },
     "hero": {
       "eyebrow": "Học ngoại ngữ",
-      "title": "Viết. Dịch. Học.",
+      "title": "folio giúp bạn giữ nhịp viết",
+      "titleBrand": "folio",
+      "titleRest": "giúp bạn giữ nhịp viết.",
+      "subtitle": "Viết nhật ký bằng ngôn ngữ đích trong một app. Không còn phải chuyển tab để dịch một từ.",
       "cta": "Try Folio free"
     },
     "demo": {
-      "prefix": "Không còn phải chuyển qua lại giữa các ứng dụng và mất nhịp viết. Chỉ cần dịch ",
+      "prefix": "Luyện ghép câu mà không cần chuyển app hay mất mạch suy nghĩ. Chỉ cần dịch ",
       "windowTitle": "Folio — Bài viết hôm nay"
     },
     "featuresOverview": {
@@ -39,21 +42,21 @@
       "title": "Hỗ trợ hơn 160+ ngôn ngữ"
     },
     "problemSolution": {
-      "title": "Folio giúp bạn giữ nhịp viết.",
+      "title": "Học ngôn ngữ, thật dễ dàng",
       "subtitle": "Đây là cách chúng tôi giải quyết vấn đề.",
       "problemLabel": "Vấn đề",
       "solutionLabel": "Giải pháp",
       "problems": {
-        "0": "Dành nhiều thời gian chuyển app hơn là viết",
-        "1": "Danh sách từ vựng không bao giờ dùng đến",
-        "2": "Mất đà mỗi khi kẹt ở một từ",
-        "3": "Cụm từ sách giáo khoa — không giống cách bạn nói thật"
+        "0": "Phải chuyển app giữa câu chỉ để dịch",
+        "1": "Danh sách từ vựng mở ra rồi… không bao giờ xem lại",
+        "2": "App quá dễ hoặc khó đến mức choáng ngợp",
+        "3": "Tự học mà khó theo dõi tiến độ của bạn"
       },
       "solutions": {
         "0": "Dịch ngay giữa câu bằng lệnh //",
-        "1": "Học từ trong ngữ cảnh cuộc sống của bạn",
-        "2": "Theo dõi chuỗi ngày, từ vựng và tiến độ",
-        "3": "Lưu từ vào thẻ ghi nhớ để luyện tập"
+        "1": "Từ được lưu vào thẻ ghi nhớ tự động",
+        "2": "Gợi ý viết vừa đủ thử thách — không quá dễ, không quá khó",
+        "3": "Streak và tiến độ được theo dõi khi bạn viết"
       }
     },
     "users": {

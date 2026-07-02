@@ -35,7 +35,7 @@ export async function LandingFaq() {
                   className="group rounded-2xl bg-[#2C2C2C]/[0.04] transition-colors open:bg-[#2C2C2C]/[0.06]"
                 >
                   <summary className="cursor-pointer list-none px-4 py-4 text-[15px] font-medium text-foreground sm:px-5 sm:py-[1.125rem] [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-start justify-between gap-4">
+                    <span className="flex items-center justify-between gap-4">
                       <span className="min-w-0 flex-1">
                         {t(`items.${id}.question`)}
                       </span>

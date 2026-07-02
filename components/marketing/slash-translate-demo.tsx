@@ -57,25 +57,39 @@ const TYPED_HOLD_MS = 1600;
 const TRANSLATED_HOLD_MS = 2800;
 const RESET_MS = 800;
 
+const INLINE_DEMO_TEXT_CLASSNAME =
+  "font-sans text-left antialiased text-base leading-[1.65] text-muted-foreground/70";
+
+const EMBEDDED_DEMO_TEXT_CLASSNAME =
+  "font-sans text-left antialiased text-base leading-relaxed text-muted-foreground/70 sm:text-lg";
+
 type DemoPhase = "slash" | "hold" | "done";
 
 type SlashTranslateDemoProps = {
-  variant?: "default" | "hero" | "compact";
+  variant?: "default" | "hero" | "compact" | "inline";
   className?: string;
+  prefix?: string;
 };
 
 export function SlashTranslateDemo({
   variant = "default",
   className,
+  prefix: prefixProp,
 }: SlashTranslateDemoProps) {
   const t = useTranslations("marketing.demo");
+  const prefix = prefixProp ?? t("prefix");
   const isEmbedded = variant === "hero" || variant === "compact";
+  const [animationReady, setAnimationReady] = useState(false);
   const [scenarioIndex, setScenarioIndex] = useState(0);
   const [phase, setPhase] = useState<DemoPhase>("slash");
   const [slashLen, setSlashLen] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   const scenario = DEMO_SCENARIOS[scenarioIndex]!;
+
+  useEffect(() => {
+    setAnimationReady(true);
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -86,11 +100,15 @@ export function SlashTranslateDemo({
   }, []);
 
   useEffect(() => {
+    if (!animationReady) return;
+
     setPhase("slash");
     setSlashLen(0);
-  }, [scenarioIndex]);
+  }, [animationReady, scenarioIndex]);
 
   useEffect(() => {
+    if (!animationReady) return;
+
     if (reducedMotion) {
       setPhase("done");
       setSlashLen(0);
@@ -117,23 +135,21 @@ export function SlashTranslateDemo({
       }, TRANSLATED_HOLD_MS + RESET_MS);
       return () => window.clearTimeout(t);
     }
-  }, [phase, slashLen, reducedMotion, scenario]);
+  }, [animationReady, phase, slashLen, reducedMotion, scenario]);
 
-  const slashText = scenario.slashSource.slice(0, slashLen);
-  const showCursor = !reducedMotion && phase === "slash";
+  const isAnimating = animationReady && !reducedMotion;
+  const visiblePhase = isAnimating ? phase : "done";
+  const slashText = scenario.slashSource.slice(0, isAnimating ? slashLen : 0);
+  const showCursor = isAnimating && phase === "slash";
 
   const demoText = (
     <p
       dir="auto"
-      className={cn(
-        "max-w-sm font-sans antialiased sm:max-w-md",
-        isEmbedded
-          ? "text-base leading-relaxed text-muted-foreground/70 sm:text-lg"
-          : "text-base leading-[1.65] text-muted-foreground/70",
-      )}
+      className={isEmbedded ? EMBEDDED_DEMO_TEXT_CLASSNAME : INLINE_DEMO_TEXT_CLASSNAME}
+      suppressHydrationWarning
     >
-      {t("prefix")}
-      {phase === "done" ? (
+      {prefix}
+      {visiblePhase === "done" ? (
         <mark
           className={journalEditorTranslationHighlightClassName}
           title={scenario.slashHint}
@@ -153,6 +169,10 @@ export function SlashTranslateDemo({
       ) : null}
     </p>
   );
+
+  if (variant === "inline") {
+    return demoText;
+  }
 
   if (isEmbedded) {
     return (
@@ -174,7 +194,7 @@ export function SlashTranslateDemo({
           <span className="size-2 rounded-full bg-sidebar-primary/40" />
           <span className="size-2 rounded-full bg-sidebar-primary/25" />
           <span className="size-2 rounded-full bg-sidebar-primary/15" />
-          <span className="ml-2 text-[11px] font-medium text-muted-foreground">
+          <span className="ml-2 text-xs font-medium text-muted-foreground sm:text-[13px]">
             {t("windowTitle")}
           </span>
         </div>

@@ -1,6 +1,8 @@
 import { LandingMotion } from "@/components/marketing/landing-motion";
 import { ForceLightScope } from "@/components/theme/force-light-scope";
 
+export const dynamic = "force-dynamic";
+
 export default function MarketingLayout({
   children,
 }: Readonly<{
