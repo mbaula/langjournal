@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import {
   SettingsPanelRow,
   SettingsSection,
@@ -11,7 +11,6 @@ import {
 import { settingsFieldRowStartClassName } from "@/components/settings/settings-field-styles";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
 type SettingsMoreSectionProps = {
   previewMode?: boolean;
@@ -50,14 +49,12 @@ export function SettingsMoreSection({
         <div className={settingsFieldRowStartClassName}>
           <Label className="pt-2">{t("logOut")}</Label>
           <div className="flex min-w-0 justify-end">
-            <Link
-              href={
-                previewMode ? "/api/dev/exit-account-preview" : "/auth/signout"
-              }
-              className={cn(buttonVariants({ variant: "outline" }))}
+            <SignOutButton
+              previewMode={previewMode}
+              className={buttonVariants({ variant: "outline" })}
             >
               {previewMode ? tCommon("exitPreview") : tCommon("logOut")}
-            </Link>
+            </SignOutButton>
           </div>
         </div>
       </SettingsPanelRow>

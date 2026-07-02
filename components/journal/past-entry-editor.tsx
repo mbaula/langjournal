@@ -7,6 +7,7 @@ import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import { deleteJournalEntryRequest } from "@/components/journal/delete-entry-control";
 import { journalPastEntryAreaShellClassName, journalWriteAreaShellClassName, journalWriteTitleClassName } from "@/components/journal/field-styles";
+import { ListenButton } from "@/components/speech/listen-button";
 import {
   JournalEditor,
   type InlineTranslation,
@@ -108,21 +109,28 @@ export function PastEntryEditor({
           translateTrigger={translateTrigger}
           onLanguagesSaved={onLanguagesSaved}
         />
-        {onDeleted ? (
-          <EntryActionsMenu
-            entryId={entry.id}
-            onRenameTitle={() => {
-              const el = document.getElementById(`past-entry-title-${entry.id}`);
-              if (el instanceof HTMLInputElement) {
-                el.focus();
-                el.select();
-              }
-            }}
-            onDeleteConfirm={confirmDelete}
-            className="pointer-events-auto opacity-100"
-            triggerClassName="text-muted-foreground"
+        <div className="flex items-center gap-1">
+          <ListenButton
+            text={draftBody}
+            languageCode={targetLanguage}
+            label="Listen to entry"
           />
-        ) : null}
+          {onDeleted ? (
+            <EntryActionsMenu
+              entryId={entry.id}
+              onRenameTitle={() => {
+                const el = document.getElementById(`past-entry-title-${entry.id}`);
+                if (el instanceof HTMLInputElement) {
+                  el.focus();
+                  el.select();
+                }
+              }}
+              onDeleteConfirm={confirmDelete}
+              className="pointer-events-auto opacity-100"
+              triggerClassName="text-muted-foreground"
+            />
+          ) : null}
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-3">

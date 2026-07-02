@@ -13,6 +13,7 @@ import { PastEntriesSection } from "@/components/journal/past-entries-section";
 import { JournalHomeHeader } from "@/components/journal/journal-home-header";
 import { LanguageBar } from "@/components/journal/language-bar";
 import { SaveEntryBar } from "@/components/journal/save-entry-bar";
+import { ListenButton } from "@/components/speech/listen-button";
 import {
   JournalEditor,
   type InlineTranslation,
@@ -285,12 +286,19 @@ export function JournalWriteBody({
 
   const entryEditorColumn = (
     <div className={journalWriteAreaShellClassName}>
-      <LanguageBar
-        source={source}
-        target={target}
-        translateTrigger={translateTrigger}
-        onLanguagesSaved={handleLanguagesSaved}
-      />
+      <div className="flex items-start justify-between gap-3">
+        <LanguageBar
+          source={source}
+          target={target}
+          translateTrigger={translateTrigger}
+          onLanguagesSaved={handleLanguagesSaved}
+        />
+        <ListenButton
+          text={draftBody}
+          languageCode={target}
+          label="Listen to entry"
+        />
+      </div>
 
       <div className="mt-6 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
         <EntryTitleField
