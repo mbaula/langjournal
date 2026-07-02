@@ -13,8 +13,8 @@ import {
   marketingFlowTitleClassName,
   marketingHeroCtaClassName,
 } from "@/components/marketing/marketing-flow-styles";
-import { OnboardingLanguageCombobox } from "@/components/onboarding/onboarding-language-combobox";
-import { OnboardingLevelSelect } from "@/components/onboarding/onboarding-level-select";
+import { LanguageSearchCombobox } from "@/components/languages/language-search-combobox";
+import { ProficiencyLevelSelect } from "@/components/languages/proficiency-level-select";
 import {
   ONBOARDING_QUESTION_COUNT,
 } from "@/components/onboarding/onboarding-progress";
@@ -441,7 +441,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                     {getLanguageName(lang.languageCode)}
                   </p>
                 </div>
-                <OnboardingLevelSelect
+                <ProficiencyLevelSelect
                   value={lang.level}
                   onChange={(level) =>
                     updateLanguageLevel(
@@ -475,7 +475,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
         {addingLanguage ? (
           <div className="mt-4 w-full rounded-2xl border-2 border-dashed border-border/60 p-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[3fr_2fr] sm:items-start">
-              <OnboardingLanguageCombobox
+              <LanguageSearchCombobox
                 options={unusedLanguages}
                 value={newLangCode}
                 onChange={setNewLangCode}
@@ -487,7 +487,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                 }
                 inputAriaLabel={t("languages.languageLabel")}
               />
-              <OnboardingLevelSelect
+              <ProficiencyLevelSelect
                 value={newLangLevel}
                 onChange={(level) =>
                   setNewLangLevel(level as OnboardingLanguageLevel)

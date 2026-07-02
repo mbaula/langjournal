@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { Plus, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
+import { LanguageSearchCombobox } from "@/components/languages/language-search-combobox";
+import { ProficiencyLevelSelect } from "@/components/languages/proficiency-level-select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -15,13 +17,15 @@ import {
   settingsFieldRowClassName,
   settingsFieldRowStartClassName,
   settingsInputClassName,
-  settingsSelectClassName,
+  settingsLanguageComboboxInputClassName,
+  settingsLanguagePickerTriggerClassName,
 } from "@/components/settings/settings-field-styles";
 import type { OnboardingState, UserLanguageEntry } from "@/lib/db/onboarding";
 import { useOnboardingLabels } from "@/lib/i18n/hooks";
+import { getLocalizedLanguageDisplayName } from "@/lib/i18n/language-display-name";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
-import { ONBOARDING_LANGUAGE_LEVELS } from "@/lib/onboarding/labels";
 import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
+import { ONBOARDING_LANGUAGE_LEVELS } from "@/lib/onboarding/labels";
 
 type Lang = { code: string; name: string };
 
@@ -32,7 +36,8 @@ type ProfileSettingsFormProps = {
 export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) {
   const t = useTranslations("settings.profile");
   const tCommon = useTranslations("common");
-  const { languageLevelLabels } = useOnboardingLabels();
+  const locale = useLocale();
+  const { languageLevelLabels, levelDescriptions } = useOnboardingLabels();
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initialState.displayName ?? "");
   const [userLanguages, setUserLanguages] = useState<UserLanguageEntry[]>(
@@ -79,18 +84,48 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
     };
   }, [t]);
 
+  const localizedLanguages = useMemo(
+    () =>
+      availableLanguages.map((language) => ({
+        code: language.code,
+        name: getLocalizedLanguageDisplayName(
+          language.code,
+          locale,
+          availableLanguages,
+        ),
+      })),
+    [availableLanguages, locale],
+  );
+
   const getLanguageName = useCallback(
-    (code: string) => {
-      const match = availableLanguages.find((l) => l.code === code);
-      return match?.name ?? code;
-    },
-    [availableLanguages],
+    (code: string) =>
+      getLocalizedLanguageDisplayName(code, locale, availableLanguages),
+    [availableLanguages, locale],
+  );
+
+  const levelOptions = useMemo(
+    () =>
+      ONBOARDING_LANGUAGE_LEVELS.map((level) => ({
+        value: level,
+        label: languageLevelLabels[level],
+        description: levelDescriptions[level],
+      })),
+    [languageLevelLabels, levelDescriptions],
+  );
+
+  const compactLevelOptions = useMemo(
+    () =>
+      ONBOARDING_LANGUAGE_LEVELS.map((level) => ({
+        value: level,
+        label: languageLevelLabels[level],
+      })),
+    [languageLevelLabels],
   );
 
   const unusedLanguages = useMemo(() => {
     const usedCodes = new Set(userLanguages.map((l) => l.languageCode));
-    return availableLanguages.filter((l) => !usedCodes.has(l.code));
-  }, [availableLanguages, userLanguages]);
+    return localizedLanguages.filter((l) => !usedCodes.has(l.code));
+  }, [localizedLanguages, userLanguages]);
 
   const addLanguage = () => {
     if (!newLangCode || !newLangLevel) return;
@@ -168,41 +203,43 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
         <div className={settingsFieldRowStartClassName}>
           <Label className="pt-2">{t("languages")}</Label>
           <div className="min-w-0 space-y-3">
-            <p className="text-sm text-muted-foreground">{t("languagesHelp")}</p>
 
             {userLanguages.length > 0 ? (
               <ul className="space-y-2">
                 {userLanguages.map((lang) => (
                   <li
                     key={lang.languageCode}
-                    className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 sm:flex-row sm:items-center"
+                    className="flex items-center gap-2"
                   >
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                    <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                       {getLanguageName(lang.languageCode)}
                     </span>
-                    <select
+                    <ProficiencyLevelSelect
                       value={lang.level}
-                      onChange={(e) =>
+                      onChange={(level) =>
                         updateLanguageLevel(
                           lang.languageCode,
-                          e.target.value as OnboardingLanguageLevel,
+                          level as OnboardingLanguageLevel,
                         )
                       }
-                      className="h-8 shrink-0 cursor-pointer rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35"
-                    >
-                      {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
-                        <option key={level} value={level}>
-                          {languageLevelLabels[level]}
-                        </option>
-                      ))}
-                    </select>
+                      options={compactLevelOptions}
+                      className="w-auto min-w-[9rem] shrink-0"
+                      triggerClassName={settingsLanguagePickerTriggerClassName}
+                      dropdownClassName="shadow-none"
+                      placeholder={t("selectLevel")}
+                      aria-label={t("levelFor", {
+                        language: getLanguageName(lang.languageCode),
+                      })}
+                    />
                     <button
                       type="button"
                       onClick={() => removeLanguage(lang.languageCode)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-                      aria-label={`Remove ${getLanguageName(lang.languageCode)}`}
+                      className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label={t("removeLanguage", {
+                        language: getLanguageName(lang.languageCode),
+                      })}
                     >
-                      <X className="size-4" strokeWidth={1.5} />
+                      <X className="size-3.5" strokeWidth={1.5} />
                     </button>
                   </li>
                 ))}
@@ -212,39 +249,33 @@ export function ProfileSettingsForm({ initialState }: ProfileSettingsFormProps) 
             )}
 
             {addingLanguage ? (
-              <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <select
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-[3fr_2fr] sm:items-start">
+                  <LanguageSearchCombobox
+                    options={unusedLanguages}
                     value={newLangCode}
-                    onChange={(e) => setNewLangCode(e.target.value)}
+                    onChange={setNewLangCode}
                     disabled={loadingLanguages}
-                    className={settingsSelectClassName}
-                  >
-                    <option value="">
-                      {loadingLanguages ? tCommon("loading") : t("selectLanguage")}
-                    </option>
-                    {unusedLanguages.map((language) => (
-                      <option key={language.code} value={language.code}>
-                        {language.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={newLangLevel}
-                    onChange={(e) =>
-                      setNewLangLevel(e.target.value as OnboardingLanguageLevel)
+                    placeholder={
+                      loadingLanguages ? tCommon("loading") : t("searchPlaceholder")
                     }
-                    className={settingsSelectClassName}
-                  >
-                    <option value="">{t("selectLevel")}</option>
-                    {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
-                      <option key={level} value={level}>
-                        {languageLevelLabels[level]}
-                      </option>
-                    ))}
-                  </select>
+                    inputAriaLabel={t("languageLabel")}
+                    inputClassName={settingsLanguageComboboxInputClassName}
+                    searchIconClassName="left-3"
+                    dropdownClassName="shadow-none"
+                  />
+                  <ProficiencyLevelSelect
+                    value={newLangLevel}
+                    onChange={(level) =>
+                      setNewLangLevel(level as OnboardingLanguageLevel)
+                    }
+                    options={levelOptions}
+                    placeholder={t("selectLevel")}
+                    triggerClassName={settingsLanguagePickerTriggerClassName}
+                    dropdownClassName="shadow-none"
+                  />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <Button
                     type="button"
                     size="sm"
