@@ -4,6 +4,7 @@ import type { InlineTranslation } from "@/lib/entries/translate";
 import {
   adjustTranslationSpansForEdit,
   appendTranslationSpan,
+  findTranslationAtIndex,
   pruneInvalidTranslationSpans,
 } from "@/lib/entries/translation-spans";
 
@@ -49,6 +50,21 @@ describe("adjustTranslationSpansForEdit", () => {
         spans: [{ start: 12, end: 18 }],
       },
     ]);
+  });
+});
+
+describe("findTranslationAtIndex", () => {
+  it("returns the translation covering a character index", () => {
+    const translations = [
+      {
+        ...base,
+        spans: [{ start: 4, end: 10 }],
+      },
+    ];
+    expect(findTranslationAtIndex(translations, 3)).toBeNull();
+    expect(findTranslationAtIndex(translations, 4)).toEqual(translations[0]);
+    expect(findTranslationAtIndex(translations, 9)).toEqual(translations[0]);
+    expect(findTranslationAtIndex(translations, 10)).toBeNull();
   });
 });
 

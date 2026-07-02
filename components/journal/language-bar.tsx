@@ -635,7 +635,12 @@ export function LanguageBar({
                     <kbd className="rounded border border-border bg-muted px-1 font-sans text-xs text-foreground">
                       {triggerKeyLabel}
                     </kbd>
-                    .
+                    . To translate a pasted paragraph or multiple lines, highlight
+                    the text and press{" "}
+                    <kbd className="rounded border border-border bg-muted px-1 font-sans text-xs text-foreground">
+                      {triggerKeyLabel}
+                    </kbd>{" "}
+                    or use Translate selection.
                   </p>
                 </div>
                 <button

@@ -90,6 +90,19 @@ export function PastEntryEditor({
 
   const canSave = Boolean(entryTitle.trim() || draftBody.trim());
 
+  const handleTranslationsChange = useCallback(
+    (translations: InlineTranslation[]) => {
+      onSaved({
+        ...entry,
+        title: entryTitle.trim() ? entryTitle.trim() : null,
+        body: draftBody,
+        translations,
+        updatedAt: new Date(),
+      });
+    },
+    [draftBody, entry, entryTitle, onSaved],
+  );
+
   const confirmDelete = useCallback(async () => {
     const result = await deleteJournalEntryRequest(entry.id);
     if (result.ok) {
@@ -149,6 +162,7 @@ export function PastEntryEditor({
           targetLanguage={targetLanguage}
           translateTrigger={translateTrigger}
           onBodyChange={setDraftBody}
+          onTranslationsChange={handleTranslationsChange}
           bodyMinHeightClassName="min-h-[16rem]"
           containerMinHeightClassName="min-h-[16rem]"
         />

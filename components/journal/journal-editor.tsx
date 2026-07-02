@@ -14,13 +14,19 @@ import {
 import { journalEntryBodyClassName } from "@/components/journal/field-styles";
 import { JournalEditingBackdropContent } from "@/components/journal/journal-editing-backdrop-content";
 import { JournalWritePlaceholder } from "@/components/journal/journal-write-placeholder";
+import { Button } from "@/components/ui/button";
 import type { TranslationLoadingState } from "@/components/journal/journal-editing-backdrop-content";
 import type { InlineTranslation, TranslationSpan } from "@/lib/entries/translate";
 import {
+  parseSelectionForTranslation,
+  tryApplySelectionTranslation,
+} from "@/lib/entries/selection-translate";
+import {
   adjustTranslationSpansForEdit,
-  appendTranslationSpan,
+  findTranslationAtIndex,
   pruneInvalidTranslationSpans,
 } from "@/lib/entries/translation-spans";
+import { getTextareaIndexAtPoint } from "@/lib/journal/textarea-index-at-point";
 import { countWords, wordCountLabel } from "@/lib/text/word-count";
 import {
   normalizeTranslationSource,
@@ -49,6 +55,7 @@ type JournalEditorProps = {
   targetLanguage: string;
   translateTrigger?: TranslateTrigger;
   onBodyChange?: (body: string) => void;
+  onTranslationsChange?: (translations: InlineTranslation[]) => void;
   bodyMinHeightClassName?: string;
   containerMinHeightClassName?: string;
 };
@@ -202,6 +209,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
       targetLanguage,
       translateTrigger = "enter",
       onBodyChange,
+      onTranslationsChange,
       bodyMinHeightClassName = ENTRY_BODY_MIN_HEIGHT_CLASS,
       containerMinHeightClassName,
     },
@@ -251,6 +259,11 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
   const translationLoadingTimerRef = useRef<number | null>(null);
   const [translationLoading, setTranslationLoading] =
     useState<TranslationLoadingState | null>(null);
+  const [hoveredSourceText, setHoveredSourceText] = useState<{
+    text: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const clearTranslationLoading = useCallback(() => {
     if (translationLoadingTimerRef.current !== null) {
@@ -338,14 +351,36 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     [body, textareaSelection.start, textareaSelection.end],
   );
 
-  const slashTranslateHint = useMemo(() => {
+  const selectionSegment = useMemo(
+    () =>
+      parseSelectionForTranslation(
+        body,
+        textareaSelection.start,
+        textareaSelection.end,
+        PREFETCH_MIN_LENGTH,
+      ),
+    [body, textareaSelection.start, textareaSelection.end],
+  );
+
+  const selectionHighlight = selectionSegment
+    ? { start: selectionSegment.start, end: selectionSegment.end }
+    : null;
+
+  const editHighlight = selectionHighlight ?? slashHighlight;
+
+  const editTranslateHint = useMemo(() => {
     if (translationLoading?.showSpinner) return null;
-    if (!slashHighlight) return null;
-    if (textareaSelection.start < slashHighlight.start + 2) return null;
+    if (!editHighlight) return null;
+    if (!selectionHighlight) {
+      if (!slashHighlight) return null;
+      if (textareaSelection.start < slashHighlight.start + 2) return null;
+    }
     return translateTrigger === "tab"
       ? "Press Tab to translate"
       : "Press Enter to translate";
   }, [
+    editHighlight,
+    selectionHighlight,
     slashHighlight,
     textareaSelection.start,
     translationLoading?.showSpinner,
@@ -357,12 +392,12 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
       <JournalEditingBackdropContent
         body={body}
         translations={translations}
-        slashHighlight={slashHighlight}
+        editHighlight={editHighlight}
         translationLoading={translationLoading}
-        slashTranslateHint={slashTranslateHint}
+        editTranslateHint={editTranslateHint}
       />
     ),
-    [body, translations, slashHighlight, translationLoading, slashTranslateHint],
+    [body, translations, editHighlight, translationLoading, editTranslateHint],
   );
 
   const syncCaretFromTextarea = useCallback((ta: HTMLTextAreaElement) => {
@@ -371,6 +406,29 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
       end: ta.selectionEnd,
     });
   }, []);
+
+  const updateHoveredTranslation = useCallback(
+    (ta: HTMLTextAreaElement, clientX: number, clientY: number) => {
+      const index = getTextareaIndexAtPoint(ta, clientX, clientY);
+      if (index === null) {
+        setHoveredSourceText(null);
+        return;
+      }
+
+      const translation = findTranslationAtIndex(translationsRef.current, index);
+      if (!translation) {
+        setHoveredSourceText(null);
+        return;
+      }
+
+      setHoveredSourceText({
+        text: translation.sourceText,
+        x: clientX,
+        y: clientY,
+      });
+    },
+    [],
+  );
 
   const saveBody = useCallback(
     async (text: string) => {
@@ -424,11 +482,15 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
   const saveTranslationsRef = useRef(saveTranslations);
   saveTranslationsRef.current = saveTranslations;
 
+  const onTranslationsChangeRef = useRef(onTranslationsChange);
+  onTranslationsChangeRef.current = onTranslationsChange;
+
   const applyCommittedTranslation = useCallback(
     (committed: InlineTranslation) => {
       const next = mergeTranslationState(translationsRef.current, committed);
       setTranslations(next);
       void saveTranslationsRef.current(next);
+      onTranslationsChangeRef.current?.(next);
     },
     [],
   );
@@ -632,6 +694,60 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     const ta = textareaRef.current;
     if (!ta) return;
 
+    const selection = parseSelectionForTranslation(
+      bodyRef.current,
+      ta.selectionStart,
+      ta.selectionEnd,
+      PREFETCH_MIN_LENGTH,
+    );
+    if (selection) {
+      const trimmed = selection.trimmed;
+      const key = translationMemoryCacheKey(
+        sourceLanguage,
+        targetLanguage,
+        trimmed,
+      );
+
+      if (
+        !clientSessionCacheRef.current.has(key) &&
+        !prefetchInflightRef.current.has(key) &&
+        leadingPrefetchKeyRef.current !== key
+      ) {
+        leadingPrefetchKeyRef.current = key;
+        runPrefetchWithAbort(trimmed);
+      }
+
+      cancelScheduledPrefetch();
+      prefetchDebounceTimerRef.current = window.setTimeout(() => {
+        prefetchDebounceTimerRef.current = null;
+        const taNow = textareaRef.current;
+        if (!taNow) return;
+        const selectionNow = parseSelectionForTranslation(
+          bodyRef.current,
+          taNow.selectionStart,
+          taNow.selectionEnd,
+          PREFETCH_MIN_LENGTH,
+        );
+        if (!selectionNow) return;
+
+        const trimmedNow = selectionNow.trimmed;
+        const keyNow = translationMemoryCacheKey(
+          sourceLanguage,
+          targetLanguage,
+          trimmedNow,
+        );
+        if (
+          clientSessionCacheRef.current.has(keyNow) ||
+          prefetchInflightRef.current.has(keyNow)
+        ) {
+          return;
+        }
+
+        runPrefetchWithAbort(trimmedNow);
+      }, PREFETCH_DEBOUNCE_MS);
+      return;
+    }
+
     const parsed = parseCurrentSlashSegment(
       bodyRef.current,
       ta.selectionStart,
@@ -699,12 +815,159 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     targetLanguage,
   ]);
 
+  const applySelectionTranslation = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+
+    const parsed = parseSelectionForTranslation(
+      bodyRef.current,
+      ta.selectionStart,
+      ta.selectionEnd,
+      PREFETCH_MIN_LENGTH,
+    );
+    if (!parsed) return;
+
+    const { start, end, trimmed } = parsed;
+    const norm = normalizeTranslationSource(trimmed);
+    const cacheKey = translationMemoryCacheKey(
+      sourceLanguage,
+      targetLanguage,
+      trimmed,
+    );
+    const text = bodyRef.current;
+
+    const cachedInSession = clientSessionCacheRef.current.get(cacheKey);
+    if (cachedInSession) {
+      const applied = tryApplySelectionTranslation(
+        text,
+        start,
+        end,
+        norm,
+        cachedInSession.translatedText,
+      );
+      if (applied) {
+        const { appliedText, next, cursor } = applied;
+        const span = { start, end: start + appliedText.length };
+        pendingCursorRef.current = cursor;
+        setBody(next);
+        const optimistic: InlineTranslation = {
+          id: `opt-${crypto.randomUUID()}`,
+          sourceText: trimmed,
+          translatedText: appliedText,
+          spans: [span],
+        };
+        setTranslations((prev) => mergeTranslationState(prev, optimistic));
+        void saveBody(next);
+        void fetchCommitTranslation(trimmed, next, span, appliedText).then((t) => {
+          if (t) applyCommittedTranslationRef.current(t);
+        });
+        requestAnimationFrame(() => textareaRef.current?.focus());
+        return;
+      }
+    }
+
+    if (trimmed.length < PREFETCH_MIN_LENGTH) return;
+
+    void (async () => {
+      const hadCache = clientSessionCacheRef.current.has(cacheKey);
+      const hadInflight = prefetchInflightRef.current.has(cacheKey);
+      if (!hadCache && !hadInflight) {
+        beginTranslationLoading({ start, end });
+      }
+
+      const fetched = await getOrStartTranslationForEnter(trimmed, cacheKey);
+      clearTranslationLoading();
+
+      if (!fetched) {
+        setError("Translation failed");
+        return;
+      }
+
+      const cur = bodyRef.current;
+      const applied = tryApplySelectionTranslation(
+        cur,
+        start,
+        end,
+        norm,
+        fetched.translatedText,
+      );
+      if (!applied) return;
+
+      const { appliedText, next, cursor } = applied;
+      const span = { start, end: start + appliedText.length };
+      const optimistic: InlineTranslation = {
+        id: `opt-${crypto.randomUUID()}`,
+        sourceText: trimmed,
+        translatedText: appliedText,
+        spans: [span],
+      };
+
+      pendingCursorRef.current = cursor;
+      setBody(next);
+      setTranslations((prev) => mergeTranslationState(prev, optimistic));
+      void saveBody(next);
+
+      clientSessionCacheRef.current.set(cacheKey, {
+        ...fetched,
+        translatedText: appliedText,
+      });
+
+      void fetchCommitTranslation(trimmed, next, span, appliedText).then((t) => {
+        if (!t) return;
+        applyCommittedTranslationRef.current(t);
+        clientSessionCacheRef.current.set(cacheKey, {
+          sourceText: t.sourceText,
+          translatedText: t.translatedText,
+        });
+        if (t.translatedText !== appliedText) {
+          const fix = tryApplySelectionTranslation(
+            bodyRef.current,
+            start,
+            end,
+            norm,
+            t.translatedText,
+          );
+          if (fix) {
+            pendingCursorRef.current = fix.cursor;
+            setBody(fix.next);
+            void saveBody(fix.next);
+          }
+        }
+      });
+
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    })();
+  }, [
+    beginTranslationLoading,
+    clearTranslationLoading,
+    fetchCommitTranslation,
+    getOrStartTranslationForEnter,
+    saveBody,
+    sourceLanguage,
+    targetLanguage,
+  ]);
+
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       const triggerKey = translateTrigger === "tab" ? "Tab" : "Enter";
       const isTriggerKey = e.key === triggerKey;
+      const ta = e.currentTarget;
 
-      const cursorPos = e.currentTarget.selectionStart;
+      if (isTriggerKey) {
+        const selection = parseSelectionForTranslation(
+          bodyRef.current,
+          ta.selectionStart,
+          ta.selectionEnd,
+          PREFETCH_MIN_LENGTH,
+        );
+        if (selection) {
+          e.preventDefault();
+          applySelectionTranslation();
+          return;
+        }
+      }
+
+      const cursorPos = ta.selectionStart;
       const text = bodyRef.current;
       const parsed = parseCurrentSlashSegment(text, cursorPos);
 
@@ -865,6 +1128,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
       sourceLanguage,
       targetLanguage,
       translateTrigger,
+      applySelectionTranslation,
     ],
   );
 
@@ -949,6 +1213,10 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           }}
           onKeyUp={(e) => syncCaretFromTextarea(e.currentTarget)}
           onClick={(e) => syncCaretFromTextarea(e.currentTarget)}
+          onMouseMove={(e) =>
+            updateHoveredTranslation(e.currentTarget, e.clientX, e.clientY)
+          }
+          onMouseLeave={() => setHoveredSourceText(null)}
           onKeyDown={onKeyDown}
           onBlur={handleBlur}
           autoFocus
@@ -962,11 +1230,39 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
             <JournalWritePlaceholder />
           </div>
         ) : null}
+        {hoveredSourceText ? (
+          <div
+            className="pointer-events-none fixed z-50 max-w-xs rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium whitespace-pre-wrap text-foreground shadow-sm"
+            style={{
+              left: hoveredSourceText.x + 12,
+              top: hoveredSourceText.y + 16,
+            }}
+            role="tooltip"
+          >
+            {hoveredSourceText.text}
+          </div>
+        ) : null}
       </div>
-      {slashTranslateHint ? (
+      {editTranslateHint ? (
         <p className="sr-only" aria-live="polite">
-          {slashTranslateHint}
+          {editTranslateHint}
         </p>
+      ) : null}
+      {selectionSegment ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => applySelectionTranslation()}
+          >
+            Translate selection
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            or press {translateTrigger === "tab" ? "Tab" : "Enter"}
+          </span>
+        </div>
       ) : null}
       <p className="flex justify-end pb-1 text-sm text-muted-foreground tabular-nums dark:text-foreground/80">
         {wordCountLabel(wordCount)}

@@ -274,6 +274,17 @@ export function JournalWriteBody({
     [],
   );
 
+  const handleTranslationsChange = useCallback(
+    (translations: InlineTranslation[]) => {
+      setSavedEntries((current) =>
+        current.map((item) =>
+          item.id === activeEntryId ? { ...item, translations } : item,
+        ),
+      );
+    },
+    [activeEntryId],
+  );
+
   const handlePastEntryUpdated = useCallback((entry: EntryRow) => {
     setSavedEntries((current) =>
       current.map((item) => (item.id === entry.id ? entry : item)),
@@ -320,6 +331,7 @@ export function JournalWriteBody({
           targetLanguage={target}
           translateTrigger={translateTrigger}
           onBodyChange={setDraftBody}
+          onTranslationsChange={handleTranslationsChange}
           bodyMinHeightClassName={journalWriteEditorMinHeightClassName}
           containerMinHeightClassName={journalWriteEditorContainerClassName}
         />
