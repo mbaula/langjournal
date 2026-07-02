@@ -27,7 +27,14 @@ export function useOnboardingLabels() {
     ONBOARDING_AGE_RANGES.map((range) => [range, t(`ageRanges.${range}`)]),
   ) as Record<OnboardingAgeRange, string>;
 
-  return { languageLevelLabels, ageRangeLabels };
+  const levelDescriptions = Object.fromEntries(
+    ONBOARDING_LANGUAGE_LEVELS.map((level) => [
+      level,
+      t(`levelDescriptions.${level}`),
+    ]),
+  ) as Record<OnboardingLanguageLevel, string>;
+
+  return { languageLevelLabels, ageRangeLabels, levelDescriptions };
 }
 
 export function useFlashcardSortLabels() {

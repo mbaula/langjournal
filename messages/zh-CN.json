@@ -326,10 +326,49 @@
     }
   },
   "onboarding": {
+    "next": "下一步",
+    "saving": "保存中…",
+    "skip": "跳过",
+    "back": "返回",
+    "cancel": "取消",
+    "add": "添加",
+    "loadLanguagesError": "无法加载语言列表",
+    "saveError": "无法保存入门设置",
+    "setupComplete": "设置完成",
+    "completionHeading": "一切就绪，{name}！",
+    "completionHeadingFallback": "一切就绪！",
+    "completionDescription": "你的日记已准备就绪。开始写作，随时使用 {slash} 将单词或短语翻译成{language}。",
+    "startJournaling": "开始写日记",
+    "name": {
+      "title": "你叫什么名字？",
+      "description": "仅用于个性化你的体验。",
+      "placeholder": "你的名字或昵称..."
+    },
+    "age": {
+      "title": "你多大了？",
+      "description": "可选。你的回答会匿名保存。",
+      "placeholder": "选择年龄段..."
+    },
+    "languages": {
+      "title": "你在学习哪些语言？",
+      "description": "至少添加一种语言。之后可以随时修改。",
+      "searchPlaceholder": "搜索语言...",
+      "loadingLanguages": "加载中...",
+      "selectLevel": "选择水平...",
+      "addLanguage": "添加语言",
+      "removeLanguage": "移除{language}",
+      "levelFor": "{language}的水平",
+      "languageLabel": "语言"
+    },
     "levels": {
       "beginner": "初级",
       "intermediate": "中级",
       "proficient": "高级"
+    },
+    "levelDescriptions": {
+      "beginner": "我刚开始学习",
+      "intermediate": "我能就熟悉的话题进行交流",
+      "proficient": "我能在多种场合表达自己"
     },
     "ageRanges": {
       "under_18": "18 岁以下",

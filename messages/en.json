@@ -326,10 +326,49 @@
     }
   },
   "onboarding": {
+    "next": "Next",
+    "saving": "Saving…",
+    "skip": "Skip",
+    "back": "Back",
+    "cancel": "Cancel",
+    "add": "Add",
+    "loadLanguagesError": "Could not load languages",
+    "saveError": "Could not save onboarding",
+    "setupComplete": "Setup complete",
+    "completionHeading": "You're all set, {name}!",
+    "completionHeadingFallback": "You're all set!",
+    "completionDescription": "Your journal is ready. Start writing and use {slash} anytime you want to translate a word or phrase into {language}.",
+    "startJournaling": "Start journaling",
+    "name": {
+      "title": "What's your name?",
+      "description": "This is just for personalizing your experience.",
+      "placeholder": "Your name or nickname..."
+    },
+    "age": {
+      "title": "How old are you?",
+      "description": "Optional. Your answer is stored anonymously.",
+      "placeholder": "Select age range..."
+    },
+    "languages": {
+      "title": "What languages are you learning?",
+      "description": "Add at least one language. You can always update this later.",
+      "searchPlaceholder": "Search languages...",
+      "loadingLanguages": "Loading...",
+      "selectLevel": "Select level...",
+      "addLanguage": "Add a language",
+      "removeLanguage": "Remove {language}",
+      "levelFor": "Level for {language}",
+      "languageLabel": "Language"
+    },
     "levels": {
       "beginner": "Beginner",
       "intermediate": "Intermediate",
       "proficient": "Proficient"
+    },
+    "levelDescriptions": {
+      "beginner": "I just started learning",
+      "intermediate": "I can communicate on familiar topics",
+      "proficient": "I can express myself in many situations"
     },
     "ageRanges": {
       "under_18": "Under 18",

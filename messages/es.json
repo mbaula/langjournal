@@ -326,10 +326,49 @@
     }
   },
   "onboarding": {
+    "next": "Siguiente",
+    "saving": "Guardando…",
+    "skip": "Omitir",
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "add": "Añadir",
+    "loadLanguagesError": "No se pudieron cargar los idiomas",
+    "saveError": "No se pudo guardar la configuración inicial",
+    "setupComplete": "Configuración completa",
+    "completionHeading": "¡Todo listo, {name}!",
+    "completionHeadingFallback": "¡Todo listo!",
+    "completionDescription": "Tu diario está listo. Empieza a escribir y usa {slash} cuando quieras traducir una palabra o frase al {language}.",
+    "startJournaling": "Empezar a escribir",
+    "name": {
+      "title": "¿Cómo te llamas?",
+      "description": "Solo para personalizar tu experiencia.",
+      "placeholder": "Tu nombre o apodo..."
+    },
+    "age": {
+      "title": "¿Cuántos años tienes?",
+      "description": "Opcional. Tu respuesta se guarda de forma anónima.",
+      "placeholder": "Selecciona un rango de edad..."
+    },
+    "languages": {
+      "title": "¿Qué idiomas estás aprendiendo?",
+      "description": "Añade al menos un idioma. Siempre puedes cambiarlo después.",
+      "searchPlaceholder": "Buscar idiomas...",
+      "loadingLanguages": "Cargando...",
+      "selectLevel": "Selecciona un nivel...",
+      "addLanguage": "Añadir un idioma",
+      "removeLanguage": "Eliminar {language}",
+      "levelFor": "Nivel de {language}",
+      "languageLabel": "Idioma"
+    },
     "levels": {
       "beginner": "Principiante",
       "intermediate": "Intermedio",
       "proficient": "Avanzado"
+    },
+    "levelDescriptions": {
+      "beginner": "Acabo de empezar a aprender",
+      "intermediate": "Puedo comunicarme en temas familiares",
+      "proficient": "Puedo expresarme en muchas situaciones"
     },
     "ageRanges": {
       "under_18": "Menor de 18",

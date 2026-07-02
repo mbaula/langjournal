@@ -326,10 +326,49 @@
     }
   },
   "onboarding": {
+    "next": "Tiếp",
+    "saving": "Đang lưu…",
+    "skip": "Bỏ qua",
+    "back": "Quay lại",
+    "cancel": "Hủy",
+    "add": "Thêm",
+    "loadLanguagesError": "Không thể tải danh sách ngôn ngữ",
+    "saveError": "Không thể lưu thiết lập ban đầu",
+    "setupComplete": "Thiết lập xong",
+    "completionHeading": "Xong rồi, {name}!",
+    "completionHeadingFallback": "Xong rồi!",
+    "completionDescription": "Nhật ký của bạn đã sẵn sàng. Bắt đầu viết và dùng {slash} bất cứ khi nào bạn muốn dịch một từ hoặc cụm từ sang {language}.",
+    "startJournaling": "Bắt đầu viết nhật ký",
+    "name": {
+      "title": "Bạn tên gì?",
+      "description": "Chỉ để cá nhân hóa trải nghiệm của bạn.",
+      "placeholder": "Tên hoặc biệt danh của bạn..."
+    },
+    "age": {
+      "title": "Bạn bao nhiêu tuổi?",
+      "description": "Tùy chọn. Câu trả lời của bạn được lưu ẩn danh.",
+      "placeholder": "Chọn nhóm tuổi..."
+    },
+    "languages": {
+      "title": "Bạn đang học những ngôn ngữ nào?",
+      "description": "Thêm ít nhất một ngôn ngữ. Bạn có thể cập nhật sau.",
+      "searchPlaceholder": "Tìm ngôn ngữ...",
+      "loadingLanguages": "Đang tải...",
+      "selectLevel": "Chọn trình độ...",
+      "addLanguage": "Thêm ngôn ngữ",
+      "removeLanguage": "Xóa {language}",
+      "levelFor": "Trình độ {language}",
+      "languageLabel": "Ngôn ngữ"
+    },
     "levels": {
       "beginner": "Sơ cấp",
       "intermediate": "Trung cấp",
       "proficient": "Thành thạo"
+    },
+    "levelDescriptions": {
+      "beginner": "Tôi mới bắt đầu học",
+      "intermediate": "Tôi có thể giao tiếp về các chủ đề quen thuộc",
+      "proficient": "Tôi có thể diễn đạt bản thân trong nhiều tình huống"
     },
     "ageRanges": {
       "under_18": "Dưới 18",
