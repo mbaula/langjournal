@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { Loader2 } from "lucide-react";
 
 import { journalEditorTranslationHighlightClassName } from "@/components/journal/field-styles";
@@ -31,6 +31,7 @@ function splitPlainWithSlash(
   translationLoading: TranslationLoadingState | null,
   slashTranslateHint: string | null,
   keyCounter: { n: number },
+  hintAnchorRef?: RefObject<HTMLSpanElement | null>,
 ): ReactNode[] {
   const out: ReactNode[] = [];
   if (!slash || segText.length === 0) {
@@ -58,14 +59,11 @@ function splitPlainWithSlash(
 
   if (atHighlightEnd && slashTranslateHint) {
     out.push(
-      <span key={keyCounter.n++} className="relative inline">
+      <span key={keyCounter.n++} ref={hintAnchorRef} className="inline">
         <mark className={journalEditorTranslationHighlightClassName}>
           {segText.slice(i, j)}
           {showSpinner ? <TranslationSpinner /> : null}
         </mark>
-        <span className="pointer-events-none absolute left-full top-full z-10 mt-1 ml-0 whitespace-nowrap rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium text-foreground shadow-sm">
-          {slashTranslateHint}
-        </span>
       </span>,
     );
   } else {
@@ -92,6 +90,7 @@ export function JournalEditingBackdropContent({
   translationLoading = null,
   slashTranslateHint = null,
   translatingLabel = "Translating…",
+  hintAnchorRef,
 }: {
   body: string;
   translations: InlineTranslation[];
@@ -99,6 +98,7 @@ export function JournalEditingBackdropContent({
   translationLoading?: TranslationLoadingState | null;
   slashTranslateHint?: string | null;
   translatingLabel?: string;
+  hintAnchorRef?: RefObject<HTMLSpanElement | null>;
 }) {
   const keyCounter = { n: 0 };
   const pieces: ReactNode[] = [];
@@ -136,6 +136,7 @@ export function JournalEditingBackdropContent({
               translationLoading,
               slashTranslateHint,
               keyCounter,
+              hintAnchorRef,
             ),
           );
         }

@@ -17,13 +17,14 @@ export type FloatingPanelRect = {
   width: number;
 };
 
-const FLOATING_PANEL_MAX_WIDTH = 448; // 28rem
+const LANGUAGE_PICKER_MAX_WIDTH = 320; // 20rem
+const HELP_POPOVER_MAX_WIDTH = 448; // 28rem
 const FLOATING_PANEL_VIEWPORT_GUTTER = 16;
 
 export function computeLanguagePickerRect(anchor: DOMRect): FloatingPanelRect {
   const width = Math.min(
     window.innerWidth - FLOATING_PANEL_VIEWPORT_GUTTER * 2,
-    FLOATING_PANEL_MAX_WIDTH,
+    LANGUAGE_PICKER_MAX_WIDTH,
   );
   const left = Math.max(
     FLOATING_PANEL_VIEWPORT_GUTTER,
@@ -39,7 +40,7 @@ export function computeLanguagePickerRect(anchor: DOMRect): FloatingPanelRect {
 export function computeHelpPopoverRect(anchor: DOMRect): FloatingPanelRect {
   const width = Math.min(
     window.innerWidth - FLOATING_PANEL_VIEWPORT_GUTTER * 2,
-    FLOATING_PANEL_MAX_WIDTH,
+    HELP_POPOVER_MAX_WIDTH,
   );
   const mobile = window.matchMedia("(max-width: 639px)").matches;
 

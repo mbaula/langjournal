@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
 import { languagePairFromProfile } from "@/lib/db/language";
 import { prisma } from "@/lib/db/prisma";
+import { resolveEntryLanguagePair } from "@/lib/entries/entry-language";
 import {
   type InlineTranslation,
   removeTranslation,
@@ -94,6 +95,8 @@ export async function POST(request: Request, context: RouteContext) {
       id: true,
       body: true,
       translations: true,
+      sourceLanguage: true,
+      targetLanguage: true,
       user: {
         select: {
           languageProfile: {
@@ -112,9 +115,8 @@ export async function POST(request: Request, context: RouteContext) {
     ? (entry.translations as InlineTranslation[])
     : [];
 
-  const { source, target } = languagePairFromProfile(
-    entry.user.languageProfile,
-  );
+  const profile = languagePairFromProfile(entry.user.languageProfile);
+  const { source, target } = resolveEntryLanguagePair(entry, profile);
 
   const result = await resolveCommitTranslation(
     text,

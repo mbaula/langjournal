@@ -5,6 +5,13 @@ const isoDate = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
   .optional();
 
+const entryLanguageCode = z
+  .string()
+  .trim()
+  .min(2, "Code too short")
+  .max(20, "Code too long")
+  .regex(/^[\w-]+$/, "Invalid language code");
+
 export const createJournalEntryBodySchema = z
   .object({
     entryDate: isoDate,
@@ -76,5 +83,7 @@ export const finishJournalEntryBodySchema = z
     title: z.string().max(500).optional(),
     body: z.string().max(200_000).optional(),
     translations: z.array(inlineTranslationSchema).optional(),
+    sourceLanguage: entryLanguageCode.optional(),
+    targetLanguage: entryLanguageCode.optional(),
   })
   .strict();

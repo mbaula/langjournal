@@ -62,6 +62,7 @@ export default async function JournalPage({
         subtitle={subtitle}
         sourceLanguage={source}
         targetLanguage={target}
+        learningLanguages={onboarding.languages}
         translateTrigger={translateTrigger}
         entryId={todayEntry.id}
         initialTitle={todayEntry.title}
@@ -101,6 +102,7 @@ export default async function JournalPage({
       subtitle={subtitle}
       sourceLanguage={source}
       targetLanguage={target}
+      learningLanguages={onboarding.languages}
       translateTrigger={translateTrigger}
       entryId={todayEntry.id}
       initialTitle={todayEntry.title}

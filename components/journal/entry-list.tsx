@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import {
   JournalEntryCard,
   type JournalEntryCardProps,
@@ -9,10 +11,10 @@ import {
   PAST_ENTRY_EXPAND_MS,
   PastEntryExpandPanel,
 } from "@/components/journal/past-entry-expand-panel";
-import { getLanguageDisplayName } from "@/lib/languages/display-name";
+import type { UserLanguageEntry } from "@/lib/db/onboarding";
+import { getLocalizedLanguageDisplayName } from "@/lib/i18n/language-display-name";
 import type { TranslateTrigger } from "@/components/journal/journal-editor";
 import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
 
 export type EntryRow = {
   id: string;
@@ -23,6 +25,8 @@ export type EntryRow = {
   body: string | null;
   translations: unknown;
   flashcardCount?: number;
+  sourceLanguage?: string | null;
+  targetLanguage?: string | null;
 };
 
 export function formatFlashcardLabel(count: number): string {
@@ -58,6 +62,7 @@ type EntryListProps = {
   entries: EntryRow[];
   targetLanguage?: string;
   sourceLanguage?: string;
+  learningLanguages?: readonly UserLanguageEntry[];
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
   editingEntryId?: string | null;
@@ -98,10 +103,23 @@ export function countEntryTranslations(translations: unknown): number {
   }).length;
 }
 
+function entryLanguageLabel(
+  entry: EntryRow,
+  fallbackTarget: string | undefined,
+  locale: string,
+): string | null {
+  const code = entry.targetLanguage ?? fallbackTarget;
+  if (!code) {
+    return null;
+  }
+  return getLocalizedLanguageDisplayName(code, locale);
+}
+
 export function EntryList({
   entries,
   targetLanguage,
   sourceLanguage,
+  learningLanguages = [],
   translateTrigger,
   onLanguagesSaved,
   editingEntryId,
@@ -111,6 +129,7 @@ export function EntryList({
   onRenameTitle,
 }: EntryListProps) {
   const t = useTranslations("journal");
+  const locale = useLocale();
 
   if (entries.length === 0) {
     return (
@@ -118,15 +137,15 @@ export function EntryList({
     );
   }
 
-  const languageLabel = targetLanguage
-    ? getLanguageDisplayName(targetLanguage)
-    : null;
   const formatFlashcard = (count: number) => t("flashcardCount", { count });
 
   return (
     <ul className="flex w-full flex-col gap-10">
       {entries.map((entry) => {
         const isExpanded = editingEntryId === entry.id;
+        const languageLabel = entryLanguageLabel(entry, targetLanguage, locale);
+        const entrySourceLanguage = entry.sourceLanguage ?? sourceLanguage;
+        const entryTargetLanguage = entry.targetLanguage ?? targetLanguage;
 
         return (
           <li
@@ -163,8 +182,9 @@ export function EntryList({
                   <PastEntryExpandPanel open={isExpanded}>
                     <PastEntryEditor
                       entry={entry}
-                      sourceLanguage={sourceLanguage}
-                      targetLanguage={targetLanguage ?? sourceLanguage}
+                      sourceLanguage={entrySourceLanguage ?? entryTargetLanguage ?? ""}
+                      targetLanguage={entryTargetLanguage ?? entrySourceLanguage ?? ""}
+                      learningLanguages={learningLanguages}
                       translateTrigger={translateTrigger}
                       onLanguagesSaved={onLanguagesSaved}
                       onSaved={onEntrySaved}

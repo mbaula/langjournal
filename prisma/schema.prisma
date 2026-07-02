@@ -143,6 +143,10 @@ model JournalEntry {
   promptLevel  CefrLevel?
   /// Set when the user marks today's entry as done for the day.
   completedAt  DateTime?
+  /// Learning language stamped when the entry is saved (for filtering/history).
+  targetLanguage String?
+  /// Native language stamped when the entry is saved (translation context).
+  sourceLanguage String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

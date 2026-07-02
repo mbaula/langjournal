@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { wordCountLabel } from "@/lib/text/word-count";
 import { cn } from "@/lib/utils";
 
 const saveEntryButtonClassName =
@@ -12,6 +13,7 @@ type SaveEntryBarProps = {
   successMessage: string | null;
   finishError: string | null;
   onFinish: () => void;
+  wordCount?: number;
   className?: string;
 };
 
@@ -21,19 +23,18 @@ export function SaveEntryBar({
   successMessage,
   finishError,
   onFinish,
+  wordCount,
   className,
 }: SaveEntryBarProps) {
-  if (!canFinish && !successMessage && !finishError) {
+  const showWordCount = wordCount !== undefined;
+  const showActionRow = canFinish || showWordCount;
+
+  if (!showActionRow && !successMessage && !finishError) {
     return null;
   }
 
   return (
-    <div
-      className={cn(
-        "sticky bottom-[max(30px,env(safe-area-inset-bottom))] z-30 mt-4 flex flex-col items-start gap-2 self-start",
-        className,
-      )}
-    >
+    <div className={cn("flex w-full flex-col items-start gap-2", className)}>
       {successMessage ? (
         <p
           className="max-w-xs rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm leading-snug text-emerald-950 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100"
@@ -50,17 +51,28 @@ export function SaveEntryBar({
           {finishError}
         </p>
       ) : null}
-      {canFinish ? (
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          disabled={finishPending}
-          className={saveEntryButtonClassName}
-          onClick={() => void onFinish()}
-        >
-          Save entry
-        </Button>
+      {showActionRow ? (
+        <div className="flex w-full items-center justify-between gap-4">
+          {canFinish ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={finishPending}
+              className={saveEntryButtonClassName}
+              onClick={() => void onFinish()}
+            >
+              Save entry
+            </Button>
+          ) : (
+            <span aria-hidden="true" />
+          )}
+          {showWordCount ? (
+            <p className="shrink-0 text-sm leading-none text-muted-foreground tabular-nums dark:text-foreground/80">
+              {wordCountLabel(wordCount)}
+            </p>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

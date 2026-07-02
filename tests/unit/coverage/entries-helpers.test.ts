@@ -78,10 +78,10 @@ describe("coverage: entries/text helpers", () => {
     expect(utcCalendarDate(d).toISOString().slice(11)).toBe("00:00:00.000Z");
   });
 
-  it("bodySnippetForSidebar handles empty + truncation", () => {
+  it("bodySnippetForSidebar handles empty and full body", () => {
     expect(bodySnippetForSidebar(null)).toBe("Empty entry");
     const long = "Hello world. " + "x".repeat(500);
-    expect(bodySnippetForSidebar(long, 20).length).toBeLessThanOrEqual(20);
+    expect(bodySnippetForSidebar(long)).toBe(long);
   });
 
   it("translation cache key normalizes source", () => {

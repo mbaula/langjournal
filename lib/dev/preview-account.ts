@@ -59,7 +59,10 @@ export function getDevPreviewOnboardingState(): OnboardingState {
   return {
     displayName: "Alex",
     ageRange: "25_34",
-    languages: [{ languageCode: "fr", level: "intermediate" }],
+    languages: [
+      { languageCode: "fr", level: "intermediate" },
+      { languageCode: "es", level: "beginner" },
+    ],
     isComplete: true,
   };
 }
@@ -93,6 +96,8 @@ export function getDevPreviewJournalEntries() {
       translations: [],
       entryDate: daysAgoUtc(0),
       completedAt: null,
+      sourceLanguage: "en",
+      targetLanguage: "fr",
       createdAt: now,
       updatedAt: now,
     },
@@ -102,7 +107,9 @@ export function getDevPreviewJournalEntries() {
       body: "J'ai révisé le subjonctif pendant une heure. C'est difficile mais //progress.",
       translations: [],
       entryDate: daysAgoUtc(2),
-      completedAt: null,
+      completedAt: daysAgoUtc(2),
+      sourceLanguage: "en",
+      targetLanguage: "fr",
       createdAt: now,
       updatedAt: now,
       flashcardCount: 1,
@@ -110,10 +117,12 @@ export function getDevPreviewJournalEntries() {
     {
       id: "00000000-0000-0000-0000-000000000003",
       title: "Weekend notes",
-      body: "Ce week-end j'ai lu un chapitre de mon livre préféré en français.",
+      body: "Este fin de semana leí un capítulo de mi libro favorito en español.",
       translations: [],
       entryDate: daysAgoUtc(5),
-      completedAt: null,
+      completedAt: daysAgoUtc(5),
+      sourceLanguage: "en",
+      targetLanguage: "es",
       createdAt: now,
       updatedAt: now,
       flashcardCount: 3,

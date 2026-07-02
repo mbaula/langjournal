@@ -17,6 +17,8 @@ import {
 import { LanguageBar } from "@/components/journal/language-bar";
 import { SaveEntryBar } from "@/components/journal/save-entry-bar";
 import type { EntryRow } from "@/components/journal/entry-list";
+import type { UserLanguageEntry } from "@/lib/db/onboarding";
+import { countWords } from "@/lib/text/word-count";
 import { cn } from "@/lib/utils";
 
 function coalesceTranslations(raw: unknown): InlineTranslation[] {
@@ -40,6 +42,7 @@ type PastEntryEditorProps = {
   entry: EntryRow;
   sourceLanguage: string;
   targetLanguage: string;
+  learningLanguages?: readonly UserLanguageEntry[];
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
   onSaved: (entry: EntryRow) => void;
@@ -50,6 +53,7 @@ export function PastEntryEditor({
   entry,
   sourceLanguage,
   targetLanguage,
+  learningLanguages = [],
   translateTrigger,
   onLanguagesSaved,
   onSaved,
@@ -57,7 +61,7 @@ export function PastEntryEditor({
 }: PastEntryEditorProps) {
   const t = useTranslations("journal");
   const editorRef = useRef<JournalEditorHandle>(null);
-  const [entryTitle, setEntryTitle] = useState(entry.title?.trim() ?? "");
+  const [entryTitle, setEntryTitle] = useState(entry.title ?? "");
   const [draftBody, setDraftBody] = useState(entry.body ?? "");
   const [savePending, setSavePending] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -106,6 +110,7 @@ export function PastEntryEditor({
         <LanguageBar
           source={sourceLanguage}
           target={targetLanguage}
+          learningLanguages={learningLanguages}
           translateTrigger={translateTrigger}
           onLanguagesSaved={onLanguagesSaved}
         />
@@ -133,12 +138,12 @@ export function PastEntryEditor({
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6 flex flex-col">
         <EntryTitleField
           entryId={entry.id}
           initialTitle={entry.title}
           inputId={`past-entry-title-${entry.id}`}
-          className={journalWriteTitleClassName}
+          className={cn(journalWriteTitleClassName, "mb-4 sm:mb-5")}
           onTitleChange={setEntryTitle}
         />
 
@@ -161,6 +166,7 @@ export function PastEntryEditor({
           successMessage={null}
           finishError={saveError}
           onFinish={handleSave}
+          wordCount={countWords(draftBody)}
         />
       </div>
     </div>

@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { journalEntryBodyClassName } from "@/components/journal/field-styles";
 import { JournalEditingBackdropContent } from "@/components/journal/journal-editing-backdrop-content";
 import { JournalWritePlaceholder } from "@/components/journal/journal-write-placeholder";
+import { SlashTranslateHint } from "@/components/journal/slash-translate-hint";
 import type { TranslationLoadingState } from "@/components/journal/journal-editing-backdrop-content";
 import type { InlineTranslation, TranslationSpan } from "@/lib/entries/translate";
 import {
@@ -22,7 +23,6 @@ import {
   appendTranslationSpan,
   pruneInvalidTranslationSpans,
 } from "@/lib/entries/translation-spans";
-import { countWords, wordCountLabel } from "@/lib/text/word-count";
 import {
   normalizeTranslationSource,
   translationMemoryCacheKey,
@@ -55,7 +55,7 @@ type JournalEditorProps = {
 };
 
 export type JournalEditorHandle = {
-  flushSave: () => Promise<void>;
+  flushSave: (options?: { persist?: boolean }) => Promise<void>;
   getDraftContent: () => {
     body: string;
     translations: InlineTranslation[];
@@ -157,23 +157,20 @@ function translationsForPersistence(
   return translations.filter((t) => !t.id.startsWith("opt-"));
 }
 
-const COMMIT_WAIT_MS = 3000;
-const COMMIT_POLL_MS = 100;
-
-function hasPendingTranslationCommits(translations: InlineTranslation[]): boolean {
-  return translations.some((translation) => translation.id.startsWith("opt-"));
+function trackPendingCommit(
+  pending: Set<Promise<unknown>>,
+  promise: Promise<unknown>,
+) {
+  pending.add(promise);
+  void promise.finally(() => {
+    pending.delete(promise);
+  });
 }
 
 async function waitForPendingTranslationCommits(
-  readTranslations: () => InlineTranslation[],
+  pending: Set<Promise<unknown>>,
 ): Promise<void> {
-  const deadline = Date.now() + COMMIT_WAIT_MS;
-  while (
-    hasPendingTranslationCommits(readTranslations()) &&
-    Date.now() < deadline
-  ) {
-    await new Promise((resolve) => window.setTimeout(resolve, COMMIT_POLL_MS));
-  }
+  await Promise.all([...pending]);
 }
 
 function mergeTranslationState(
@@ -221,6 +218,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
   const savedBodyRef = useRef(initialBody);
   const savedTranslationsRef = useRef(initialTranslations);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const hintAnchorRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingCursorRef = useRef<number | null>(null);
   const [textareaSelection, setTextareaSelection] = useState({
@@ -237,6 +235,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
   const prefetchInflightRef = useRef(
     new Map<string, Promise<PrefetchResult | null>>(),
   );
+  const pendingTranslationCommitPromisesRef = useRef(new Set<Promise<unknown>>());
 
   // Track language pair so we can clear caches when it changes
   const languagePairRef = useRef({ source: sourceLanguage, target: targetLanguage });
@@ -364,6 +363,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
         translationLoading={translationLoading}
         slashTranslateHint={slashTranslateHint}
         translatingLabel={t("translating")}
+        hintAnchorRef={hintAnchorRef}
       />
     ),
     [body, translations, slashHighlight, translationLoading, slashTranslateHint, t],
@@ -431,8 +431,9 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
   const applyCommittedTranslation = useCallback(
     (committed: InlineTranslation) => {
       const next = mergeTranslationState(translationsRef.current, committed);
+      translationsRef.current = next;
       setTranslations(next);
-      void saveTranslationsRef.current(next);
+      savedTranslationsRef.current = translationsForPersistence(next);
     },
     [],
   );
@@ -442,10 +443,17 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
   useImperativeHandle(
     ref,
     () => ({
-      flushSave: async () => {
-        await saveBodyRef.current(bodyRef.current);
-        await waitForPendingTranslationCommits(() => translationsRef.current);
-        await saveTranslationsRef.current(translationsRef.current);
+      flushSave: async (options?: { persist?: boolean }) => {
+        const persist = options?.persist ?? true;
+        if (persist) {
+          await saveBodyRef.current(bodyRef.current);
+        }
+        await waitForPendingTranslationCommits(
+          pendingTranslationCommitPromisesRef.current,
+        );
+        if (persist) {
+          await saveTranslationsRef.current(translationsRef.current);
+        }
       },
       getDraftContent: () => ({
         body: bodyRef.current,
@@ -454,6 +462,10 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     }),
     [],
   );
+
+  const trackTranslationCommit = useCallback((promise: Promise<unknown>) => {
+    trackPendingCommit(pendingTranslationCommitPromisesRef.current, promise);
+  }, []);
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -761,16 +773,18 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           };
           setTranslations((prev) => mergeTranslationState(prev, optimistic));
           void saveBody(applied.next);
-          void fetchCommitTranslation(
-            trimmed,
-            applied.next,
-            span,
-            appliedText,
-          ).then((t) => {
-            if (t) {
-              applyCommittedTranslationRef.current(t);
-            }
-          });
+          trackTranslationCommit(
+            fetchCommitTranslation(
+              trimmed,
+              applied.next,
+              span,
+              appliedText,
+            ).then((translation) => {
+              if (translation) {
+                applyCommittedTranslationRef.current(translation);
+              }
+            }),
+          );
           requestAnimationFrame(() => textareaRef.current?.focus());
           return;
         }
@@ -829,33 +843,35 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           translatedText: appliedText,
         });
 
-        void fetchCommitTranslation(
-          trimmed,
-          applied.next,
-          span,
-          appliedText,
-        ).then((t) => {
-          if (!t) return;
-          applyCommittedTranslationRef.current(t);
-          clientSessionCacheRef.current.set(cacheKey, {
-            sourceText: t.sourceText,
-            translatedText: t.translatedText,
-          });
-          if (t.translatedText !== appliedText) {
-            const fix = tryApplySlashTranslation(
-              bodyRef.current,
-              absStart,
-              absSegmentEnd,
-              norm,
-              t.translatedText,
-            );
-            if (fix) {
-              pendingCursorRef.current = fix.cursor;
-              setBody(fix.next);
-              void saveBody(fix.next);
+        trackTranslationCommit(
+          fetchCommitTranslation(
+            trimmed,
+            applied.next,
+            span,
+            appliedText,
+          ).then((translation) => {
+            if (!translation) return;
+            applyCommittedTranslationRef.current(translation);
+            clientSessionCacheRef.current.set(cacheKey, {
+              sourceText: translation.sourceText,
+              translatedText: translation.translatedText,
+            });
+            if (translation.translatedText !== appliedText) {
+              const fix = tryApplySlashTranslation(
+                bodyRef.current,
+                absStart,
+                absSegmentEnd,
+                norm,
+                translation.translatedText,
+              );
+              if (fix) {
+                pendingCursorRef.current = fix.cursor;
+                setBody(fix.next);
+                void saveBody(fix.next);
+              }
             }
-          }
-        });
+          }),
+        );
 
         requestAnimationFrame(() => textareaRef.current?.focus());
       })();
@@ -868,6 +884,7 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
       saveBody,
       sourceLanguage,
       targetLanguage,
+      trackTranslationCommit,
       translateTrigger,
     ],
   );
@@ -896,17 +913,20 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     [onBodyChange, schedulePrefetch],
   );
 
-  const wordCount = useMemo(() => countWords(body), [body]);
-
   return (
     <div
       ref={containerRef}
       className={cn(
-        "flex w-full max-w-none min-h-0 flex-col gap-3",
+        "flex w-full max-w-none min-h-0 flex-col",
         containerMinHeightClassName,
       )}
     >
-      <div className={cn("relative w-full min-h-0 flex-1", bodyMinHeightClassName)}>
+      <div
+        className={cn(
+          "relative w-full min-h-0 flex-1",
+          bodyMinHeightClassName,
+        )}
+      >
         <div
           className="pointer-events-none absolute inset-0 z-0 overflow-visible"
           aria-hidden="true"
@@ -968,13 +988,17 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
         ) : null}
       </div>
       {slashTranslateHint ? (
+        <SlashTranslateHint
+          anchorRef={hintAnchorRef}
+          hint={slashTranslateHint}
+          layoutKey={`${textareaSelection.start}:${textareaSelection.end}:${body.length}`}
+        />
+      ) : null}
+      {slashTranslateHint ? (
         <p className="sr-only" aria-live="polite">
           {slashTranslateHint}
         </p>
       ) : null}
-      <p className="flex justify-end pb-1 text-sm text-muted-foreground tabular-nums dark:text-foreground/80">
-        {wordCountLabel(wordCount)}
-      </p>
       {error ? (
         <p className="text-sm text-destructive" role="alert">
           {error}

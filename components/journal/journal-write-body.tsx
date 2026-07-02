@@ -1,15 +1,18 @@
 "use client";
 
 import { ArrowDown } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { journalWriteAreaShellClassName, journalWriteEditorContainerClassName, journalWriteEditorMinHeightClassName, journalWritePageShellClassName, journalWriteTitleClassName, journalWriteViewportClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
 import { DailyPromptCard } from "@/components/journal/daily-prompt-card";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
 import { type EntryRow } from "@/components/journal/entry-list";
-import { PastEntriesSection } from "@/components/journal/past-entries-section";
+import {
+  PastEntriesSection,
+  type PastEntriesFocusRequest,
+} from "@/components/journal/past-entries-section";
 import { JournalHomeHeader } from "@/components/journal/journal-home-header";
 import { LanguageBar } from "@/components/journal/language-bar";
 import { SaveEntryBar } from "@/components/journal/save-entry-bar";
@@ -20,7 +23,10 @@ import {
   type JournalEditorHandle,
   type TranslateTrigger,
 } from "@/components/journal/journal-editor";
+import type { UserLanguageEntry } from "@/lib/db/onboarding";
+import { buildPastEntryLanguageTabs } from "@/lib/languages/past-entries-language-tabs";
 import type { DailyPromptState } from "@/lib/prompts/prompt-core";
+import { countWords } from "@/lib/text/word-count";
 import { cn } from "@/lib/utils";
 
 type JournalWriteBodyProps = {
@@ -28,6 +34,7 @@ type JournalWriteBodyProps = {
   subtitle: string;
   sourceLanguage: string;
   targetLanguage: string;
+  learningLanguages?: readonly UserLanguageEntry[];
   translateTrigger?: TranslateTrigger;
   entryId: string;
   initialTitle: string | null;
@@ -102,6 +109,8 @@ function toEntryRow(entry: {
   createdAt: Date | string;
   updatedAt: Date | string;
   flashcardCount?: number;
+  sourceLanguage?: string | null;
+  targetLanguage?: string | null;
 }): EntryRow {
   return {
     id: entry.id,
@@ -112,6 +121,8 @@ function toEntryRow(entry: {
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     flashcardCount: entry.flashcardCount ?? 0,
+    sourceLanguage: entry.sourceLanguage ?? null,
+    targetLanguage: entry.targetLanguage ?? null,
   };
 }
 
@@ -120,6 +131,7 @@ export function JournalWriteBody({
   subtitle,
   sourceLanguage,
   targetLanguage,
+  learningLanguages = [],
   translateTrigger,
   entryId: initialEntryId,
   initialTitle,
@@ -130,11 +142,12 @@ export function JournalWriteBody({
   initialEditEntryId,
 }: JournalWriteBodyProps) {
   const t = useTranslations("journal");
+  const locale = useLocale();
   const router = useRouter();
   const [source, setSource] = useState(sourceLanguage);
   const [target, setTarget] = useState(targetLanguage);
   const [activeEntryId, setActiveEntryId] = useState(initialEntryId);
-  const [entryTitle, setEntryTitle] = useState(initialTitle?.trim() ?? "");
+  const [entryTitle, setEntryTitle] = useState(initialTitle ?? "");
   const [draftBody, setDraftBody] = useState(initialBody);
   const [editorInitialBody, setEditorInitialBody] = useState(initialBody);
   const [editorInitialTranslations, setEditorInitialTranslations] =
@@ -149,8 +162,18 @@ export function JournalWriteBody({
     initialDailyPrompt?.text ?? "",
   );
   const [usePromptPending, setUsePromptPending] = useState(false);
+  const [pastEntriesFocusRequest, setPastEntriesFocusRequest] =
+    useState<PastEntriesFocusRequest | null>(null);
   const pastEntriesSectionRef = useRef<HTMLElement>(null);
   const editorRef = useRef<JournalEditorHandle>(null);
+
+  const hasPastEntriesSection = useMemo(
+    () =>
+      savedEntries.length > 0 &&
+      buildPastEntryLanguageTabs(savedEntries, learningLanguages, locale)
+        .length > 0,
+    [learningLanguages, locale, savedEntries],
+  );
 
   useEffect(() => {
     if (!successMessage) {
@@ -206,7 +229,7 @@ export function JournalWriteBody({
     setSuccessMessage(null);
 
     try {
-      await editorRef.current?.flushSave();
+      await editorRef.current?.flushSave({ persist: false });
       const draft = editorRef.current?.getDraftContent();
 
       const res = await fetch(`/api/entries/${activeEntryId}/finish`, {
@@ -216,6 +239,8 @@ export function JournalWriteBody({
           title: entryTitle,
           body: draft?.body ?? draftBody,
           translations: draft?.translations,
+          sourceLanguage: source,
+          targetLanguage: target,
         }),
       });
 
@@ -248,17 +273,14 @@ export function JournalWriteBody({
       setDailyPrompt(data.dailyPrompt);
       setActivePromptText(data.dailyPrompt?.text ?? "");
       setSuccessMessage(t("entrySaved"));
-
-      router.refresh();
-
-      pastEntriesSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
+      setPastEntriesFocusRequest({
+        languageCode: target,
+        entryId: data.completedEntry.id,
       });
     } finally {
       setFinishPending(false);
     }
-  }, [activeEntryId, draftBody, entryTitle, finishPending, router, t]);
+  }, [activeEntryId, draftBody, entryTitle, finishPending, source, target, t]);
 
   const isPromptAdopted =
     activePromptText.trim().length > 0 &&
@@ -290,6 +312,7 @@ export function JournalWriteBody({
         <LanguageBar
           source={source}
           target={target}
+          learningLanguages={learningLanguages}
           translateTrigger={translateTrigger}
           onLanguagesSaved={handleLanguagesSaved}
         />
@@ -300,13 +323,13 @@ export function JournalWriteBody({
         />
       </div>
 
-      <div className="mt-6 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      <div className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden">
         <EntryTitleField
           key={activeEntryId}
           entryId={activeEntryId}
           initialTitle={entryTitle}
           inputId={`entry-title-${activeEntryId}`}
-          className={journalWriteTitleClassName}
+          className={cn(journalWriteTitleClassName, "mb-4 sm:mb-5")}
           onTitleChange={setEntryTitle}
         />
 
@@ -330,6 +353,7 @@ export function JournalWriteBody({
           successMessage={successMessage}
           finishError={finishError}
           onFinish={handleFinish}
+          wordCount={countWords(draftBody)}
         />
       </div>
     </div>
@@ -363,21 +387,24 @@ export function JournalWriteBody({
       )}
 
       <PastEntriesScrollHint
-        visible={savedEntries.length > 0}
+        visible={hasPastEntriesSection}
         pastEntriesSectionRef={pastEntriesSectionRef}
       />
 
-      {savedEntries.length > 0 ? (
+      {hasPastEntriesSection ? (
         <PastEntriesSection
           entries={savedEntries}
           targetLanguage={target}
           sourceLanguage={source}
+          learningLanguages={learningLanguages}
           translateTrigger={translateTrigger}
           onLanguagesSaved={handleLanguagesSaved}
           onEntryUpdated={handlePastEntryUpdated}
           onEntryDeleted={handlePastEntryDeleted}
           initialEditingEntryId={initialEditEntryId}
           sectionRef={pastEntriesSectionRef}
+          focusRequest={pastEntriesFocusRequest}
+          onFocusRequestHandled={() => setPastEntriesFocusRequest(null)}
         />
       ) : null}
     </div>

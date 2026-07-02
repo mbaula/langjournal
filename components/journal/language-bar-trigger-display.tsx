@@ -1,4 +1,4 @@
-import { Globe } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -6,7 +6,7 @@ export const languageBarTriggerClassName =
   "inline-flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full bg-app-shell p-2 font-sans dark:border dark:border-foreground/14 dark:bg-muted dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)]";
 
 export const languageBarLabelClassName =
-  "flex h-9 min-w-0 items-center rounded-full bg-background px-4 text-sm font-medium tracking-[0.06em] whitespace-nowrap text-foreground uppercase dark:bg-card/80 dark:ring-1 dark:ring-foreground/8";
+  "flex h-9 min-w-0 items-center rounded-full bg-background px-4 text-sm font-medium whitespace-nowrap text-foreground dark:bg-card/80 dark:ring-1 dark:ring-foreground/8";
 
 export const languageBarIconButtonClassName =
   "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm dark:ring-1 dark:ring-foreground/12";
@@ -29,19 +29,14 @@ export function formatLanguageCodeBadge(code: string): string {
 }
 
 type LanguageBarTriggerDisplayProps = {
-  sourceCode: string;
-  targetCode: string;
+  label: string;
   className?: string;
 };
 
 export function LanguageBarTriggerDisplay({
-  sourceCode,
-  targetCode,
+  label,
   className,
 }: LanguageBarTriggerDisplayProps) {
-  const sourceBadge = formatLanguageCodeBadge(sourceCode);
-  const targetBadge = formatLanguageCodeBadge(targetCode);
-
   return (
     <div
       className={cn(
@@ -52,12 +47,10 @@ export function LanguageBarTriggerDisplay({
       aria-hidden
     >
       <span className={languageBarLabelClassName}>
-        <span className="truncate">
-          {sourceBadge} → {targetBadge}
-        </span>
+        <span className="truncate">{label}</span>
       </span>
       <span className={languageBarIconButtonClassName}>
-        <Globe className="size-4" strokeWidth={1.5} />
+        <ChevronDown className="size-4" strokeWidth={1.5} />
       </span>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
@@ -84,8 +84,6 @@ export function JournalEntryCard({
   const [renamePending, setRenamePending] = useState(false);
   const [renameValue, setRenameValue] = useState(title?.trim() ?? "");
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
-  const [previewClamped, setPreviewClamped] = useState(false);
 
   const trimmedTitle = titleValue?.trim();
   const entryMetaLabel = formatEntryMetaLabel(
@@ -150,27 +148,6 @@ export function JournalEntryCard({
   const isEmptyBody =
     lines.length === 0 || (lines.length === 1 && !lines[0].trim());
 
-  const syncPreviewClamp = useCallback(() => {
-    const el = previewRef.current;
-    if (!el || isEmptyBody) {
-      setPreviewClamped(false);
-      return;
-    }
-    setPreviewClamped(el.scrollHeight > el.clientHeight + 1);
-  }, [isEmptyBody]);
-
-  useLayoutEffect(() => {
-    syncPreviewClamp();
-  }, [body, translations, syncPreviewClamp]);
-
-  useEffect(() => {
-    const el = previewRef.current;
-    if (!el || isEmptyBody) return;
-    const observer = new ResizeObserver(() => syncPreviewClamp());
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [body, isEmptyBody, syncPreviewClamp]);
-
   const entryHeader = (
     <>
       <h2 className="text-lg font-semibold tracking-tight text-foreground">
@@ -185,59 +162,51 @@ export function JournalEntryCard({
   const entryBody = (
     <>
       <hr className="my-3 border-border" />
-      <div ref={previewRef} className="relative max-h-36 overflow-hidden">
-        <div className="flex flex-col gap-0">
-          {isEmptyBody ? (
-            <p
-              className={cn(
-                journalEntryPreviewTextClassName,
-                "text-muted-foreground",
-              )}
-            >
-              {t("noTextYet")}
-            </p>
-          ) : (
-            lines.map((line, idx) => {
-              const lineStart =
-                idx === 0
-                  ? 0
-                  : lines.slice(0, idx).reduce((sum, l) => sum + l.length + 1, 0);
-              const segs = segmentTranslatedLineBySpans(line, lineStart, segsList);
-              return (
-                <p
-                  key={idx}
-                  className={cn(
-                    journalEntryPreviewTextClassName,
-                    "min-h-[1.25em] whitespace-pre-wrap",
-                  )}
-                >
-                  {segs.map((seg, si) =>
-                    seg.translation ? (
-                      <span
-                        key={si}
-                        title={seg.translation.sourceText}
-                        className={cn(
-                          "cursor-default",
-                          journalTranslationHighlightClassName,
-                        )}
-                      >
-                        {seg.text}
-                      </span>
-                    ) : (
-                      <span key={si}>{seg.text}</span>
-                    ),
-                  )}
-                </p>
-              );
-            })
-          )}
-        </div>
-        {previewClamped ? (
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent"
-            aria-hidden
-          />
-        ) : null}
+      <div className="flex flex-col gap-0">
+        {isEmptyBody ? (
+          <p
+            className={cn(
+              journalEntryPreviewTextClassName,
+              "text-muted-foreground",
+            )}
+          >
+            {t("noTextYet")}
+          </p>
+        ) : (
+          lines.map((line, idx) => {
+            const lineStart =
+              idx === 0
+                ? 0
+                : lines.slice(0, idx).reduce((sum, l) => sum + l.length + 1, 0);
+            const segs = segmentTranslatedLineBySpans(line, lineStart, segsList);
+            return (
+              <p
+                key={idx}
+                className={cn(
+                  journalEntryPreviewTextClassName,
+                  "min-h-[1.25em] whitespace-pre-wrap",
+                )}
+              >
+                {segs.map((seg, si) =>
+                  seg.translation ? (
+                    <span
+                      key={si}
+                      title={seg.translation.sourceText}
+                      className={cn(
+                        "cursor-default",
+                        journalTranslationHighlightClassName,
+                      )}
+                    >
+                      {seg.text}
+                    </span>
+                  ) : (
+                    <span key={si}>{seg.text}</span>
+                  ),
+                )}
+              </p>
+            );
+          })
+        )}
       </div>
     </>
   );

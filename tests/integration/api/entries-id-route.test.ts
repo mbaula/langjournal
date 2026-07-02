@@ -80,12 +80,10 @@ describe("api/entries/[id] route", () => {
     expect(res.status).toBe(400);
   });
 
-  it("PATCH updates title/body and returns updated entry", async () => {
-    const updated = { id: "e1", title: "T", body: "B" };
+  it("PATCH updates title/body and returns success", async () => {
     mocks.getAuthenticatedUserId.mockResolvedValueOnce("u1");
     mocks.updateJournalEntryTitle.mockResolvedValueOnce({ ok: true });
     mocks.updateJournalEntryBody.mockResolvedValueOnce({ ok: true });
-    mocks.getJournalEntryForUser.mockResolvedValueOnce(updated);
 
     const req = new Request("http://localhost", {
       method: "PATCH",
@@ -97,7 +95,8 @@ describe("api/entries/[id] route", () => {
     expect(res.status).toBe(200);
     expect(mocks.updateJournalEntryTitle).toHaveBeenCalledWith("e1", "u1", "T");
     expect(mocks.updateJournalEntryBody).toHaveBeenCalledWith("e1", "u1", "B");
-    await expect(res.json()).resolves.toEqual({ entry: updated });
+    expect(mocks.getJournalEntryForUser).not.toHaveBeenCalled();
+    await expect(res.json()).resolves.toEqual({ ok: true });
   });
 
   it("DELETE returns 404 when service says not found", async () => {

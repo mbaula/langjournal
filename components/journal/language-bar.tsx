@@ -1,11 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, CircleHelp, Globe, Search, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Check, ChevronDown, CircleHelp, Search, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo";
-import { Button } from "@/components/ui/button";
 import {
   formatLanguageCodeBadge,
   languageBarIconButtonClassName,
@@ -17,6 +17,9 @@ import {
   computeHelpPopoverRect,
   computeLanguagePickerRect,
 } from "@/components/journal/language-bar-floating-panel";
+import type { UserLanguageEntry } from "@/lib/db/onboarding";
+import { getLocalizedLanguageDisplayName } from "@/lib/i18n/language-display-name";
+import { orderLearningLanguageOptions } from "@/lib/languages/learning-language-options";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import { resolveLanguageLabel } from "@/lib/languages/display-name";
 import { cn } from "@/lib/utils";
@@ -31,13 +34,16 @@ type Lang = { code: string; name: string };
 type LanguageBarProps = {
   source: string;
   target: string;
+  learningLanguages?: readonly UserLanguageEntry[];
   translateTrigger?: TranslateTrigger;
-  /** Called after a successful save so parents (e.g. the editor) can use the new pair. */
   onLanguagesSaved?: (source: string, target: string) => void;
 };
 
 const languageBarPopoverBaseClass =
-  "rounded-3xl border border-border bg-popover p-5 text-sm leading-relaxed text-popover-foreground shadow-lg sm:p-6";
+  "rounded-3xl border border-border bg-popover p-4 text-sm leading-relaxed text-popover-foreground shadow-lg sm:p-5";
+
+const languagePickerPopoverClass =
+  "rounded-3xl border border-border bg-popover p-4 text-sm leading-relaxed text-popover-foreground shadow-lg sm:max-w-[20rem] sm:p-5";
 
 const languageBarPopoverTitleClassName =
   "text-base font-semibold tracking-tight text-foreground";
@@ -58,7 +64,7 @@ const languagePickerSearchWrapClassName =
   "flex items-center gap-2 rounded-full border border-border bg-background px-3 py-2";
 
 const languagePickerDisplayWrapClassName =
-  "group flex w-full cursor-pointer items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-muted/30";
+  "group flex w-full cursor-pointer items-center gap-2 rounded-full border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 const languagePickerDisplayTextClassName =
   "min-w-0 flex-1 truncate text-sm font-medium text-foreground";
@@ -75,6 +81,12 @@ const languagePickerListClassName =
 const languagePickerOptionClassName =
   "flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-sm transition-colors";
 
+const learningLanguageOptionClassName =
+  "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+const languagePickerOptionIdleClassName =
+  "border border-transparent text-foreground hover:border-border hover:bg-muted hover:text-foreground focus-visible:border-border focus-visible:bg-muted";
+
 function filterLanguageOptions(options: Lang[], query: string) {
   const normalized = query.trim().toLowerCase();
   if (!normalized) {
@@ -88,6 +100,64 @@ function filterLanguageOptions(options: Lang[], query: string) {
   );
 }
 
+function LearningLanguageList({
+  id,
+  subtitle,
+  options,
+  value,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  subtitle: string;
+  options: Lang[];
+  value: string;
+  disabled: boolean;
+  onChange: (code: string) => void;
+}) {
+  return (
+    <section className="min-w-0" aria-labelledby={`${id}-subtitle`}>
+      <p
+        id={`${id}-subtitle`}
+        className="mb-2 text-sm font-medium text-foreground"
+      >
+        {subtitle}
+      </p>
+      <div
+        role="radiogroup"
+        aria-labelledby={`${id}-subtitle`}
+        className="flex flex-col gap-1"
+      >
+        {options.map((language) => {
+          const isSelected = language.code === value;
+          return (
+            <button
+              key={`${id}-${language.code}`}
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              disabled={disabled}
+              onClick={() => onChange(language.code)}
+              className={cn(
+                learningLanguageOptionClassName,
+                isSelected
+                  ? "bg-primary font-medium text-primary-foreground"
+                  : languagePickerOptionIdleClassName,
+                disabled && "opacity-60",
+              )}
+            >
+              <span className="min-w-0 flex-1 truncate">{language.name}</span>
+              {isSelected ? (
+                <Check className="size-4 shrink-0" strokeWidth={1.5} />
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function SearchableLanguagePicker({
   id,
   subtitle,
@@ -95,6 +165,9 @@ function SearchableLanguagePicker({
   options,
   disabled,
   onChange,
+  searchPlaceholder,
+  selectPlaceholder,
+  editHint,
 }: {
   id: string;
   subtitle: string;
@@ -102,6 +175,9 @@ function SearchableLanguagePicker({
   options: Lang[];
   disabled: boolean;
   onChange: (code: string) => void;
+  searchPlaceholder: string;
+  selectPlaceholder: string;
+  editHint: string;
 }) {
   const [query, setQuery] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -131,7 +207,7 @@ function SearchableLanguagePicker({
     <section className="min-w-0 flex-1" aria-labelledby={`${id}-subtitle`}>
       <p
         id={`${id}-subtitle`}
-        className="mb-2 text-sm font-medium text-foreground"
+        className="mb-2 text-sm font-medium text-muted-foreground"
       >
         {subtitle}
       </p>
@@ -139,7 +215,7 @@ function SearchableLanguagePicker({
       {isEditing ? (
         <>
           <label htmlFor={`${id}-search`} className="sr-only">
-            Search {subtitle.toLowerCase()}
+            {subtitle}
           </label>
           <div className={languagePickerSearchWrapClassName}>
             <Search
@@ -153,7 +229,7 @@ function SearchableLanguagePicker({
               type="search"
               value={query}
               disabled={disabled}
-              placeholder="Search languages…"
+              placeholder={searchPlaceholder}
               onChange={(event) => setQuery(event.target.value)}
               onBlur={() => {
                 if (!query.trim()) {
@@ -194,9 +270,10 @@ function SearchableLanguagePicker({
                     }}
                     className={cn(
                       languagePickerOptionClassName,
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       isSelected
                         ? "bg-primary font-medium text-primary-foreground"
-                        : "text-foreground hover:bg-muted/60",
+                        : languagePickerOptionIdleClassName,
                       disabled && "opacity-60",
                     )}
                   >
@@ -229,13 +306,13 @@ function SearchableLanguagePicker({
             languagePickerDisplayWrapClassName,
             disabled && "cursor-not-allowed opacity-60",
           )}
-          aria-label={`Edit ${subtitle.toLowerCase()}, currently ${selected?.name ?? "not selected"}`}
+          aria-label={`${subtitle}, ${selected?.name ?? selectPlaceholder}`}
         >
           <span className={languagePickerDisplayTextClassName}>
-            {selected?.name ?? "Select language…"}
+            {selected?.name ?? selectPlaceholder}
           </span>
           <span className={languagePickerEditHintClassName} aria-hidden>
-            edit
+            {editHint}
           </span>
         </button>
       )}
@@ -251,10 +328,12 @@ const languageBarTriggerButtonClassName = cn(
 export function LanguageBar({
   source: initialSource,
   target: initialTarget,
+  learningLanguages = [],
   translateTrigger = "enter",
   onLanguagesSaved,
 }: LanguageBarProps) {
   const t = useTranslations("journal");
+  const locale = useLocale();
   const triggerKeyLabel = translateTrigger === "tab" ? "Tab" : "Enter";
   const [source, setSource] = useState(initialSource);
   const [target, setTarget] = useState(initialTarget);
@@ -302,9 +381,9 @@ export function LanguageBar({
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (languagePickerRef.current?.contains(target)) return;
-      if (languagePickerPanelRef.current?.contains(target)) return;
+      const node = e.target as Node;
+      if (languagePickerRef.current?.contains(node)) return;
+      if (languagePickerPanelRef.current?.contains(node)) return;
       setOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
@@ -314,9 +393,9 @@ export function LanguageBar({
   useEffect(() => {
     if (!helpOpen) return;
     const onDoc = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (helpRootRef.current?.contains(target)) return;
-      if (helpPanelRef.current?.contains(target)) return;
+      const node = e.target as Node;
+      if (helpRootRef.current?.contains(node)) return;
+      if (helpPanelRef.current?.contains(node)) return;
       setHelpOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
@@ -369,7 +448,7 @@ export function LanguageBar({
           languages?: Lang[];
         };
         if (!res.ok) {
-          setError(data.error ?? "Could not load languages");
+          setError(data.error ?? t("loadLanguagesFailed"));
           return;
         }
         if (data.languages?.length) {
@@ -382,12 +461,12 @@ export function LanguageBar({
           );
         }
       } catch {
-        setError("Could not load languages");
+        setError(t("loadLanguagesFailed"));
       } finally {
         setLoadingList(false);
       }
     })();
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (languages?.length) return;
@@ -399,12 +478,25 @@ export function LanguageBar({
     [languages, source, target],
   );
 
-  const sourceLabel = resolveLanguageLabel(source, displayCatalog);
-  const targetLabel = resolveLanguageLabel(target, displayCatalog);
-  const sourceBadge = formatLanguageCodeBadge(source);
-  const targetBadge = formatLanguageCodeBadge(target);
+  const targetLabel = getLocalizedLanguageDisplayName(
+    target,
+    locale,
+    displayCatalog,
+  );
+  const triggerLabel = t("learningLanguageLabel", { language: targetLabel });
 
-  const options = useMemo(
+  const learningOptions = useMemo(
+    () =>
+      orderLearningLanguageOptions(
+        learningLanguages,
+        draftTarget,
+        mergeProfileCodes(languages ?? [], draftSource, draftTarget),
+        locale,
+      ),
+    [learningLanguages, draftTarget, draftSource, languages, locale],
+  );
+
+  const nativeOptions = useMemo(
     () => mergeProfileCodes(languages ?? [], draftSource, draftTarget),
     [languages, draftSource, draftTarget],
   );
@@ -427,7 +519,7 @@ export function LanguageBar({
         targetLanguage?: string;
       };
       if (!res.ok) {
-        setError(data.error ?? "Save failed");
+        setError(data.error ?? t("languageSaveFailed"));
         return;
       }
       const nextSource = data.nativeLanguage ?? draftSource;
@@ -440,11 +532,11 @@ export function LanguageBar({
       setSavedPulse(false);
       setOpen(false);
     } catch {
-      setError("Save failed");
+      setError(t("languageSaveFailed"));
     } finally {
       setSaving(false);
     }
-  }, [draftSource, draftTarget, onLanguagesSaved]);
+  }, [draftSource, draftTarget, onLanguagesSaved, t]);
 
   const pickerDisabled = loadingList || saving;
   const hasChanges = draftSource !== source || draftTarget !== target;
@@ -461,15 +553,13 @@ export function LanguageBar({
           className={languageBarTriggerButtonClassName}
           aria-expanded={open}
           aria-haspopup="dialog"
-          aria-label={`Change translation languages, currently ${sourceLabel} to ${targetLabel}`}
+          aria-label={t("changeLearningLanguage", { language: targetLabel })}
         >
           <span className={languageBarLabelClassName}>
-            <span className="truncate">
-              {sourceBadge} → {targetBadge}
-            </span>
+            <span className="truncate">{triggerLabel}</span>
           </span>
           <span className={languageBarIconButtonClassName} aria-hidden>
-            <Globe className="size-4" strokeWidth={1.5} />
+            <ChevronDown className="size-4" strokeWidth={1.5} />
           </span>
         </button>
 
@@ -484,7 +574,7 @@ export function LanguageBar({
             ariaDescribedBy="language-pair-instructions"
             className={cn(
               languagePickerPanelClass,
-              languageBarPopoverBaseClass,
+              languagePickerPopoverClass,
               "transition-[opacity,transform] duration-200 ease-out will-change-[opacity,transform]",
               panelEntered && !panelClosing
                 ? "translate-y-0 scale-100 opacity-100"
@@ -496,44 +586,71 @@ export function LanguageBar({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p id="language-pair-title" className={languageBarPopoverTitleClassName}>
-                    Language pair
+                    {t("languagePickerTitle")}
                   </p>
                   <p
                     id="language-pair-instructions"
                     className={languageBarPopoverDescriptionClassName}
                   >
-                    Pick the language you write in and the one you&apos;re learning.
-                    Save when you&apos;re done.
+                    {t("languagePickerDescription")}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
                   className={languageBarPopoverCloseClassName}
-                  aria-label="Close language picker"
+                  aria-label={t("closeLanguagePicker")}
                 >
                   <X className="size-4" strokeWidth={1.5} />
                 </button>
               </div>
             </header>
 
-            <div className={cn(languageBarPopoverBodyClassName, "flex flex-col gap-4 sm:flex-row")}>
+            <div className={cn(languageBarPopoverBodyClassName, "space-y-5")}>
+              {learningOptions.length > 0 ? (
+                <LearningLanguageList
+                  id="bar-learning"
+                  subtitle={t("learningSectionLabel")}
+                  value={draftTarget}
+                  options={learningOptions}
+                  disabled={pickerDisabled}
+                  onChange={setDraftTarget}
+                />
+              ) : (
+                <SearchableLanguagePicker
+                  id="bar-target-fallback"
+                  subtitle={t("learningSectionLabel")}
+                  value={draftTarget}
+                  options={nativeOptions}
+                  disabled={pickerDisabled}
+                  onChange={setDraftTarget}
+                  searchPlaceholder={t("searchLanguages")}
+                  selectPlaceholder={t("selectLanguage")}
+                  editHint={t("editLanguageHint")}
+                />
+              )}
+
               <SearchableLanguagePicker
                 id="bar-native"
-                subtitle="When stuck, I'll write in…"
+                subtitle={t("nativeSectionLabel")}
                 value={draftSource}
-                options={options}
+                options={nativeOptions}
                 disabled={pickerDisabled}
                 onChange={setDraftSource}
+                searchPlaceholder={t("searchLanguages")}
+                selectPlaceholder={t("selectLanguage")}
+                editHint={t("editLanguageHint")}
               />
-              <SearchableLanguagePicker
-                id="bar-target"
-                subtitle="I'm learning…"
-                value={draftTarget}
-                options={options}
-                disabled={pickerDisabled}
-                onChange={setDraftTarget}
-              />
+
+              <p className="text-right text-sm">
+                <Link
+                  href="/app/settings"
+                  className="font-medium text-foreground/80 underline-offset-2 hover:text-foreground hover:underline"
+                  onClick={() => setOpen(false)}
+                >
+                  {t("manageLanguagesLink")}
+                </Link>
+              </p>
             </div>
 
             {error ? (
@@ -558,33 +675,34 @@ export function LanguageBar({
                       : "translate-y-1 opacity-0",
                   )}
                 >
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 rounded-full transition-opacity duration-150"
-                  disabled={saving || savedPulse}
-                  onClick={() => {
-                    setDraftSource(source);
-                    setDraftTarget(target);
-                    setError(null);
-                    setOpen(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  className={cn(
-                    "h-8 min-w-[4.5rem] rounded-full transition-all duration-200 ease-out",
-                    savedPulse && "scale-[0.98] opacity-90",
-                  )}
-                  disabled={pickerDisabled || savedPulse}
-                  onClick={() => void save()}
-                >
-                  {saving ? "Saving…" : savedPulse ? "Saved!" : "Save"}
-                </Button>
+                  <button
+                    type="button"
+                    className="inline-flex h-8 items-center rounded-full px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                    disabled={saving || savedPulse}
+                    onClick={() => {
+                      setDraftSource(source);
+                      setDraftTarget(target);
+                      setError(null);
+                      setOpen(false);
+                    }}
+                  >
+                    {t("cancel")}
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      "inline-flex h-8 min-w-[4.5rem] items-center justify-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-all duration-200 ease-out disabled:opacity-50",
+                      savedPulse && "scale-[0.98] opacity-90",
+                    )}
+                    disabled={pickerDisabled || savedPulse}
+                    onClick={() => void save()}
+                  >
+                    {saving
+                      ? t("languageSaving")
+                      : savedPulse
+                        ? t("languageSaved")
+                        : t("save")}
+                  </button>
                 </div>
               </div>
             </div>
