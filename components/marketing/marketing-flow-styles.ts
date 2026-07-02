@@ -37,7 +37,7 @@ export const marketingHeroGridClassName =
 
 /** Shared width + alignment for hero copy, CTA, and demo. */
 export const marketingHeroContentClassName =
-  "relative z-10 flex w-full max-w-[min(100%,36rem)] flex-col items-center text-center sm:max-w-[38rem]";
+  "relative z-10 flex w-full min-w-0 max-w-[min(100%,36rem)] flex-col items-center text-center sm:max-w-[38rem]";
 
 /** White demo card inside the hero panel. */
 export const marketingDemoShellClassName =
@@ -76,7 +76,7 @@ export const marketingFlowDescriptionClassName =
   "mt-3 max-w-lg font-sans text-[15px] leading-relaxed text-muted-foreground sm:text-base";
 
 export const marketingHeroTitleClassName =
-  "whitespace-nowrap font-[family-name:var(--font-folio)] text-[clamp(1.75rem,4.2vw,3.375rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-[#262628]";
+  "text-balance font-[family-name:var(--font-folio)] text-[clamp(1.5rem,6.5vw,3.375rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-[#262628] sm:whitespace-nowrap sm:text-[clamp(1.75rem,4.2vw,3.375rem)]";
 
 export const marketingHeroTitleBrandClassName =
   "font-[family-name:var(--font-folio)] text-[1.1em] font-normal italic";

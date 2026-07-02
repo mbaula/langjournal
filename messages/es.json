@@ -17,7 +17,7 @@
       "cta": "Prueba Folio gratis"
     },
     "demo": {
-      "prefix": "Practica armar frases sin cambiar de app ni perder el hilo de tus ideas. Solo traduce ",
+      "prefix": "Practica armar frases. Cuando te atasques, usa el comando // para traducir ",
       "windowTitle": "Folio — Entrada de hoy"
     },
     "featuresOverview": {
@@ -111,7 +111,8 @@
       }
     },
     "footer": {
-      "tagline": "Escríbelo. Tradúcelo. Aprende.",
+      "taglineBrand": "folio",
+      "taglineRest": "te mantiene en el flujo",
       "features": "Funciones",
       "faq": "Preguntas frecuentes",
       "copyright": "© {year} Folio"

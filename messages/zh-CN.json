@@ -17,7 +17,7 @@
       "cta": "免费试用 Folio"
     },
     "demo": {
-      "prefix": "练习造句，不必切换应用，也不会打断思路。只需翻译 ",
+      "prefix": "练习造句。卡住时，用 // 命令翻译 ",
       "windowTitle": "Folio — 今日日记"
     },
     "featuresOverview": {
@@ -111,7 +111,8 @@
       }
     },
     "footer": {
-      "tagline": "写。译。学。",
+      "taglineBrand": "folio",
+      "taglineRest": "帮你保持心流",
       "features": "功能",
       "faq": "常见问题",
       "copyright": "© {year} Folio"

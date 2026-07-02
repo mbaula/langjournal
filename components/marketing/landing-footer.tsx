@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { FolioWordmark } from "@/components/app/folio-wordmark";
 import { FeedbackButton } from "@/components/feedback/feedback-button";
 import { landingSectionXClassName } from "@/components/marketing/landing-spacing";
+import { marketingHeroTitleBrandClassName } from "@/components/marketing/marketing-flow-styles";
 import { cn } from "@/lib/utils";
 
 const footerLinkClassName =
@@ -22,8 +23,11 @@ export async function LandingFooter() {
       >
         <div className="flex flex-col gap-4">
           <FolioWordmark showBeta={false} />
-          <p className="whitespace-nowrap font-[family-name:var(--font-folio)] text-[clamp(1.125rem,3.5vw,1.75rem)] font-semibold leading-none tracking-[-0.02em]">
-            {t("tagline")}
+          <p className="text-balance font-[family-name:var(--font-folio)] text-[clamp(1.125rem,3.5vw,1.75rem)] font-semibold leading-snug tracking-[-0.02em]">
+            <em className={marketingHeroTitleBrandClassName}>
+              {t("taglineBrand")}
+            </em>{" "}
+            {t("taglineRest")}
           </p>
         </div>
 

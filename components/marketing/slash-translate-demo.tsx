@@ -17,37 +17,37 @@ const DEMO_SCENARIOS: DemoScenario[] = [
   {
     id: "es",
     slashSource: "//a mitad de frase!",
-    translation: "mid-sentence!",
+    translation: "mid-sentence",
     slashHint: "a mitad de frase!",
   },
   {
     id: "fr",
     slashSource: "//milieu de phrase!",
-    translation: "mid-sentence!",
+    translation: "mid-sentence",
     slashHint: "milieu de phrase!",
   },
   {
     id: "zh",
     slashSource: "//句中!",
-    translation: "mid-sentence!",
+    translation: "mid-sentence",
     slashHint: "句中!",
   },
   {
     id: "vi",
     slashSource: "//giữa câu!",
-    translation: "mid-sentence!",
+    translation: "mid-sentence",
     slashHint: "giữa câu!",
   },
   {
     id: "ja",
     slashSource: "//文中!",
-    translation: "mid-sentence!",
+    translation: "mid-sentence",
     slashHint: "文中!",
   },
   {
     id: "hi",
     slashSource: "//वाक्य के बीच!",
-    translation: "mid-sentence!",
+    translation: "mid-sentence",
     slashHint: "वाक्य के बीच!",
   },
 ];

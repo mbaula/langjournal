@@ -65,7 +65,7 @@ function SpeechBubbleTail({ side }: { side: "left" | "right" }) {
   return (
     <span
       className={cn(
-        "absolute top-[46%] block h-5 w-12 -translate-y-1/2 bg-background",
+        "absolute top-[46%] hidden h-5 w-12 -translate-y-1/2 bg-background sm:block",
         side === "left"
           ? "-left-11 [clip-path:polygon(100%_0,100%_100%,0_50%)]"
           : "-right-11 [clip-path:polygon(0_0,0_100%,100%_50%)]",
@@ -88,7 +88,7 @@ function ScenarioBubble({
     <div
       key={stepKey}
       className={cn(
-        "landing-scenario-enter mx-auto flex w-full max-w-[16.5rem] flex-col sm:max-w-[17.5rem]",
+        "landing-scenario-enter mx-auto flex w-full max-w-[min(100%,16.5rem)] flex-col sm:max-w-[17.5rem]",
         side === "left" ? "items-start" : "items-end text-right",
       )}
     >
@@ -203,20 +203,19 @@ export function LandingUsers() {
       className="relative scroll-mt-16 bg-background px-4 pb-4 pt-0 sm:px-6 sm:pb-6 md:px-8 md:pb-8"
       style={{ height: `${SECTION_HEIGHT_VH}vh` }}
     >
-      <div className="sticky top-0 flex h-screen flex-col">
+      <div className="sticky top-0 flex min-h-dvh flex-col">
         <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-none bg-marketing-hero-panel">
           <div className="flex flex-1 items-center px-5 py-10 sm:px-8 sm:py-12 md:px-10 md:py-14 lg:px-12 lg:py-16">
-            <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-x-8 xl:gap-x-12">
+            <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-x-8 xl:gap-10">
               <div
                 className={cn(
                   "order-2 lg:order-1 lg:pl-11 xl:pl-12",
-                  activeScenario?.side !== "left" && "hidden lg:block",
+                  activeScenario?.side !== "left" && "hidden",
                 )}
               >
                 <div
                   className={cn(
-                    "relative flex min-h-[10rem] w-full items-center sm:min-h-[11rem]",
-                    "justify-start",
+                    "relative flex w-full items-center justify-center lg:min-h-[10rem] lg:justify-start xl:min-h-[11rem]",
                   )}
                 >
                   {activeScenario?.side === "left" ? (
@@ -229,7 +228,7 @@ export function LandingUsers() {
                 </div>
               </div>
 
-              <LandingReveal className="order-1 mx-auto flex w-full max-w-[18rem] flex-col items-center text-center lg:order-2 lg:justify-self-center">
+              <LandingReveal className="order-1 mx-auto flex w-full max-w-[18rem] min-w-0 flex-col items-center text-center sm:max-w-[20rem] lg:order-2 lg:justify-self-center">
                 <p className="font-sans text-[15px] leading-relaxed text-[#2C2C2C]/60 sm:text-base">
                   {t("intro")}
                 </p>
@@ -248,13 +247,12 @@ export function LandingUsers() {
               <div
                 className={cn(
                   "order-3 lg:pr-11 xl:pr-12",
-                  activeScenario?.side !== "right" && "hidden lg:block",
+                  activeScenario?.side !== "right" && "hidden",
                 )}
               >
                 <div
                   className={cn(
-                    "relative flex min-h-[10rem] w-full items-center sm:min-h-[11rem]",
-                    "justify-end",
+                    "relative flex w-full items-center justify-center lg:min-h-[10rem] lg:justify-end xl:min-h-[11rem]",
                   )}
                 >
                   {activeScenario?.side === "right" ? (

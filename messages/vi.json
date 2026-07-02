@@ -17,7 +17,7 @@
       "cta": "Try Folio free"
     },
     "demo": {
-      "prefix": "Luyện ghép câu mà không cần chuyển app hay mất mạch suy nghĩ. Chỉ cần dịch ",
+      "prefix": "Luyện ghép câu. Khi bí, dùng lệnh // để dịch ",
       "windowTitle": "Folio — Bài viết hôm nay"
     },
     "featuresOverview": {
@@ -111,7 +111,8 @@
       }
     },
     "footer": {
-      "tagline": "Viết. Dịch. Học.",
+      "taglineBrand": "folio",
+      "taglineRest": "giúp bạn giữ nhịp viết",
       "features": "Tính năng",
       "faq": "Câu hỏi thường gặp",
       "copyright": "© {year} Folio"

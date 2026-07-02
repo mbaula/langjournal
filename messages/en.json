@@ -17,7 +17,7 @@
       "cta": "Try Folio free"
     },
     "demo": {
-      "prefix": "Practice putting sentences together without switching apps and losing your train of thoughts. Just translate ",
+      "prefix": "Practice putting sentences together. When stuck, use the // command to translate ",
       "windowTitle": "Folio — Today's entry"
     },
     "featuresOverview": {
@@ -111,7 +111,8 @@
       }
     },
     "footer": {
-      "tagline": "Write It. Translate It. Learn It.",
+      "taglineBrand": "folio",
+      "taglineRest": "keeps you in the flow",
       "features": "Features",
       "faq": "FAQ",
       "copyright": "© {year} Folio"

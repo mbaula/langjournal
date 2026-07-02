@@ -68,7 +68,7 @@ export async function LandingHero() {
               </Link>
             </div>
 
-            <div className="landing-enter landing-enter-delay-5 mt-10 w-fit max-w-full self-start text-left sm:mt-12 md:mt-14">
+            <div className="landing-enter landing-enter-delay-5 mt-10 w-full max-w-full self-stretch text-left sm:mt-12 sm:w-fit sm:self-start md:mt-14">
               <SlashTranslateDemoShell>
                 <SlashTranslateDemo
                   variant="inline"
