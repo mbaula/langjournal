@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ export function EntryTitleField({
   className,
   onTitleChange,
 }: EntryTitleFieldProps) {
+  const t = useTranslations("journal");
   const router = useRouter();
   const [value, setValue] = useState(initialTitle?.trim() ?? "");
   const valueRef = useRef(value);
@@ -70,8 +72,8 @@ export function EntryTitleField({
         setValue(e.target.value);
         onTitleChange?.(e.target.value);
       }}
-      placeholder="Entry title"
-      aria-label="Entry title"
+      placeholder={t("entryTitlePlaceholder")}
+      aria-label={t("entryTitle")}
       className={cn(
         "font-sans w-full min-w-0 border-0 bg-transparent py-0 leading-[1.15] text-foreground outline-none transition-colors",
         "placeholder:text-muted-foreground/50 dark:placeholder:text-foreground/65",
