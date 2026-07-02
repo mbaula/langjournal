@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Plus, X } from "lucide-react";
 
 import {
@@ -98,7 +97,6 @@ function OnboardingNextButton({
 }
 
 export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
-  const router = useRouter();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState<OnboardingStepDirection>("forward");
   const [name, setName] = useState(initialState.displayName ?? "");
@@ -111,6 +109,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [navigatingToApp, setNavigatingToApp] = useState(false);
 
   const [addingLanguage, setAddingLanguage] = useState(false);
   const [newLangCode, setNewLangCode] = useState("");
@@ -241,10 +240,14 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
             {primaryLanguageName}.
           </p>
           <Button
-            onClick={() => router.push("/app/journal")}
+            onClick={() => {
+              setNavigatingToApp(true);
+              window.location.assign("/app/journal");
+            }}
+            disabled={navigatingToApp}
             className="mt-8 h-12 rounded-full px-8 text-base shadow-sm"
           >
-            Start journaling
+            {navigatingToApp ? "Loading…" : "Start journaling"}
           </Button>
         </OnboardingStepTransition>
       </OnboardingShell>
