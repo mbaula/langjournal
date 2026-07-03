@@ -245,6 +245,9 @@
     "help": "帮助",
     "howToTranslate": "如何翻译",
     "howToTranslateInstructions": "输入 <slash></slash> 后跟要翻译的词或短语，然后按 <key></key>。",
+    "howToTranslateSelectionInstructions": "要翻译粘贴的段落或多行文字，请选中文字后按 <key></key> 或使用{selectionAction}。",
+    "translateSelection": "翻译选中内容",
+    "orPressKeyToTranslate": "或按 {key}",
     "closeHelp": "关闭帮助",
     "dailyPrompt": {
       "label": "写作提示",
@@ -343,6 +346,7 @@
     "completionHeadingFallback": "一切就绪！",
     "completionDescription": "你可以开始写作了。随时使用 {slash} 将单词或短语翻译成{language}。",
     "startJournaling": "开始写作",
+    "navigatingToApp": "加载中…",
     "name": {
       "title": "你叫什么名字？",
       "description": "仅用于个性化你的体验。",

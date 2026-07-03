@@ -758,6 +758,14 @@ export function LanguageBar({
                           {triggerKeyLabel}
                         </kbd>
                       ),
+                    })}{" "}
+                    {t.rich("howToTranslateSelectionInstructions", {
+                      key: () => (
+                        <kbd className="rounded border border-border bg-muted px-1 font-sans text-xs text-foreground">
+                          {triggerKeyLabel}
+                        </kbd>
+                      ),
+                      selectionAction: t("translateSelection"),
                     })}
                   </p>
                 </div>

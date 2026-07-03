@@ -24,24 +24,24 @@ function TranslationSpinner() {
   );
 }
 
-function splitPlainWithSlash(
+function splitPlainWithHighlight(
   segText: string,
   absBase: number,
-  slash: SlashRange,
+  highlight: SlashRange,
   translationLoading: TranslationLoadingState | null,
-  slashTranslateHint: string | null,
+  editTranslateHint: string | null,
   keyCounter: { n: number },
   hintAnchorRef?: RefObject<HTMLSpanElement | null>,
 ): ReactNode[] {
   const out: ReactNode[] = [];
-  if (!slash || segText.length === 0) {
+  if (!highlight || segText.length === 0) {
     out.push(<span key={keyCounter.n++}>{segText}</span>);
     return out;
   }
   const a = absBase;
   const b = absBase + segText.length;
-  const lo = Math.max(a, slash.start);
-  const hi = Math.min(b, slash.end);
+  const lo = Math.max(a, highlight.start);
+  const hi = Math.min(b, highlight.end);
   if (lo >= hi) {
     out.push(<span key={keyCounter.n++}>{segText}</span>);
     return out;
@@ -52,12 +52,12 @@ function splitPlainWithSlash(
 
   const showSpinner =
     translationLoading?.showSpinner === true &&
-    translationLoading.start === slash.start &&
+    translationLoading.start === highlight.start &&
     translationLoading.end === hi;
 
-  const atHighlightEnd = hi === slash.end;
+  const atHighlightEnd = hi === highlight.end;
 
-  if (atHighlightEnd && slashTranslateHint) {
+  if (atHighlightEnd && editTranslateHint) {
     out.push(
       <span key={keyCounter.n++} ref={hintAnchorRef} className="inline">
         <mark className={journalEditorTranslationHighlightClassName}>
@@ -82,21 +82,21 @@ function splitPlainWithSlash(
   return out;
 }
 
-/** Mirror layer under the transparent textarea: blue for translations and `//` segments. */
+/** Mirror layer under the transparent textarea: blue for translations and active edit highlights. */
 export function JournalEditingBackdropContent({
   body,
   translations,
-  slashHighlight,
+  editHighlight,
   translationLoading = null,
-  slashTranslateHint = null,
+  editTranslateHint = null,
   translatingLabel = "Translating…",
   hintAnchorRef,
 }: {
   body: string;
   translations: InlineTranslation[];
-  slashHighlight: SlashRange;
+  editHighlight: SlashRange;
   translationLoading?: TranslationLoadingState | null;
-  slashTranslateHint?: string | null;
+  editTranslateHint?: string | null;
   translatingLabel?: string;
   hintAnchorRef?: RefObject<HTMLSpanElement | null>;
 }) {
@@ -129,12 +129,12 @@ export function JournalEditingBackdropContent({
           );
         } else {
           pieces.push(
-            ...splitPlainWithSlash(
+            ...splitPlainWithHighlight(
               segText,
               absBase,
-              slashHighlight,
+              editHighlight,
               translationLoading,
-              slashTranslateHint,
+              editTranslateHint,
               keyCounter,
               hintAnchorRef,
             ),

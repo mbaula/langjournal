@@ -17,10 +17,33 @@ import { appendTranslationSpan } from "@/lib/entries/translation-spans";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+function adjustSpanForCRLFNormalization(
+  rawBody: string,
+  span: { start: number; end: number },
+): { start: number; end: number } {
+  let crlfCountBefore = 0;
+  for (let i = 0; i < span.start && i < rawBody.length - 1; i++) {
+    if (rawBody[i] === "\r" && rawBody[i + 1] === "\n") {
+      crlfCountBefore++;
+    }
+  }
+  let crlfCountInSpan = 0;
+  for (let i = span.start; i < span.end && i < rawBody.length - 1; i++) {
+    if (rawBody[i] === "\r" && rawBody[i + 1] === "\n") {
+      crlfCountInSpan++;
+    }
+  }
+  return {
+    start: span.start - crlfCountBefore,
+    end: span.end - crlfCountBefore - crlfCountInSpan,
+  };
+}
+
 function parseHighlightSpan(
   json: unknown,
-  body: string | undefined,
+  normalizedBody: string | undefined,
   translatedText: string,
+  rawBody?: string,
 ): TranslationSpan | null {
   if (typeof json !== "object" || json === null || !("highlightSpan" in json)) {
     return null;
@@ -36,18 +59,24 @@ function parseHighlightSpan(
     return null;
   }
 
-  const { start, end } = span as { start: number; end: number };
+  const rawSpan = span as { start: number; end: number };
   if (
-    !Number.isInteger(start) ||
-    !Number.isInteger(end) ||
-    start < 0 ||
-    end <= start
+    !Number.isInteger(rawSpan.start) ||
+    !Number.isInteger(rawSpan.end) ||
+    rawSpan.start < 0 ||
+    rawSpan.end <= rawSpan.start
   ) {
     return null;
   }
 
-  if (typeof body !== "string") return null;
-  if (body.slice(start, end) !== translatedText) return null;
+  const adjusted =
+    typeof rawBody === "string"
+      ? adjustSpanForCRLFNormalization(rawBody, rawSpan)
+      : rawSpan;
+  const { start, end } = adjusted;
+
+  if (typeof normalizedBody !== "string") return null;
+  if (normalizedBody.slice(start, end) !== translatedText) return null;
   return { start, end };
 }
 
@@ -79,15 +108,21 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  const body =
+  const rawBody =
     typeof json === "object" && json !== null && "body" in json
       ? (json as { body: unknown }).body
       : undefined;
+  const body =
+    typeof rawBody === "string" ? rawBody.replace(/\r\n/g, "\n") : rawBody;
 
-  const clientTranslatedText =
+  const rawClientTranslatedText =
     typeof json === "object" && json !== null && "translatedText" in json
       ? (json as { translatedText: unknown }).translatedText
       : undefined;
+  const clientTranslatedText =
+    typeof rawClientTranslatedText === "string"
+      ? rawClientTranslatedText.replace(/\r\n/g, "\n")
+      : rawClientTranslatedText;
 
   const entry = await prisma.journalEntry.findFirst({
     where: { id: entryId, userId: user.id },
@@ -130,10 +165,16 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
+  const effectiveTranslatedText =
+    typeof clientTranslatedText === "string"
+      ? clientTranslatedText
+      : result.translatedText;
+
   const highlightSpan = parseHighlightSpan(
     json,
     typeof body === "string" ? body : undefined,
-    result.translatedText,
+    effectiveTranslatedText,
+    typeof rawBody === "string" ? rawBody : undefined,
   );
 
   if (result.fromExisting) {
@@ -141,34 +182,53 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ translation: result.fromExisting });
     }
 
-    const updatedTranslation = appendTranslationSpan(
-      result.fromExisting,
-      highlightSpan,
-      body as string,
-    );
+    const canAppendToExisting =
+      result.fromExisting.translatedText === effectiveTranslatedText;
 
-    if (updatedTranslation === result.fromExisting) {
-      return NextResponse.json({ translation: result.fromExisting });
+    if (canAppendToExisting) {
+      const updatedTranslation = appendTranslationSpan(
+        result.fromExisting,
+        highlightSpan,
+        body as string,
+      );
+
+      if (updatedTranslation !== result.fromExisting) {
+        const nextTranslations = existing.map((t) =>
+          t.id === updatedTranslation.id ? updatedTranslation : t,
+        );
+
+        await prisma.journalEntry.update({
+          where: { id: entryId },
+          data: {
+            translations: nextTranslations as Prisma.InputJsonValue,
+          },
+        });
+
+        return NextResponse.json({ translation: updatedTranslation });
+      }
     }
 
-    const nextTranslations = existing.map((t) =>
-      t.id === updatedTranslation.id ? updatedTranslation : t,
-    );
+    const record: InlineTranslation = {
+      id: randomUUID(),
+      sourceText: result.sourceText,
+      translatedText: effectiveTranslatedText,
+      spans: [highlightSpan],
+    };
 
     await prisma.journalEntry.update({
       where: { id: entryId },
       data: {
-        translations: nextTranslations as Prisma.InputJsonValue,
+        translations: [...existing, record] as Prisma.InputJsonValue,
       },
     });
 
-    return NextResponse.json({ translation: updatedTranslation });
+    return NextResponse.json({ translation: record });
   }
 
   const record: InlineTranslation = {
     id: randomUUID(),
     sourceText: result.sourceText,
-    translatedText: result.translatedText,
+    translatedText: effectiveTranslatedText,
     spans: highlightSpan ? [highlightSpan] : undefined,
   };
 

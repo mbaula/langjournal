@@ -245,6 +245,9 @@
     "help": "Ayuda",
     "howToTranslate": "Cómo traducir",
     "howToTranslateInstructions": "Escribe <slash></slash> seguido de la palabra o frase que quieras, luego pulsa <key></key>.",
+    "howToTranslateSelectionInstructions": "Para traducir un párrafo pegado o varias líneas, selecciona el texto y pulsa <key></key> o usa {selectionAction}.",
+    "translateSelection": "Traducir selección",
+    "orPressKeyToTranslate": "o pulsa {key}",
     "closeHelp": "Cerrar ayuda",
     "dailyPrompt": {
       "label": "Consigna de escritura",
@@ -343,6 +346,7 @@
     "completionHeadingFallback": "¡Todo listo!",
     "completionDescription": "Ya puedes escribir. Usa {slash} cuando quieras traducir una palabra o frase al {language}.",
     "startJournaling": "Empezar a escribir",
+    "navigatingToApp": "Cargando…",
     "name": {
       "title": "¿Cómo te llamas?",
       "description": "Solo para personalizar tu experiencia.",

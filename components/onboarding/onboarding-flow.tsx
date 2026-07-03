@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Plus, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -87,7 +86,6 @@ function OnboardingNextButton({
 }
 
 export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
-  const router = useRouter();
   const t = useTranslations("onboarding");
   const locale = useLocale();
   const { languageLevelLabels, ageRangeLabels, levelDescriptions } =
@@ -104,6 +102,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [navigatingToApp, setNavigatingToApp] = useState(false);
 
   const [addingLanguage, setAddingLanguage] = useState(false);
   const [newLangCode, setNewLangCode] = useState("");
@@ -267,10 +266,14 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
             })}
           </p>
           <Button
-            onClick={() => router.push("/app/journal")}
+            onClick={() => {
+              setNavigatingToApp(true);
+              window.location.assign("/app/journal");
+            }}
+            disabled={navigatingToApp}
             className={cn(marketingHeroCtaClassName, "mt-8 px-8 text-base")}
           >
-            {t("startJournaling")}
+            {navigatingToApp ? t("navigatingToApp") : t("startJournaling")}
           </Button>
         </OnboardingStepTransition>
       </OnboardingShell>

@@ -245,6 +245,9 @@
     "help": "Trợ giúp",
     "howToTranslate": "Cách dịch",
     "howToTranslateInstructions": "Gõ <slash></slash> rồi từ hoặc cụm từ bạn muốn, sau đó nhấn <key></key>.",
+    "howToTranslateSelectionInstructions": "Để dịch đoạn văn dán hoặc nhiều dòng, bôi đen văn bản rồi nhấn <key></key> hoặc dùng {selectionAction}.",
+    "translateSelection": "Dịch phần đã chọn",
+    "orPressKeyToTranslate": "hoặc nhấn {key}",
     "closeHelp": "Đóng trợ giúp",
     "dailyPrompt": {
       "label": "Gợi ý chủ đề",
@@ -343,6 +346,7 @@
     "completionHeadingFallback": "Xong rồi!",
     "completionDescription": "Bạn đã sẵn sàng viết. Dùng {slash} bất cứ khi nào bạn muốn dịch một từ hoặc cụm từ sang {language}.",
     "startJournaling": "Bắt đầu viết",
+    "navigatingToApp": "Đang tải…",
     "name": {
       "title": "Bạn tên gì?",
       "description": "Chỉ để cá nhân hóa trải nghiệm của bạn.",

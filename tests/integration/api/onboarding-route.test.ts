@@ -4,6 +4,11 @@ const mocks = vi.hoisted(() => ({
   getAuthenticatedAppUser: vi.fn(),
   getOnboardingState: vi.fn(),
   completeOnboarding: vi.fn(),
+  revalidatePath: vi.fn(),
+}));
+
+vi.mock("next/cache", () => ({
+  revalidatePath: mocks.revalidatePath,
 }));
 
 vi.mock("@/lib/auth/api-user", () => ({
@@ -73,6 +78,8 @@ describe("api/onboarding route", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(200);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app", "layout");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/onboarding");
   });
 
   it("POST validates payload - requires at least one language", async () => {
@@ -117,5 +124,7 @@ describe("api/onboarding route", () => {
       ],
     });
     expect(res.status).toBe(200);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/app", "layout");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/onboarding");
   });
 });

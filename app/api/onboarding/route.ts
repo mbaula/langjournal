@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
 import {
@@ -49,6 +50,9 @@ export async function POST(request: Request) {
     ageRange: parsed.data.ageRange ?? null,
     languages: parsed.data.languages,
   });
+
+  revalidatePath("/app", "layout");
+  revalidatePath("/onboarding");
 
   return NextResponse.json({ ok: true });
 }

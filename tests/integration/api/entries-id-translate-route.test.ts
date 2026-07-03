@@ -157,6 +157,161 @@ describe("api/entries/[id]/translate route", () => {
     });
   });
 
+  it("POST creates new record when fromExisting has different whitespace", async () => {
+    const existingTranslation = {
+      id: "t1",
+      sourceText: "hello world",
+      translatedText: "hola mundo",
+    };
+    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.prisma.journalEntry.findFirst.mockResolvedValueOnce({
+      id: "e1",
+      body: "prefix\nhola mundo\nsuffix",
+      translations: [existingTranslation],
+      user: { languageProfile: { nativeLanguage: "en", targetLanguage: "es" } },
+    });
+    mocks.languagePairFromProfile.mockReturnValueOnce({ source: "en", target: "es" });
+    mocks.resolveCommitTranslation.mockResolvedValueOnce({
+      ok: true,
+      sourceText: "hello world",
+      translatedText: "hola mundo",
+      fromExisting: existingTranslation,
+      fromServerMemory: false,
+    });
+    mocks.prisma.journalEntry.update.mockResolvedValueOnce({});
+
+    const req = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({
+        text: "hello world",
+        translatedText: "hola mundo\n",
+        body: "prefix\nhola mundo\nsuffix",
+        highlightSpan: { start: 7, end: 18 },
+      }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req, ctx("e1"));
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.translation.spans).toEqual([{ start: 7, end: 18 }]);
+    expect(json.translation.translatedText).toBe("hola mundo\n");
+    expect(json.translation.id).toBe("uuid-1");
+  });
+
+  it("POST stores span when clientTranslatedText has preserved whitespace", async () => {
+    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.prisma.journalEntry.findFirst.mockResolvedValueOnce({
+      id: "e1",
+      body: "prefix\nhola mundo\nsuffix",
+      translations: [],
+      user: { languageProfile: { nativeLanguage: "en", targetLanguage: "es" } },
+    });
+    mocks.languagePairFromProfile.mockReturnValueOnce({ source: "en", target: "es" });
+    mocks.resolveCommitTranslation.mockResolvedValueOnce({
+      ok: true,
+      sourceText: "hello world",
+      translatedText: "hola mundo",
+      fromExisting: null,
+      fromServerMemory: true,
+    });
+    mocks.prisma.journalEntry.update.mockResolvedValueOnce({});
+
+    const req = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({
+        text: "hello world",
+        translatedText: "hola mundo\n",
+        body: "prefix\nhola mundo\nsuffix",
+        highlightSpan: { start: 7, end: 18 },
+      }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req, ctx("e1"));
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.translation.spans).toEqual([{ start: 7, end: 18 }]);
+    expect(json.translation.translatedText).toBe("hola mundo\n");
+  });
+
+  it("POST handles multi-line paragraph translation", async () => {
+    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    const translatedParagraph = "Durante el último año, he perfeccionado mi capacidad.\nTambién he crecido profesionalmente.";
+    const body = `Some intro text.\n\n${translatedParagraph}\n\nSome outro text.`;
+    const start = body.indexOf(translatedParagraph);
+    const end = start + translatedParagraph.length;
+    
+    mocks.prisma.journalEntry.findFirst.mockResolvedValueOnce({
+      id: "e1",
+      body,
+      translations: [],
+      user: { languageProfile: { nativeLanguage: "en", targetLanguage: "es" } },
+    });
+    mocks.languagePairFromProfile.mockReturnValueOnce({ source: "en", target: "es" });
+    mocks.resolveCommitTranslation.mockResolvedValueOnce({
+      ok: true,
+      sourceText: "Over the past year, I have perfected my ability.\nI have also grown professionally.",
+      translatedText: translatedParagraph,
+      fromExisting: null,
+      fromServerMemory: true,
+    });
+    mocks.prisma.journalEntry.update.mockResolvedValueOnce({});
+
+    const req = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({
+        text: "Over the past year, I have perfected my ability.\nI have also grown professionally.",
+        translatedText: translatedParagraph,
+        body,
+        highlightSpan: { start, end },
+      }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req, ctx("e1"));
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.translation.spans).toEqual([{ start, end }]);
+    expect(json.translation.translatedText).toBe(translatedParagraph);
+  });
+
+  it("POST adjusts span positions when body has CRLF line endings", async () => {
+    mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
+    mocks.prisma.journalEntry.findFirst.mockResolvedValueOnce({
+      id: "e1",
+      body: "prefix\nhola mundo\nsuffix",
+      translations: [],
+      user: { languageProfile: { nativeLanguage: "en", targetLanguage: "es" } },
+    });
+    mocks.languagePairFromProfile.mockReturnValueOnce({ source: "en", target: "es" });
+    mocks.resolveCommitTranslation.mockResolvedValueOnce({
+      ok: true,
+      sourceText: "hello world",
+      translatedText: "hola mundo",
+      fromExisting: null,
+      fromServerMemory: true,
+    });
+    mocks.prisma.journalEntry.update.mockResolvedValueOnce({});
+
+    const req = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({
+        text: "hello world",
+        translatedText: "hola mundo",
+        body: "prefix\r\nhola mundo\r\nsuffix",
+        highlightSpan: { start: 8, end: 18 },
+      }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req, ctx("e1"));
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.translation.spans).toEqual([{ start: 7, end: 17 }]);
+    expect(json.translation.translatedText).toBe("hola mundo");
+  });
+
   it("DELETE returns 401 when unauthorized", async () => {
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce(null);
     const req = new Request("http://localhost", { method: "DELETE", body: "{}" });

@@ -58,6 +58,20 @@ export function adjustTranslationSpansForEdit(
   });
 }
 
+export function findTranslationAtIndex(
+  translations: InlineTranslation[],
+  index: number,
+): InlineTranslation | null {
+  for (const translation of translations) {
+    for (const span of translation.spans ?? []) {
+      if (index >= span.start && index < span.end) {
+        return translation;
+      }
+    }
+  }
+  return null;
+}
+
 export function pruneInvalidTranslationSpans(
   body: string,
   translations: InlineTranslation[],

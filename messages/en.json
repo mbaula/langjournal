@@ -245,6 +245,9 @@
     "help": "Help",
     "howToTranslate": "How to translate",
     "howToTranslateInstructions": "Type <slash></slash> followed by the word or phrase you want, then press <key></key>.",
+    "howToTranslateSelectionInstructions": "To translate a pasted paragraph or multiple lines, highlight the text and press <key></key> or use {selectionAction}.",
+    "translateSelection": "Translate selection",
+    "orPressKeyToTranslate": "or press {key}",
     "closeHelp": "Close help",
     "dailyPrompt": {
       "label": "Writing prompt",
@@ -343,6 +346,7 @@
     "completionHeadingFallback": "You're all set!",
     "completionDescription": "You're ready to write. Use {slash} anytime you want to translate a word or phrase into {language}.",
     "startJournaling": "Start writing",
+    "navigatingToApp": "Loading…",
     "name": {
       "title": "What's your name?",
       "description": "This is just for personalizing your experience.",
