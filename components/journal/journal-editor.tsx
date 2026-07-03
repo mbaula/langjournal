@@ -29,7 +29,6 @@ import {
   pruneInvalidTranslationSpans,
 } from "@/lib/entries/translation-spans";
 import { getTextareaIndexAtPoint } from "@/lib/journal/textarea-index-at-point";
-import { countWords, wordCountLabel } from "@/lib/text/word-count";
 import {
   normalizeTranslationSource,
   translationMemoryCacheKey,
@@ -1186,8 +1185,6 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
     [onBodyChange, schedulePrefetch],
   );
 
-  const wordCount = useMemo(() => countWords(body), [body]);
-
   return (
     <div
       ref={containerRef}
@@ -1308,9 +1305,6 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
           </span>
         </div>
       ) : null}
-      <p className="flex justify-end pb-1 text-sm text-muted-foreground tabular-nums dark:text-foreground/80">
-        {wordCountLabel(wordCount)}
-      </p>
       {error ? (
         <p className="text-sm text-destructive" role="alert">
           {error}
