@@ -36,7 +36,7 @@ export function OnboardingShell({
     <div className="flex min-h-dvh min-w-0 flex-col bg-background text-foreground">
       <MarketingNav />
 
-      <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <section className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-visible">
         <main
           className={cn(
             "relative z-10 mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col items-start justify-start",

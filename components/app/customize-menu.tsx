@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Moon, Palette, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { useAccent } from "@/components/accent-provider";
 import { useTheme } from "@/components/theme-provider";
@@ -21,6 +22,7 @@ const accentSwatchClassName =
   "size-7 rounded-md shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)] transition-[transform,box-shadow,ring-color] duration-150 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)]";
 
 export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "toolbar" }) {
+  const t = useTranslations("customize");
   const { resolvedTheme, setTheme } = useTheme();
   const { accent, setAccent } = useAccent();
   const [open, setOpen] = useState(false);
@@ -65,10 +67,10 @@ export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "
         )}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Customize appearance"
+        aria-label={t("ariaLabel")}
       >
         <Palette className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
-        {variant === "sidebar" ? "Customize" : null}
+        {variant === "sidebar" ? t("label") : null}
       </button>
 
       {open ? (
@@ -84,7 +86,7 @@ export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "
               className="text-sm font-semibold text-foreground"
               id="customize-accent-label"
             >
-              Color
+              {t("color")}
             </p>
           </div>
           <div
@@ -128,18 +130,18 @@ export function CustomizeMenu({ variant = "sidebar" }: { variant?: "sidebar" | "
               resolvedTheme === "dark" ? (
                 <>
                   <Sun className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
-                  Light mode
+                  {t("lightMode")}
                 </>
               ) : (
                 <>
                   <Moon className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
-                  Dark mode
+                  {t("darkMode")}
                 </>
               )
             ) : (
               <>
                 <Moon className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
-                Theme
+                {t("theme")}
               </>
             )}
           </button>

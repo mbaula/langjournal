@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -22,27 +22,38 @@ export function EntryTitleField({
   className,
   onTitleChange,
 }: EntryTitleFieldProps) {
-  const router = useRouter();
-  const [value, setValue] = useState(initialTitle?.trim() ?? "");
+  const t = useTranslations("journal");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const entryIdRef = useRef(entryId);
+  const [value, setValue] = useState(initialTitle ?? "");
   const valueRef = useRef(value);
   valueRef.current = value;
 
   useEffect(() => {
-    setValue(initialTitle?.trim() ?? "");
-  }, [initialTitle, entryId]);
+    if (entryIdRef.current === entryId) {
+      return;
+    }
+    entryIdRef.current = entryId;
+    setValue(initialTitle ?? "");
+  }, [entryId, initialTitle]);
+
+  useEffect(() => {
+    const input = inputRef.current;
+    if (input && document.activeElement === input) {
+      return;
+    }
+    setValue(initialTitle ?? "");
+  }, [initialTitle]);
 
   const patch = useCallback(
     async (title: string) => {
-      const res = await fetch(`/api/entries/${entryId}`, {
+      await fetch(`/api/entries/${entryId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title }),
       });
-      if (res.ok) {
-        router.refresh();
-      }
     },
-    [entryId, router],
+    [entryId],
   );
 
   const patchRef = useRef(patch);
@@ -63,6 +74,7 @@ export function EntryTitleField({
 
   return (
     <input
+      ref={inputRef}
       id={inputId}
       type="text"
       value={value}
@@ -70,8 +82,8 @@ export function EntryTitleField({
         setValue(e.target.value);
         onTitleChange?.(e.target.value);
       }}
-      placeholder="Entry title"
-      aria-label="Entry title"
+      placeholder={t("entryTitlePlaceholder")}
+      aria-label={t("entryTitle")}
       className={cn(
         "font-sans w-full min-w-0 border-0 bg-transparent py-0 leading-[1.15] text-foreground outline-none transition-colors",
         "placeholder:text-muted-foreground/50 dark:placeholder:text-foreground/65",

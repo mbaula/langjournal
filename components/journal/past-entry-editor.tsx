@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import { EntryTitleField } from "@/components/journal/entry-title-field";
@@ -16,6 +17,8 @@ import {
 import { LanguageBar } from "@/components/journal/language-bar";
 import { SaveEntryBar } from "@/components/journal/save-entry-bar";
 import type { EntryRow } from "@/components/journal/entry-list";
+import type { UserLanguageEntry } from "@/lib/db/onboarding";
+import { countWords } from "@/lib/text/word-count";
 import { cn } from "@/lib/utils";
 
 function coalesceTranslations(raw: unknown): InlineTranslation[] {
@@ -39,6 +42,8 @@ type PastEntryEditorProps = {
   entry: EntryRow;
   sourceLanguage: string;
   targetLanguage: string;
+  learningLanguages?: readonly UserLanguageEntry[];
+  languageCatalog?: readonly { code: string; name: string }[];
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
   onSaved: (entry: EntryRow) => void;
@@ -49,13 +54,16 @@ export function PastEntryEditor({
   entry,
   sourceLanguage,
   targetLanguage,
+  learningLanguages = [],
+  languageCatalog,
   translateTrigger,
   onLanguagesSaved,
   onSaved,
   onDeleted,
 }: PastEntryEditorProps) {
+  const t = useTranslations("journal");
   const editorRef = useRef<JournalEditorHandle>(null);
-  const [entryTitle, setEntryTitle] = useState(entry.title?.trim() ?? "");
+  const [entryTitle, setEntryTitle] = useState(entry.title ?? "");
   const [draftBody, setDraftBody] = useState(entry.body ?? "");
   const [savePending, setSavePending] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -82,11 +90,11 @@ export function PastEntryEditor({
         updatedAt: new Date(),
       });
     } catch {
-      setSaveError("Couldn't save your entry. Try again.");
+      setSaveError(t("entrySaveFailed"));
     } finally {
       setSavePending(false);
     }
-  }, [draftBody, entry, entryTitle, initialTranslations, onSaved, savePending]);
+  }, [draftBody, entry, entryTitle, initialTranslations, onSaved, savePending, t]);
 
   const canSave = Boolean(entryTitle.trim() || draftBody.trim());
 
@@ -117,6 +125,8 @@ export function PastEntryEditor({
         <LanguageBar
           source={sourceLanguage}
           target={targetLanguage}
+          learningLanguages={learningLanguages}
+          initialLanguages={languageCatalog}
           translateTrigger={translateTrigger}
           onLanguagesSaved={onLanguagesSaved}
         />
@@ -144,12 +154,12 @@ export function PastEntryEditor({
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6 flex flex-col">
         <EntryTitleField
           entryId={entry.id}
           initialTitle={entry.title}
           inputId={`past-entry-title-${entry.id}`}
-          className={journalWriteTitleClassName}
+          className={cn(journalWriteTitleClassName, "mb-4 sm:mb-5")}
           onTitleChange={setEntryTitle}
         />
 
@@ -173,6 +183,7 @@ export function PastEntryEditor({
           successMessage={null}
           finishError={saveError}
           onFinish={handleSave}
+          wordCount={countWords(draftBody)}
         />
       </div>
     </div>

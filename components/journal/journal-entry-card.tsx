@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { EntryActionsMenu } from "@/components/entry/entry-actions-menu";
 import {
@@ -41,6 +42,7 @@ export type JournalEntryCardProps = {
   dateLabel: string;
   languageLabel?: string | null;
   flashcardCount?: number;
+  formatFlashcard?: (count: number) => string;
   body: string | null;
   translations: unknown;
   onRenameTitle?: (entryId: string) => void;
@@ -51,8 +53,13 @@ function formatEntryMetaLabel(
   dateLabel: string,
   languageLabel?: string | null,
   flashcardCount?: number,
+  formatFlashcard?: (count: number) => string,
 ) {
-  return formatEntrySubtitle(dateLabel, { languageLabel, flashcardCount });
+  return formatEntrySubtitle(dateLabel, {
+    languageLabel,
+    flashcardCount,
+    formatFlashcard,
+  });
 }
 
 export function JournalEntryCard({
@@ -63,11 +70,13 @@ export function JournalEntryCard({
   dateLabel,
   languageLabel,
   flashcardCount,
+  formatFlashcard,
   body,
   translations,
   onRenameTitle,
   onDeleted,
 }: JournalEntryCardProps) {
+  const t = useTranslations("journal");
   const router = useRouter();
   const { removeEntryFromCache, updateEntryInCache } = useEntry();
   const [titleValue, setTitleValue] = useState<string | null>(title);
@@ -75,14 +84,13 @@ export function JournalEntryCard({
   const [renamePending, setRenamePending] = useState(false);
   const [renameValue, setRenameValue] = useState(title?.trim() ?? "");
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
-  const [previewClamped, setPreviewClamped] = useState(false);
 
   const trimmedTitle = titleValue?.trim();
   const entryMetaLabel = formatEntryMetaLabel(
     dateLabel,
     languageLabel,
     flashcardCount,
+    formatFlashcard,
   );
   const displayTitle = trimmedTitle || entryMetaLabel;
   const subtitle = trimmedTitle ? entryMetaLabel : null;
@@ -140,27 +148,6 @@ export function JournalEntryCard({
   const isEmptyBody =
     lines.length === 0 || (lines.length === 1 && !lines[0].trim());
 
-  const syncPreviewClamp = useCallback(() => {
-    const el = previewRef.current;
-    if (!el || isEmptyBody) {
-      setPreviewClamped(false);
-      return;
-    }
-    setPreviewClamped(el.scrollHeight > el.clientHeight + 1);
-  }, [isEmptyBody]);
-
-  useLayoutEffect(() => {
-    syncPreviewClamp();
-  }, [body, translations, syncPreviewClamp]);
-
-  useEffect(() => {
-    const el = previewRef.current;
-    if (!el || isEmptyBody) return;
-    const observer = new ResizeObserver(() => syncPreviewClamp());
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [body, isEmptyBody, syncPreviewClamp]);
-
   const entryHeader = (
     <>
       <h2 className="text-lg font-semibold tracking-tight text-foreground">
@@ -175,59 +162,51 @@ export function JournalEntryCard({
   const entryBody = (
     <>
       <hr className="my-3 border-border" />
-      <div ref={previewRef} className="relative max-h-36 overflow-hidden">
-        <div className="flex flex-col gap-0">
-          {isEmptyBody ? (
-            <p
-              className={cn(
-                journalEntryPreviewTextClassName,
-                "text-muted-foreground",
-              )}
-            >
-              No text yet — open this entry to write.
-            </p>
-          ) : (
-            lines.map((line, idx) => {
-              const lineStart =
-                idx === 0
-                  ? 0
-                  : lines.slice(0, idx).reduce((sum, l) => sum + l.length + 1, 0);
-              const segs = segmentTranslatedLineBySpans(line, lineStart, segsList);
-              return (
-                <p
-                  key={idx}
-                  className={cn(
-                    journalEntryPreviewTextClassName,
-                    "min-h-[1.25em] whitespace-pre-wrap",
-                  )}
-                >
-                  {segs.map((seg, si) =>
-                    seg.translation ? (
-                      <span
-                        key={si}
-                        title={seg.translation.sourceText}
-                        className={cn(
-                          "cursor-default",
-                          journalTranslationHighlightClassName,
-                        )}
-                      >
-                        {seg.text}
-                      </span>
-                    ) : (
-                      <span key={si}>{seg.text}</span>
-                    ),
-                  )}
-                </p>
-              );
-            })
-          )}
-        </div>
-        {previewClamped ? (
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent"
-            aria-hidden
-          />
-        ) : null}
+      <div className="flex flex-col gap-0">
+        {isEmptyBody ? (
+          <p
+            className={cn(
+              journalEntryPreviewTextClassName,
+              "text-muted-foreground",
+            )}
+          >
+            {t("noTextYet")}
+          </p>
+        ) : (
+          lines.map((line, idx) => {
+            const lineStart =
+              idx === 0
+                ? 0
+                : lines.slice(0, idx).reduce((sum, l) => sum + l.length + 1, 0);
+            const segs = segmentTranslatedLineBySpans(line, lineStart, segsList);
+            return (
+              <p
+                key={idx}
+                className={cn(
+                  journalEntryPreviewTextClassName,
+                  "min-h-[1.25em] whitespace-pre-wrap",
+                )}
+              >
+                {segs.map((seg, si) =>
+                  seg.translation ? (
+                    <span
+                      key={si}
+                      title={seg.translation.sourceText}
+                      className={cn(
+                        "cursor-default",
+                        journalTranslationHighlightClassName,
+                      )}
+                    >
+                      {seg.text}
+                    </span>
+                  ) : (
+                    <span key={si}>{seg.text}</span>
+                  ),
+                )}
+              </p>
+            );
+          })
+        )}
       </div>
     </>
   );
@@ -247,8 +226,8 @@ export function JournalEntryCard({
                 }}
                 onBlur={() => void saveRename()}
                 disabled={renamePending}
-                placeholder="Entry title…"
-                aria-label="Rename entry title"
+                placeholder={t("entryTitlePlaceholder")}
+                aria-label={t("renameEntryTitle")}
                 className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-ring"
               />
               <div className="flex shrink-0 items-center gap-1">
@@ -259,7 +238,7 @@ export function JournalEntryCard({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={cancelRename}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="button"
@@ -268,7 +247,7 @@ export function JournalEntryCard({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => void saveRename()}
                 >
-                  {renamePending ? "…" : "Save"}
+                  {renamePending ? "…" : t("save")}
                 </button>
               </div>
             </div>
@@ -281,8 +260,11 @@ export function JournalEntryCard({
             className="min-w-0 flex-1 cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={
               subtitle
-                ? `Edit entry: ${displayTitle}, ${subtitle}`
-                : `Edit entry: ${displayTitle}`
+                ? t("editEntryAriaWithSubtitle", {
+                    title: displayTitle,
+                    subtitle,
+                  })
+                : t("editEntryAria", { title: displayTitle })
             }
           >
             {entryHeader}
@@ -294,8 +276,11 @@ export function JournalEntryCard({
             className="min-w-0 flex-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={
               subtitle
-                ? `Open entry to edit: ${displayTitle}, ${subtitle}`
-                : `Open entry to edit: ${displayTitle}`
+                ? t("openEntryAriaWithSubtitle", {
+                    title: displayTitle,
+                    subtitle,
+                  })
+                : t("openEntryAria", { title: displayTitle })
             }
           >
             {entryHeader}

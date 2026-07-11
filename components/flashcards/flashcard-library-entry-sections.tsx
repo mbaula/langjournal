@@ -1,13 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { FlashcardLibraryGrid } from "@/components/flashcards/flashcard-library-grid";
 import {
-  entryGroupLabel,
   type FlashcardEntryGroup,
 } from "@/lib/flashcards/library-sort";
 import type { FlashcardRecord } from "@/lib/flashcards/types";
+import { useFlashcardGroupLabels } from "@/lib/i18n/hooks";
 import { cn } from "@/lib/utils";
 
 type FlashcardLibraryEntrySectionsProps = {
@@ -17,16 +18,28 @@ type FlashcardLibraryEntrySectionsProps = {
   className?: string;
 };
 
+function groupLabel(
+  group: FlashcardEntryGroup,
+  labels: ReturnType<typeof useFlashcardGroupLabels>,
+): string {
+  if (group.entryTitle?.trim()) return group.entryTitle.trim();
+  if (group.entryId) return labels.untitledEntry;
+  return labels.noLinkedEntry;
+}
+
 export function FlashcardLibraryEntrySections({
   groups,
   getItemKey,
   renderItem,
   className,
 }: FlashcardLibraryEntrySectionsProps) {
+  const t = useTranslations("flashcards.groups");
+  const groupLabels = useFlashcardGroupLabels();
+
   return (
     <div className={cn("flex flex-col gap-10 border-t border-border pt-8", className)}>
       {groups.map((group, index) => {
-        const label = entryGroupLabel(group);
+        const label = groupLabel(group, groupLabels);
         const itemCount = group.cards.length;
 
         return (
@@ -47,7 +60,7 @@ export function FlashcardLibraryEntrySections({
                 {label}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {itemCount} {itemCount === 1 ? "flashcard" : "flashcards"}
+                {t("flashcardCount", { count: itemCount })}
               </p>
             </div>
 

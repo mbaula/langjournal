@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
 
 import { ContributionChart } from "@/components/journal/contribution-chart";
 import { JournalProgressStats } from "@/components/journal/journal-progress-stats";
@@ -40,20 +41,19 @@ function ProgressWidget({
   );
 }
 
-export function JournalProgressView({
+export async function JournalProgressView({
   stats,
   studentName,
   contributions,
   translationProgress,
 }: JournalProgressViewProps) {
+  const t = await getTranslations("progress");
+
   return (
     <div className={appPageShellClassName}>
       <header className="space-y-1">
-        <h1 className={journalPageTitleClassName}>Progress</h1>
-        <p className="text-sm text-muted-foreground">
-          Track your journaling streaks, vocabulary growth, and activity over
-          time.
-        </p>
+        <h1 className={journalPageTitleClassName}>{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </header>
 
       <div className="grid grid-cols-1 items-stretch gap-3 xl:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] xl:gap-4">
@@ -73,7 +73,7 @@ export function JournalProgressView({
       <ProgressWidget>
         <ContributionChart
           data={contributions}
-          title="Activity"
+          title={t("activity")}
           variant="default"
           monthsPerPage={12}
           fillWidth

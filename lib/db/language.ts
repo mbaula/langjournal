@@ -53,3 +53,10 @@ export async function updateLanguageProfile(
   invalidateLanguagePairCache();
   return result;
 }
+
+export async function updateUiLocale(userId: string, uiLocale: string) {
+  return prisma.languageProfile.update({
+    where: { userId },
+    data: { uiLocale },
+  });
+}

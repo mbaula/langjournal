@@ -46,6 +46,10 @@ vi.mock("@/lib/flashcards/service", () => ({
   countFlashcardsForUserDisplay: countFlashcardsForUserDisplayMock,
 }));
 
+vi.mock("@/lib/db/language", () => ({
+  getLanguagePair: vi.fn(async () => ({ source: "en", target: "fr" })),
+}));
+
 import {
   deleteJournalEntryForUser,
   getContributionData,
@@ -88,6 +92,8 @@ describe("listJournalEntries", () => {
         translations: true,
         entryDate: true,
         completedAt: true,
+        sourceLanguage: true,
+        targetLanguage: true,
         createdAt: true,
         updatedAt: true,
         _count: { select: { flashcards: true } },
@@ -142,6 +148,8 @@ describe("getJournalEntryForUser", () => {
         translations: true,
         entryDate: true,
         completedAt: true,
+        sourceLanguage: true,
+        targetLanguage: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -184,6 +192,8 @@ describe("getOrCreateJournalEntryForDate", () => {
         userId: "u1",
         entryDate: new Date("2026-04-27T00:00:00.000Z"),
         title: " New title ",
+        sourceLanguage: "en",
+        targetLanguage: "fr",
       },
     });
     expect(result).toEqual({ entry: { id: "new-entry" }, created: true });

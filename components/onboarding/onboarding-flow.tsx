@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowRight, Plus, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import {
   marketingFlowDescriptionClassName,
@@ -9,7 +10,10 @@ import {
   marketingFlowFieldClassName,
   marketingFlowNavButtonClassName,
   marketingFlowTitleClassName,
+  marketingHeroCtaClassName,
 } from "@/components/marketing/marketing-flow-styles";
+import { LanguageSearchCombobox } from "@/components/languages/language-search-combobox";
+import { ProficiencyLevelSelect } from "@/components/languages/proficiency-level-select";
 import {
   ONBOARDING_QUESTION_COUNT,
 } from "@/components/onboarding/onboarding-progress";
@@ -20,36 +24,17 @@ import {
 } from "@/components/onboarding/onboarding-step-transition";
 import { Button } from "@/components/ui/button";
 import type { OnboardingState, UserLanguageEntry } from "@/lib/db/onboarding";
+import { useOnboardingLabels } from "@/lib/i18n/hooks";
+import { getLocalizedLanguageDisplayName } from "@/lib/i18n/language-display-name";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
-import { resolveLanguageLabel } from "@/lib/languages/display-name";
 import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
 import {
-  AGE_RANGE_LABELS,
-  LANGUAGE_LEVEL_LABELS,
   ONBOARDING_AGE_RANGES,
   ONBOARDING_LANGUAGE_LEVELS,
 } from "@/lib/onboarding/labels";
 import { cn } from "@/lib/utils";
 
 type Lang = { code: string; name: string };
-
-const LEVEL_COPY: Record<
-  OnboardingLanguageLevel,
-  { title: string; description: string }
-> = {
-  beginner: {
-    title: "Beginner",
-    description: "I just started learning",
-  },
-  intermediate: {
-    title: "Intermediate",
-    description: "I can communicate on familiar topics",
-  },
-  proficient: {
-    title: "Proficient",
-    description: "I can express myself in many situations",
-  },
-};
 
 const selectChevronClass =
   "pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground";
@@ -77,10 +62,14 @@ function OnboardingNextButton({
   onClick,
   disabled = false,
   loading = false,
+  label,
+  loadingLabel,
 }: {
   onClick: () => void;
   disabled?: boolean;
   loading?: boolean;
+  label: string;
+  loadingLabel: string;
 }) {
   return (
     <Button
@@ -88,15 +77,19 @@ function OnboardingNextButton({
       variant="default"
       onClick={onClick}
       disabled={disabled || loading}
-      className="h-10 gap-1.5 rounded-full px-5 text-sm shadow-sm"
+      className={cn(marketingHeroCtaClassName, "h-10 px-5 text-sm")}
     >
-      {loading ? "Saving…" : "Next"}
+      {loading ? loadingLabel : label}
       {!loading ? <ArrowRight className="size-4" strokeWidth={1.5} /> : null}
     </Button>
   );
 }
 
 export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
+  const t = useTranslations("onboarding");
+  const locale = useLocale();
+  const { languageLevelLabels, ageRangeLabels, levelDescriptions } =
+    useOnboardingLabels();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState<OnboardingStepDirection>("forward");
   const [name, setName] = useState(initialState.displayName ?? "");
@@ -132,7 +125,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
           languages?: Lang[];
         };
         if (!res.ok) {
-          if (!cancelled) setError(data.error ?? "Could not load languages");
+          if (!cancelled) setError(data.error ?? t("loadLanguagesError"));
           return;
         }
 
@@ -142,7 +135,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
         );
         if (!cancelled) setAvailableLanguages(sorted);
       } catch {
-        if (!cancelled) setError("Could not load languages");
+        if (!cancelled) setError(t("loadLanguagesError"));
       } finally {
         if (!cancelled) setLoadingLanguages(false);
       }
@@ -151,11 +144,44 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
+
+  const localizedLanguages = useMemo(
+    () =>
+      availableLanguages.map((language) => ({
+        code: language.code,
+        name: getLocalizedLanguageDisplayName(
+          language.code,
+          locale,
+          availableLanguages,
+        ),
+      })),
+    [availableLanguages, locale],
+  );
 
   const getLanguageName = useCallback(
-    (code: string) => resolveLanguageLabel(code, availableLanguages),
-    [availableLanguages],
+    (code: string) =>
+      getLocalizedLanguageDisplayName(code, locale, availableLanguages),
+    [availableLanguages, locale],
+  );
+
+  const levelOptions = useMemo(
+    () =>
+      ONBOARDING_LANGUAGE_LEVELS.map((level) => ({
+        value: level,
+        label: languageLevelLabels[level],
+        description: levelDescriptions[level],
+      })),
+    [languageLevelLabels, levelDescriptions],
+  );
+
+  const compactLevelOptions = useMemo(
+    () =>
+      ONBOARDING_LANGUAGE_LEVELS.map((level) => ({
+        value: level,
+        label: languageLevelLabels[level],
+      })),
+    [languageLevelLabels],
   );
 
   const primaryLanguageName = useMemo(() => {
@@ -165,13 +191,15 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
 
   const completionHeading = useMemo(() => {
     const trimmed = name.trim();
-    return trimmed.length > 0 ? `You're all set, ${trimmed}!` : "You're all set!";
-  }, [name]);
+    return trimmed.length > 0
+      ? t("completionHeading", { name: trimmed })
+      : t("completionHeadingFallback");
+  }, [name, t]);
 
   const unusedLanguages = useMemo(() => {
     const usedCodes = new Set(userLanguages.map((l) => l.languageCode));
-    return availableLanguages.filter((l) => !usedCodes.has(l.code));
-  }, [availableLanguages, userLanguages]);
+    return localizedLanguages.filter((l) => !usedCodes.has(l.code));
+  }, [localizedLanguages, userLanguages]);
 
   function addLanguage() {
     if (!newLangCode || !newLangLevel) return;
@@ -211,13 +239,13 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
 
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? "Could not save onboarding");
+        setError(data.error ?? t("saveError"));
         return;
       }
       setDirection("forward");
       setCompleted(true);
     } catch {
-      setError("Could not save onboarding");
+      setError(t("saveError"));
     } finally {
       setSubmitting(false);
     }
@@ -228,16 +256,14 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
       <OnboardingShell showProgress={false} error={error}>
         <OnboardingStepTransition step={0} direction="forward">
           <p className={cn("mb-3", marketingFlowEyebrowClassName)}>
-            Setup complete
+            {t("setupComplete")}
           </p>
           <h1 className={marketingFlowTitleClassName}>{completionHeading}</h1>
           <p className={marketingFlowDescriptionClassName}>
-            Your journal is ready. Start writing and use{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
-              {"//"}
-            </code>{" "}
-            anytime you want to translate a word or phrase into{" "}
-            {primaryLanguageName}.
+            {t("completionDescription", {
+              slash: "//",
+              language: primaryLanguageName,
+            })}
           </p>
           <Button
             onClick={() => {
@@ -245,9 +271,9 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
               window.location.assign("/app/journal");
             }}
             disabled={navigatingToApp}
-            className="mt-8 h-12 rounded-full px-8 text-base shadow-sm"
+            className={cn(marketingHeroCtaClassName, "mt-8 px-8 text-base")}
           >
-            {navigatingToApp ? "Loading…" : "Start journaling"}
+            {navigatingToApp ? t("navigatingToApp") : t("startJournaling")}
           </Button>
         </OnboardingStepTransition>
       </OnboardingShell>
@@ -269,10 +295,14 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                 onClick={() => goToStep(2)}
                 className={marketingFlowNavButtonClassName}
               >
-                Skip
+                {t("skip")}
               </button>
               {name.trim() ? (
-                <OnboardingNextButton onClick={() => goToStep(2)} />
+                <OnboardingNextButton
+                  onClick={() => goToStep(2)}
+                  label={t("next")}
+                  loadingLabel={t("saving")}
+                />
               ) : null}
             </div>
           </>
@@ -280,13 +310,13 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
       >
         <OnboardingStepTransition step={step} direction={direction}>
           <OnboardingStepIntro
-            title="What's your name?"
-            description="This is just for personalizing your experience."
+            title={t("name.title")}
+            description={t("name.description")}
           />
           <input
             type="text"
             value={name}
-            placeholder="Your name or nickname..."
+            placeholder={t("name.placeholder")}
             className={cn(marketingFlowFieldClassName, "mt-8")}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
@@ -311,17 +341,21 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
               onClick={() => goToStep(1)}
               className={marketingFlowNavButtonClassName}
             >
-              Back
+              {t("back")}
             </button>
             {ageRange ? (
-              <OnboardingNextButton onClick={() => goToStep(3)} />
+              <OnboardingNextButton
+                onClick={() => goToStep(3)}
+                label={t("next")}
+                loadingLabel={t("saving")}
+              />
             ) : (
               <button
                 type="button"
                 onClick={() => goToStep(3)}
                 className={marketingFlowNavButtonClassName}
               >
-                Skip
+                {t("skip")}
               </button>
             )}
           </>
@@ -329,8 +363,8 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
       >
         <OnboardingStepTransition step={step} direction={direction}>
           <OnboardingStepIntro
-            title="How old are you?"
-            description="This helps us tailor prompts and suggestions to you. Your answers are anonymous."
+            title={t("age.title")}
+            description={t("age.description")}
           />
           <div className="relative mt-8">
             <select
@@ -341,10 +375,10 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                 "cursor-pointer appearance-none pr-12",
               )}
             >
-              <option value="">Select age range...</option>
+              <option value="">{t("age.placeholder")}</option>
               {ONBOARDING_AGE_RANGES.map((value) => (
                 <option key={value} value={value}>
-                  {AGE_RANGE_LABELS[value]}
+                  {ageRangeLabels[value]}
                 </option>
               ))}
             </select>
@@ -377,12 +411,14 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
             onClick={() => goToStep(2)}
             className={marketingFlowNavButtonClassName}
           >
-            Back
+            {t("back")}
           </button>
           {userLanguages.length > 0 ? (
             <OnboardingNextButton
               onClick={() => void finishOnboarding()}
               loading={submitting}
+              label={t("next")}
+              loadingLabel={t("saving")}
             />
           ) : (
             <span aria-hidden className="min-w-[3rem]" />
@@ -392,8 +428,8 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
     >
       <OnboardingStepTransition step={step} direction={direction}>
         <OnboardingStepIntro
-          title="What languages are you learning?"
-          description="Add at least one language. You can always update this later."
+          title={t("languages.title")}
+          description={t("languages.description")}
         />
 
         {userLanguages.length > 0 ? (
@@ -408,43 +444,29 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                     {getLanguageName(lang.languageCode)}
                   </p>
                 </div>
-                <div className="relative">
-                  <select
-                    value={lang.level}
-                    onChange={(e) =>
-                      updateLanguageLevel(
-                        lang.languageCode,
-                        e.target.value as OnboardingLanguageLevel,
-                      )
-                    }
-                    className="h-9 cursor-pointer appearance-none rounded-full border border-border/80 bg-background pl-3 pr-8 text-sm text-foreground outline-none"
-                  >
-                    {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
-                      <option key={level} value={level}>
-                        {LANGUAGE_LEVEL_LABELS[level]}
-                      </option>
-                    ))}
-                  </select>
-                  <svg
-                    className={cn(selectChevronClass, "right-2.5 size-3")}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    aria-hidden
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
+                <ProficiencyLevelSelect
+                  value={lang.level}
+                  onChange={(level) =>
+                    updateLanguageLevel(
+                      lang.languageCode,
+                      level as OnboardingLanguageLevel,
+                    )
+                  }
+                  options={compactLevelOptions}
+                  className="w-auto min-w-[9rem]"
+                  triggerClassName="h-9 px-3"
+                  placeholder={t("languages.selectLevel")}
+                  aria-label={t("languages.levelFor", {
+                    language: getLanguageName(lang.languageCode),
+                  })}
+                />
                 <button
                   type="button"
                   onClick={() => removeLanguage(lang.languageCode)}
                   className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-                  aria-label={`Remove ${getLanguageName(lang.languageCode)}`}
+                  aria-label={t("languages.removeLanguage", {
+                    language: getLanguageName(lang.languageCode),
+                  })}
                 >
                   <X className="size-4" />
                 </button>
@@ -455,74 +477,27 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
 
         {addingLanguage ? (
           <div className="mt-4 w-full rounded-2xl border-2 border-dashed border-border/60 p-4">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="relative min-w-0 flex-1">
-                <select
-                  value={newLangCode}
-                  onChange={(e) => setNewLangCode(e.target.value)}
-                  disabled={loadingLanguages}
-                  className={cn(
-                    marketingFlowFieldClassName,
-                    "cursor-pointer appearance-none pr-10 text-sm disabled:opacity-50",
-                  )}
-                >
-                  <option value="">
-                    {loadingLanguages ? "Loading..." : "Select language..."}
-                  </option>
-                  {unusedLanguages.map((language) => (
-                    <option key={language.code} value={language.code}>
-                      {language.name}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  className={cn(selectChevronClass, "right-4")}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-              <div className="relative min-w-0 flex-1">
-                <select
-                  value={newLangLevel}
-                  onChange={(e) =>
-                    setNewLangLevel(e.target.value as OnboardingLanguageLevel)
-                  }
-                  className={cn(
-                    marketingFlowFieldClassName,
-                    "cursor-pointer appearance-none pr-10 text-sm",
-                  )}
-                >
-                  <option value="">Select level...</option>
-                  {ONBOARDING_LANGUAGE_LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      {LEVEL_COPY[level].title} — {LEVEL_COPY[level].description}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  className={cn(selectChevronClass, "right-4")}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[3fr_2fr] sm:items-start">
+              <LanguageSearchCombobox
+                options={unusedLanguages}
+                value={newLangCode}
+                onChange={setNewLangCode}
+                disabled={loadingLanguages}
+                placeholder={
+                  loadingLanguages
+                    ? t("languages.loadingLanguages")
+                    : t("languages.searchPlaceholder")
+                }
+                inputAriaLabel={t("languages.languageLabel")}
+              />
+              <ProficiencyLevelSelect
+                value={newLangLevel}
+                onChange={(level) =>
+                  setNewLangLevel(level as OnboardingLanguageLevel)
+                }
+                options={levelOptions}
+                placeholder={t("languages.selectLevel")}
+              />
             </div>
             <div className="mt-3 flex justify-end gap-2">
               <button
@@ -534,7 +509,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                 }}
                 className={marketingFlowNavButtonClassName}
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 type="button"
@@ -542,7 +517,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
                 disabled={!newLangCode || !newLangLevel}
                 className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity disabled:opacity-40"
               >
-                Add
+                {t("add")}
               </button>
             </div>
           </div>
@@ -553,7 +528,7 @@ export function OnboardingFlow({ initialState }: OnboardingFlowProps) {
             className="mt-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-5 py-3 text-sm text-muted-foreground shadow-sm transition-colors hover:border-sidebar-primary/30 hover:text-foreground"
           >
             <Plus className="size-4" />
-            Add a language
+            {t("languages.addLanguage")}
           </button>
         )}
       </OnboardingStepTransition>

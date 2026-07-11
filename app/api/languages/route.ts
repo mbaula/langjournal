@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAuthenticatedAppUser } from "@/lib/auth/api-user";
-import { FALLBACK_LANGUAGES } from "@/lib/languages/fallback-languages";
-import { listGoogleTranslationLanguages } from "@/lib/translate/google";
+import { getSupportedLanguages } from "@/lib/languages/supported-languages";
 
 /** Supported translation languages (from Google when configured, else fallback). */
 export async function GET() {
@@ -11,8 +10,6 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const fromGoogle = await listGoogleTranslationLanguages();
-  return NextResponse.json({
-    languages: fromGoogle ?? FALLBACK_LANGUAGES,
-  });
+  const languages = await getSupportedLanguages();
+  return NextResponse.json({ languages });
 }

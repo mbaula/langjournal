@@ -76,8 +76,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
   }
 
-  const entry = await getJournalEntryForUser(id, userId);
-  return NextResponse.json({ entry });
+  return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {

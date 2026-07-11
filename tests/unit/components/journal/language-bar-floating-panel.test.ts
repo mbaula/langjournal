@@ -43,7 +43,7 @@ describe("language bar floating panel positioning", () => {
 
     expect(rect.top).toBe(168);
     expect(rect.left).toBe(16);
-    expect(rect.width).toBe(448);
+    expect(rect.width).toBe(320);
   });
 
   it("places the help popover to the right on desktop", () => {

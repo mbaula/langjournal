@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { Loader2 } from "lucide-react";
 
 import { journalEditorTranslationHighlightClassName } from "@/components/journal/field-styles";
@@ -29,8 +29,8 @@ function splitPlainWithHighlight(
   absBase: number,
   highlight: SlashRange,
   translationLoading: TranslationLoadingState | null,
-  editTranslateHint: string | null,
   keyCounter: { n: number },
+  hintAnchorRef?: RefObject<HTMLSpanElement | null>,
 ): ReactNode[] {
   const out: ReactNode[] = [];
   if (!highlight || segText.length === 0) {
@@ -55,17 +55,21 @@ function splitPlainWithHighlight(
     translationLoading.end === hi;
 
   const atHighlightEnd = hi === highlight.end;
+  // Anchor whenever the caret highlight ends here so the floating hint can
+  // position on the first `//` frame (not only after the next keystroke).
+  const attachHintAnchor = Boolean(atHighlightEnd && hintAnchorRef);
 
-  if (atHighlightEnd && editTranslateHint) {
+  if (attachHintAnchor) {
     out.push(
-      <span key={keyCounter.n++} className="relative inline">
+      <span
+        key={`slash-hint-anchor-${highlight.start}-${highlight.end}`}
+        ref={hintAnchorRef}
+        className="inline"
+      >
         <mark className={journalEditorTranslationHighlightClassName}>
           {segText.slice(i, j)}
           {showSpinner ? <TranslationSpinner /> : null}
         </mark>
-        <span className="pointer-events-none absolute left-full top-full z-10 mt-1 ml-0 whitespace-nowrap rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium text-foreground shadow-sm">
-          {editTranslateHint}
-        </span>
       </span>,
     );
   } else {
@@ -90,13 +94,15 @@ export function JournalEditingBackdropContent({
   translations,
   editHighlight,
   translationLoading = null,
-  editTranslateHint = null,
+  translatingLabel = "Translating…",
+  hintAnchorRef,
 }: {
   body: string;
   translations: InlineTranslation[];
   editHighlight: SlashRange;
   translationLoading?: TranslationLoadingState | null;
-  editTranslateHint?: string | null;
+  translatingLabel?: string;
+  hintAnchorRef?: RefObject<HTMLSpanElement | null>;
 }) {
   const keyCounter = { n: 0 };
   const pieces: ReactNode[] = [];
@@ -132,8 +138,8 @@ export function JournalEditingBackdropContent({
               absBase,
               editHighlight,
               translationLoading,
-              editTranslateHint,
               keyCounter,
+              hintAnchorRef,
             ),
           );
         }
@@ -148,7 +154,7 @@ export function JournalEditingBackdropContent({
   return (
     <>
       {translationLoading?.showSpinner ? (
-        <span className="sr-only">Translating…</span>
+        <span className="sr-only">{translatingLabel}</span>
       ) : null}
       {pieces}
     </>

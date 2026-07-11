@@ -1,0 +1,393 @@
+{
+  "marketing": {
+    "nav": {
+      "features": "Funciones",
+      "faq": "Preguntas frecuentes",
+      "tryFree": "Prueba Folio gratis",
+      "folioHome": "Inicio de Folio",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú"
+    },
+    "hero": {
+      "eyebrow": "Aprendizaje de idiomas",
+      "title": "folio te mantiene en el flujo",
+      "titleBrand": "folio",
+      "titleRest": "te mantiene en el flujo.",
+      "subtitle": "Escribe en tu idioma objetivo en una sola app. Se acabó cambiar de pestaña para traducir una palabra.",
+      "cta": "Prueba Folio gratis"
+    },
+    "demo": {
+      "prefix": "Practica armar frases. Cuando te atasques, usa el comando // para traducir ",
+      "windowTitle": "Folio — Entrada de hoy"
+    },
+    "featuresOverview": {
+      "title": "Aprende a escribir en otro idioma sin complicaciones",
+      "description": "Deja de abrir <highlight>mil sitios web diferentes</highlight> solo para escribir una frase. Folio es la app que lo reemplaza todo.",
+      "write": "escribir",
+      "translate": "traducir",
+      "practice": "practicar",
+      "track": "seguir"
+    },
+    "featuresDetail": {
+      "writeTitle": "Escribir",
+      "writeDescription": "Practica tu escritura con <strong>prompts adaptados a tu nivel</strong>, de A1 a C2.",
+      "translateTitle": "Traducir",
+      "translateDescription": "No abras mil apps. <strong>Encuentra las palabras que necesitas</strong> dentro de Folio.",
+      "practiceTitle": "Practicar",
+      "practiceDescription": "Folio guarda automáticamente tus <strong>palabras nuevas en flashcards</strong> para que practiques.",
+      "trackTitle": "Seguir",
+      "trackDescription": "Mira crecer tu racha, tus palabras y <strong>tu progreso</strong> con el tiempo."
+    },
+    "languagesShowcase": {
+      "title": "Compatible con más de 160 idiomas"
+    },
+    "problemSolution": {
+      "title": "Aprender idiomas, más fácil",
+      "subtitle": "Así estamos resolviendo el problema.",
+      "problemLabel": "El problema",
+      "solutionLabel": "La solución",
+      "problems": {
+        "0": "Cambiar de app a mitad de frase para traducir",
+        "1": "Listas de vocabulario que nunca vuelves a abrir",
+        "2": "Apps demasiado fáciles o demasiado difíciles",
+        "3": "Difícil saber cuánto avanzas cuando aprendes por tu cuenta"
+      },
+      "solutions": {
+        "0": "Traduce en mitad de la frase con el comando //",
+        "1": "Palabras guardadas en flashcards automáticamente",
+        "2": "Consignas diarias con el reto justo — ni fácil ni imposible",
+        "3": "Rachas y progreso mientras escribes"
+      }
+    },
+    "users": {
+      "intro": "si has dicho esto más de una vez...",
+      "headline": "Espera, ¿cómo se dice?",
+      "closing": "entonces folio es para ti",
+      "scenarios": {
+        "romeTag": "de viaje",
+        "romeQuote": "Este plato se ve genial, pero soy alérgico a... espera, ¿cómo se dice esa palabra?",
+        "homeTag": "en casa",
+        "homeQuote": "En el trabajo estamos haciendo un tipo de... — espera, ¿cómo se dice?",
+        "studyingTag": "estudiando",
+        "studyingQuote": "El texto usaba este término para... en realidad, ¿cómo se dice?",
+        "friendsTag": "con amigos",
+        "friendsQuote": "Es tan gracioso porque — espera, da igual, olvidé la palabra.",
+        "travelingTag": "viajando",
+        "travelingQuote": "¿Podemos bajar en la... la parada antes del aeropuerto? Olvidé cómo se llama.",
+        "textingTag": "enviando mensajes",
+        "textingQuote": "Nos vemos en ese lugar en la... ugh, ya sabes la calle — perdí la palabra."
+      }
+    },
+    "joinCta": {
+      "label": "Únete a Folio"
+    },
+    "faq": {
+      "title": "Únete a una comunidad de aprendices de idiomas",
+      "items": {
+        "slashCommand": {
+          "question": "¿Qué es el comando //?",
+          "answer": "Escribe // en cualquier parte de tu diario y redacta con tus propias palabras — Folio traduce en línea, justo donde escribes. Sin cambiar de pestaña, sin romper el flujo."
+        },
+        "privacy": {
+          "question": "¿Mi diario es privado?",
+          "answer": "Por supuesto. Tus entradas son solo tuyas. No compartimos tu escritura con nadie y nada se usa para entrenar modelos de IA."
+        },
+        "report": {
+          "question": "¿Cómo reporto un problema en Folio?",
+          "answer": "¡Estamos aquí para ayudarte! Toca <feedbackLink>aquí</feedbackLink> o el botón de Feedback cuando quieras — ya sea un error, una idea de función o si necesitas ayuda."
+        },
+        "beta": {
+          "question": "¿Qué es una versión beta?",
+          "answer": "Folio está en acceso anticipado, lo que significa que seguimos construyendo y mejorando. Es completamente gratis ahora, y puede que encuentres algún error — si pasa, avísanos."
+        },
+        "cancel": {
+          "question": "¿Puedo cancelar en cualquier momento?",
+          "answer": "Sí, sin compromiso. Puedes cancelar tu suscripción cuando quieras o eliminar tu cuenta por completo desde Ajustes."
+        },
+        "startLevel": {
+          "question": "¿Necesito saber el idioma para empezar?",
+          "answer": "Para nada — puedes empezar desde cero. Dicho esto, Folio funciona mejor si ya conoces lo básico y quieres practicar armar frases."
+        }
+      }
+    },
+    "footer": {
+      "taglineBrand": "folio",
+      "taglineRest": "te mantiene en el flujo",
+      "features": "Funciones",
+      "faq": "Preguntas frecuentes",
+      "copyright": "© {year} Folio"
+    }
+  },
+  "login": {
+    "eyebrow": "Iniciar sesión",
+    "title": "Continuar con email",
+    "description": "Te enviaremos un magic link — sin contraseña que recordar.",
+    "backToHome": "Volver al inicio",
+    "emailLabel": "Email",
+    "emailPlaceholder": "tu@example.com",
+    "submit": "Enviarme un magic link",
+    "submitting": "Enviando…",
+    "checkEmail": "Revisa tu email para el enlace de acceso."
+  },
+  "settings": {
+    "pageTitle": "Ajustes",
+    "pageDescription": "Actualiza tu perfil y preferencias.",
+    "displayLanguage": {
+      "title": "Idioma de la interfaz",
+      "description": "Cambia el idioma aquí.",
+      "label": "Idioma de visualización",
+      "saving": "Guardando…",
+      "saved": "Guardado.",
+      "error": "No se pudo actualizar el idioma"
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "body": "Tus entradas, flashcards y datos de perfil son privados. No compartimos tu escritura con terceros ni usamos tu contenido para entrenar modelos."
+    },
+    "profile": {
+      "title": "Perfil",
+      "name": "Nombre",
+      "namePlaceholder": "Tu nombre o apodo",
+      "languages": "Idiomas",
+      "noLanguages": "Aún no has añadido idiomas.",
+      "selectLanguage": "Seleccionar idioma…",
+      "selectLevel": "Seleccionar nivel…",
+      "searchPlaceholder": "Buscar idiomas...",
+      "languageLabel": "Idioma",
+      "removeLanguage": "Eliminar {language}",
+      "levelFor": "Nivel de {language}",
+      "addLanguage": "Añadir idioma",
+      "add": "Añadir",
+      "saveProfile": "Guardar perfil",
+      "loadLanguagesError": "No se pudieron cargar los idiomas",
+      "addLanguageError": "Añade al menos un idioma con nivel.",
+      "saveFailed": "Error al guardar"
+    },
+    "more": {
+      "title": "Más",
+      "logOut": "Cerrar sesión",
+      "deleteAccount": "Eliminar cuenta",
+      "deleteConfirm": "¿Eliminar tu cuenta permanentemente? Se borrarán todas las entradas, flashcards y datos del perfil. No se puede deshacer.",
+      "deleting": "Eliminando…",
+      "previewDeleteUnavailable": "La eliminación de cuenta no está disponible en modo vista previa.",
+      "deleteFailed": "No se pudo eliminar la cuenta"
+    }
+  },
+  "app": {
+    "nav": {
+      "write": "Escribir",
+      "practice": "Practicar",
+      "progress": "Progreso",
+      "settings": "Ajustes",
+      "signOut": "Cerrar sesión",
+      "exitPreview": "Salir de vista previa",
+      "account": "Cuenta",
+      "folioHome": "Inicio de Folio",
+      "mainNav": "Principal",
+      "accountMenu": "Menú de cuenta"
+    },
+    "loading": "Cargando"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "loading": "Cargando…",
+    "saved": "Guardado.",
+    "saving": "Guardando…",
+    "account": "Cuenta",
+    "exitPreview": "Salir de vista previa",
+    "logOut": "Cerrar sesión",
+    "previewAccount": "Alex (vista previa)"
+  },
+  "customize": {
+    "label": "Personalizar",
+    "ariaLabel": "Personalizar apariencia",
+    "color": "Color",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo oscuro",
+    "theme": "Tema"
+  },
+  "feedback": {
+    "label": "Feedback",
+    "clickHere": "aquí"
+  },
+  "journal": {
+    "greeting": "Hola, {name} 👋",
+    "greetingFallback": "amigo",
+    "subtitles": {
+      "0": "Miau miau, ¿has escrito algo hoy?",
+      "1": "Deberías escribir algo hoy (o else).",
+      "2": "Yo yo, ¿has escrito algo hoy?",
+      "3": "¿Quién es un nerd de idiomas? ¡Tú!",
+      "4": "Probablemente deberías escribir algo hoy (mirada)"
+    },
+    "scrollPastEntries": "Desplázate para ver entradas anteriores",
+    "entrySaved": "Entrada guardada.",
+    "entrySaveFailed": "No se pudo guardar. Inténtalo de nuevo.",
+    "savingEntry": "Guardando…",
+    "writePlaceholder": "Si te atas, escribe // para traducir en línea",
+    "entryTitle": "Título sin nombre",
+    "pastEntries": "Entradas anteriores",
+    "pastEntriesLanguageFilter": "Filtrar entradas anteriores por idioma",
+    "noEntriesInLanguage": "Aún no hay entradas guardadas en {language}.",
+    "noEntries": "Aún no hay entradas.",
+    "flashcardCount": "{count, plural, one {# flashcard} other {# flashcards}}",
+    "saveEntry": "Guardar entrada",
+    "pageOn": "Página {page} de {total}",
+    "onThisPage": "En esta página",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "pressTabTranslate": "Escribe y pulsa tab para traducir",
+    "pressEnterTranslate": "Escribe y pulsa enter para traducir",
+    "translationFailed": "Error al traducir",
+    "translating": "Traduciendo…",
+    "help": "Ayuda",
+    "howToTranslate": "Cómo traducir",
+    "howToTranslateInstructions": "Escribe <slash></slash> seguido de la palabra o frase que quieras, luego pulsa <key></key>.",
+    "howToTranslateSelectionInstructions": "Para traducir un párrafo pegado o varias líneas, selecciona el texto y pulsa <key></key> o usa {selectionAction}.",
+    "translateSelection": "Traducir selección",
+    "orPressKeyToTranslate": "o pulsa {key}",
+    "closeHelp": "Cerrar ayuda",
+    "dailyPrompt": {
+      "label": "Consigna de escritura",
+      "usePrompt": "Usar consigna",
+      "added": "Añadida",
+      "refresh": "Actualizar",
+      "easier": "Más fácil",
+      "harder": "Más difícil",
+      "saveError": "No se pudo guardar la consigna. Inténtalo de nuevo.",
+      "ariaToday": "Consigna de escritura de hoy",
+      "ariaRefresh": "Actualizar consigna"
+    },
+    "noTextYet": "Sin texto aún — abre esta entrada para escribir.",
+    "entryTitlePlaceholder": "Título sin nombre",
+    "renameEntryTitle": "Renombrar título sin nombre",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "editEntryAria": "Editar entrada: {title}",
+    "editEntryAriaWithSubtitle": "Editar entrada: {title}, {subtitle}",
+    "openEntryAria": "Abrir entrada para editar: {title}",
+    "openEntryAriaWithSubtitle": "Abrir entrada para editar: {title}, {subtitle}",
+    "pastEntriesToc": "Tabla de contenidos de entradas anteriores",
+    "translationBadge": "+ {count}",
+    "learningLanguageLabel": "Estoy aprendiendo {language}",
+    "changeLearningLanguage": "Cambiar idioma de aprendizaje, actualmente {language}",
+    "languagePickerTitle": "Idioma de aprendizaje",
+    "languagePickerDescription": "Elige el idioma que practicas. Guarda cuando termines.",
+    "learningSectionLabel": "Estoy aprendiendo…",
+    "nativeSectionLabel": "Cuando me atasco, escribo en…",
+    "manageLanguagesLink": "Añadir o gestionar idiomas",
+    "closeLanguagePicker": "Cerrar selector de idioma",
+    "searchLanguages": "Buscar idiomas…",
+    "selectLanguage": "Seleccionar idioma…",
+    "editLanguageHint": "editar",
+    "loadLanguagesFailed": "No se pudieron cargar los idiomas",
+    "languageSaveFailed": "Error al guardar",
+    "languageSaving": "Guardando…",
+    "languageSaved": "¡Guardado!"
+  },
+  "progress": {
+    "title": "Progreso",
+    "subtitle": "Sigue tus rachas, vocabulario y actividad a lo largo del tiempo.",
+    "activity": "Actividad",
+    "chartTitle": "¿Cuánta traducción usaste?",
+    "chartEmpty": "Escribe una entrada para ver tu progreso de traducción aquí.",
+    "reportCard": "Informe Folio",
+    "reportCardAria": "Informe Folio",
+    "downloadReport": "Descargar informe",
+    "savingReport": "Guardando informe",
+    "writingSince": "Escribiendo desde {year}",
+    "languagesLearning": "Idioma(s) que aprendes",
+    "noLanguagesYet": "Sin idiomas aún",
+    "totalEntries": "Entradas totales",
+    "flashcardsCreated": "Flashcards creadas"
+  },
+  "flashcards": {
+    "title": "Practicar",
+    "description": "Repasa palabras guardadas de tu diario y mantén fresco lo que aprendes.",
+    "practiceButton": "Practicar",
+    "itemCount": "{count, plural, one {# elemento} other {# elementos}}",
+    "emptyLibrary": "Aún no hay palabras. Empieza a escribir y usa // para traducir. Las palabras que busques aparecerán aquí.",
+    "searchPlaceholder": "Buscar…",
+    "noFilterMatch": "Ningún elemento coincide con los filtros.",
+    "practiceCaughtUp": "Estás al día. Vuelve después de tu próxima entrada.",
+    "backToLibrary": "Volver a la biblioteca",
+    "exit": "Salir",
+    "keyboardHint": "← → anterior / siguiente · ↑ ↓ Espacio revelar respuesta",
+    "sort": {
+      "entry": "Entrada",
+      "recent": "Reciente",
+      "ariaLabel": "Ordenar flashcards"
+    },
+    "view": {
+      "translation": "Traducción",
+      "native": "Nativo",
+      "both": "Ambos",
+      "ariaLabel": "Vista de idioma de la tarjeta"
+    },
+    "groups": {
+      "untitledEntry": "Entrada sin título",
+      "noLinkedEntry": "Sin entrada vinculada",
+      "flashcardCount": "{count, plural, one {# flashcard} other {# flashcards}}"
+    }
+  },
+  "onboarding": {
+    "next": "Siguiente",
+    "saving": "Guardando…",
+    "skip": "Omitir",
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "add": "Añadir",
+    "loadLanguagesError": "No se pudieron cargar los idiomas",
+    "saveError": "No se pudo guardar la configuración inicial",
+    "setupComplete": "Configuración completa",
+    "completionHeading": "¡Todo listo, {name}!",
+    "completionHeadingFallback": "¡Todo listo!",
+    "completionDescription": "Ya puedes escribir. Usa {slash} cuando quieras traducir una palabra o frase al {language}.",
+    "startJournaling": "Empezar a escribir",
+    "navigatingToApp": "Cargando…",
+    "name": {
+      "title": "¿Cómo te llamas?",
+      "description": "Solo para personalizar tu experiencia.",
+      "placeholder": "Tu nombre o apodo..."
+    },
+    "age": {
+      "title": "¿Cuántos años tienes?",
+      "description": "Opcional. Tu respuesta se guarda de forma anónima.",
+      "placeholder": "Selecciona un rango de edad..."
+    },
+    "languages": {
+      "title": "¿Qué idiomas estás aprendiendo?",
+      "description": "Añade al menos un idioma. Siempre puedes cambiarlo después.",
+      "searchPlaceholder": "Buscar idiomas...",
+      "loadingLanguages": "Cargando...",
+      "selectLevel": "Selecciona un nivel...",
+      "addLanguage": "Añadir un idioma",
+      "removeLanguage": "Eliminar {language}",
+      "levelFor": "Nivel de {language}",
+      "languageLabel": "Idioma"
+    },
+    "levels": {
+      "beginner": "Principiante",
+      "intermediate": "Intermedio",
+      "proficient": "Avanzado"
+    },
+    "levelDescriptions": {
+      "beginner": "Acabo de empezar a aprender",
+      "intermediate": "Puedo comunicarme en temas familiares",
+      "proficient": "Puedo expresarme en muchas situaciones"
+    },
+    "ageRanges": {
+      "under_18": "Menor de 18",
+      "18_24": "18-24",
+      "25_34": "25-34",
+      "35_64": "35-64",
+      "65_plus": "65+",
+      "prefer_not_to_say": "Prefiero no decir"
+    }
+  },
+  "locale": {
+    "switcherLabel": "Idioma"
+  }
+}

@@ -1,41 +1,61 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import {
+  marketingHeroContentClassName,
   marketingHeroCtaClassName,
   marketingHeroEyebrowClassName,
   marketingHeroGridClassName,
   marketingHeroPanelClassName,
   marketingHeroSectionClassName,
   marketingHeroTitleClassName,
+  marketingHeroTitleBrandClassName,
+  marketingHeroDescriptionClassName,
 } from "@/components/marketing/marketing-flow-styles";
 import { SlashTranslateDemo } from "@/components/marketing/slash-translate-demo";
+import { SlashTranslateDemoShell } from "@/components/marketing/slash-translate-demo-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function LandingHero() {
+export async function LandingHero() {
+  const t = await getTranslations("marketing.hero");
+  const tDemo = await getTranslations("marketing.demo");
+
   return (
     <section className={marketingHeroSectionClassName}>
       <div className={marketingHeroPanelClassName}>
         <div className={marketingHeroGridClassName}>
-          <div className="relative z-10 flex w-full min-w-0 max-w-5xl flex-col items-center text-center">
+          <div className={marketingHeroContentClassName}>
             <p
               className={cn(
                 marketingHeroEyebrowClassName,
-                "landing-enter landing-enter-delay-1",
+                "landing-enter landing-enter-delay-1 mb-2 sm:mb-3",
               )}
             >
-              Language Learning
+              {t("eyebrow")}
             </p>
             <h1
               className={cn(
                 marketingHeroTitleClassName,
-                "landing-enter landing-enter-delay-2 whitespace-nowrap text-[clamp(1.5rem,4.5vw,3.875rem)]",
+                "landing-enter landing-enter-delay-2",
               )}
             >
-              Write It. Translate It. Learn It.
+              <em className={marketingHeroTitleBrandClassName}>
+                {t("titleBrand")}
+              </em>{" "}
+              {t("titleRest")}
             </h1>
-            <div className="landing-enter landing-enter-delay-3 mt-5">
+            <p
+              className={cn(
+                marketingHeroDescriptionClassName,
+                "landing-enter landing-enter-delay-3 mt-3 sm:mt-4",
+              )}
+            >
+              {t("subtitle")}
+            </p>
+
+            <div className="landing-enter landing-enter-delay-4 mt-6 sm:mt-8">
               <Link
                 href="/login"
                 className={cn(
@@ -43,14 +63,19 @@ export function LandingHero() {
                   marketingHeroCtaClassName,
                 )}
               >
-                Try Folio free
+                {t("cta")}
                 <ArrowUpRight className="size-4" strokeWidth={1.5} />
               </Link>
             </div>
-          </div>
 
-          <div className="landing-enter landing-enter-delay-4 relative z-10 w-full max-w-lg">
-            <SlashTranslateDemo className="w-full" />
+            <div className="landing-enter landing-enter-delay-5 mt-10 w-full max-w-full self-stretch text-left sm:mt-12 sm:w-fit sm:self-start md:mt-14">
+              <SlashTranslateDemoShell>
+                <SlashTranslateDemo
+                  variant="inline"
+                  prefix={tDemo("prefix")}
+                />
+              </SlashTranslateDemoShell>
+            </div>
           </div>
         </div>
       </div>

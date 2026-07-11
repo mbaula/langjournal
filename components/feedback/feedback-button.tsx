@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageSquare } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, type ReactNode } from "react";
 
 import { appNavUtilityButtonClass } from "@/components/app/app-nav-styles";
@@ -40,9 +41,11 @@ type FeedbackInlineLinkProps = {
 
 export function FeedbackInlineLink({
   className,
-  children = "click here",
+  children,
 }: FeedbackInlineLinkProps) {
+  const t = useTranslations("feedback");
   const formId = getTallyFeedbackFormId();
+  const label = children ?? t("clickHere");
 
   useEffect(() => {
     if (!formId) {
@@ -52,7 +55,7 @@ export function FeedbackInlineLink({
   }, [formId]);
 
   if (!formId) {
-    return <span className={className}>{children}</span>;
+    return <span className={className}>{label}</span>;
   }
 
   return (
@@ -65,7 +68,7 @@ export function FeedbackInlineLink({
         className,
       )}
     >
-      {children}
+      {label}
     </button>
   );
 }
@@ -74,6 +77,7 @@ export function FeedbackButton({
   variant = "nav",
   className,
 }: FeedbackButtonProps) {
+  const t = useTranslations("feedback");
   const formId = getTallyFeedbackFormId();
 
   useEffect(() => {
@@ -98,7 +102,7 @@ export function FeedbackButton({
           className,
         )}
       >
-        Feedback
+        {t("label")}
       </button>
     );
   }
@@ -115,7 +119,7 @@ export function FeedbackButton({
         )}
       >
         <MessageSquare className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
-        Send feedback
+        {t("label")}
       </button>
     );
   }
@@ -128,7 +132,7 @@ export function FeedbackButton({
       className={cn(appNavUtilityButtonClass, className)}
     >
       <MessageSquare className="size-4 shrink-0 opacity-70" strokeWidth={1.5} />
-      Feedback
+      {t("label")}
     </button>
   );
 }

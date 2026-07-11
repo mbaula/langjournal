@@ -2,10 +2,11 @@
 
 import { FlashcardToolbarSelect } from "@/components/flashcards/flashcard-toolbar-select";
 import {
-  FLASHCARD_LIBRARY_SORT_LABELS,
   FLASHCARD_LIBRARY_SORT_OPTIONS,
   type FlashcardLibrarySort,
 } from "@/lib/flashcards/library-sort";
+import { useFlashcardSortLabels } from "@/lib/i18n/hooks";
+import { useTranslations } from "next-intl";
 
 type FlashcardSortSelectorProps = {
   value: FlashcardLibrarySort;
@@ -13,22 +14,24 @@ type FlashcardSortSelectorProps = {
   className?: string;
 };
 
-const SORT_OPTIONS = FLASHCARD_LIBRARY_SORT_OPTIONS.map((value) => ({
-  value,
-  label: FLASHCARD_LIBRARY_SORT_LABELS[value],
-}));
-
 export function FlashcardSortSelector({
   value,
   onChange,
   className,
 }: FlashcardSortSelectorProps) {
+  const t = useTranslations("flashcards.sort");
+  const sortLabels = useFlashcardSortLabels();
+  const sortOptions = FLASHCARD_LIBRARY_SORT_OPTIONS.map((option) => ({
+    value: option,
+    label: sortLabels[option],
+  }));
+
   return (
     <FlashcardToolbarSelect
       value={value}
       onChange={onChange}
-      options={SORT_OPTIONS}
-      ariaLabel="Sort flashcards"
+      options={sortOptions}
+      ariaLabel={t("ariaLabel")}
       className={className}
     />
   );

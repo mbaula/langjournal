@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import {
   JournalEntryCard,
   type JournalEntryCardProps,
@@ -7,7 +11,11 @@ import {
   PAST_ENTRY_EXPAND_MS,
   PastEntryExpandPanel,
 } from "@/components/journal/past-entry-expand-panel";
-import { getLanguageDisplayName } from "@/lib/languages/display-name";
+import type { UserLanguageEntry } from "@/lib/db/onboarding";
+import {
+  labelFromLanguageMap,
+  type LanguageLabelMap,
+} from "@/lib/languages/language-label-map";
 import type { TranslateTrigger } from "@/components/journal/journal-editor";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +28,8 @@ export type EntryRow = {
   body: string | null;
   translations: unknown;
   flashcardCount?: number;
+  sourceLanguage?: string | null;
+  targetLanguage?: string | null;
 };
 
 export function formatFlashcardLabel(count: number): string {
@@ -31,6 +41,7 @@ export function formatEntrySubtitle(
   options?: {
     languageLabel?: string | null;
     flashcardCount?: number;
+    formatFlashcard?: (count: number) => string;
   },
 ): string {
   const parts = [dateLabel];
@@ -40,7 +51,11 @@ export function formatEntrySubtitle(
   }
 
   if (options?.flashcardCount && options.flashcardCount > 0) {
-    parts.push(formatFlashcardLabel(options.flashcardCount));
+    parts.push(
+      options.formatFlashcard
+        ? options.formatFlashcard(options.flashcardCount)
+        : formatFlashcardLabel(options.flashcardCount),
+    );
   }
 
   return parts.join(" | ");
@@ -50,6 +65,9 @@ type EntryListProps = {
   entries: EntryRow[];
   targetLanguage?: string;
   sourceLanguage?: string;
+  learningLanguages?: readonly UserLanguageEntry[];
+  languageLabels?: LanguageLabelMap;
+  initialLanguages?: readonly { code: string; name: string }[];
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
   editingEntryId?: string | null;
@@ -90,10 +108,25 @@ export function countEntryTranslations(translations: unknown): number {
   }).length;
 }
 
+function entryLanguageLabel(
+  entry: EntryRow,
+  fallbackTarget: string | undefined,
+  languageLabels?: LanguageLabelMap,
+): string | null {
+  const code = entry.targetLanguage ?? fallbackTarget;
+  if (!code) {
+    return null;
+  }
+  return labelFromLanguageMap(code, languageLabels);
+}
+
 export function EntryList({
   entries,
   targetLanguage,
   sourceLanguage,
+  learningLanguages = [],
+  languageLabels,
+  initialLanguages,
   translateTrigger,
   onLanguagesSaved,
   editingEntryId,
@@ -102,20 +135,27 @@ export function EntryList({
   onEntryDeleted,
   onRenameTitle,
 }: EntryListProps) {
+  const t = useTranslations("journal");
+
   if (entries.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">No entries yet.</p>
+      <p className="text-sm text-muted-foreground">{t("noEntries")}</p>
     );
   }
 
-  const languageLabel = targetLanguage
-    ? getLanguageDisplayName(targetLanguage)
-    : null;
+  const formatFlashcard = (count: number) => t("flashcardCount", { count });
 
   return (
     <ul className="flex w-full flex-col gap-10">
       {entries.map((entry) => {
         const isExpanded = editingEntryId === entry.id;
+        const languageLabel = entryLanguageLabel(
+          entry,
+          targetLanguage,
+          languageLabels,
+        );
+        const entrySourceLanguage = entry.sourceLanguage ?? sourceLanguage;
+        const entryTargetLanguage = entry.targetLanguage ?? targetLanguage;
 
         return (
           <li
@@ -138,6 +178,7 @@ export function EntryList({
                   dateLabel={formatEntryDay(entry.entryDate)}
                   languageLabel={languageLabel}
                   flashcardCount={entry.flashcardCount}
+                  formatFlashcard={formatFlashcard}
                   body={entry.body}
                   translations={entry.translations}
                   onOpen={onEditEntry ? () => onEditEntry(entry.id) : undefined}
@@ -151,8 +192,10 @@ export function EntryList({
                   <PastEntryExpandPanel open={isExpanded}>
                     <PastEntryEditor
                       entry={entry}
-                      sourceLanguage={sourceLanguage}
-                      targetLanguage={targetLanguage ?? sourceLanguage}
+                      sourceLanguage={entrySourceLanguage ?? entryTargetLanguage ?? ""}
+                      targetLanguage={entryTargetLanguage ?? entrySourceLanguage ?? ""}
+                      learningLanguages={learningLanguages}
+                      languageCatalog={initialLanguages}
                       translateTrigger={translateTrigger}
                       onLanguagesSaved={onLanguagesSaved}
                       onSaved={onEntrySaved}

@@ -1,21 +1,21 @@
 import { ChartColumnIncreasing } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { TranslationProgressChartClient } from "@/components/journal/translation-progress-chart-client";
 import type { EntryTranslationProgress } from "@/lib/entries/service";
 import { cn } from "@/lib/utils";
-
-export const TRANSLATION_PROGRESS_CHART_TITLE =
-  "How much translation did you use?";
 
 type TranslationProgressChartProps = {
   data: EntryTranslationProgress[];
   className?: string;
 };
 
-export function TranslationProgressChart({
+export async function TranslationProgressChart({
   data,
   className,
 }: TranslationProgressChartProps) {
+  const t = await getTranslations("progress");
+
   if (data.length === 0) {
     return (
       <div className={cn("flex h-full min-h-0 flex-col gap-4", className)}>
@@ -26,11 +26,11 @@ export function TranslationProgressChart({
             aria-hidden
           />
           <h2 className="min-w-0 truncate text-sm font-semibold leading-tight text-foreground">
-            {TRANSLATION_PROGRESS_CHART_TITLE}
+            {t("chartTitle")}
           </h2>
         </div>
         <p className="flex flex-1 items-center justify-center text-center text-sm text-muted-foreground">
-          Write a journal entry to see your translation progress here.
+          {t("chartEmpty")}
         </p>
       </div>
     );
@@ -39,7 +39,7 @@ export function TranslationProgressChart({
   return (
     <TranslationProgressChartClient
       data={data}
-      title={TRANSLATION_PROGRESS_CHART_TITLE}
+      title={t("chartTitle")}
       className={className}
     />
   );

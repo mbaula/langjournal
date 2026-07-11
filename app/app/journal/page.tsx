@@ -10,15 +10,18 @@ import {
 import { getOnboardingState } from "@/lib/db/onboarding";
 import { getLanguagePair } from "@/lib/db/language";
 import {
+  encouragingSubtitleIndex,
   journalGreetingName,
-  pickEncouragingSubtitle,
 } from "@/lib/journal/greeting";
+import { getSupportedLanguages } from "@/lib/languages/supported-languages";
+import { buildLanguageLabelMap } from "@/lib/languages/language-label-map";
 import { getDailyPromptForEntry } from "@/lib/prompts/daily-prompt";
 import {
   getOrCreateJournalEntryForDate,
   isSavedJournalEntry,
   listJournalEntries,
 } from "@/lib/entries/service";
+import { getTranslations } from "next-intl/server";
 
 const translateTrigger: TranslateTrigger =
   (process.env.NEXT_PUBLIC_TRANSLATE_TRIGGER as TranslateTrigger) || "enter";
@@ -33,7 +36,10 @@ export default async function JournalPage({
   searchParams: Promise<{ edit?: string }>;
 }) {
   const { edit: initialEditEntryId } = await searchParams;
+  const t = await getTranslations("journal");
   const preview = await isAccountPreviewMode();
+  const supportedLanguages = await getSupportedLanguages();
+  const languageLabels = buildLanguageLabelMap(supportedLanguages);
 
   if (preview) {
     const { source, target } = getDevPreviewLanguagePair();
@@ -42,21 +48,27 @@ export default async function JournalPage({
       getDevPreviewJournalEntries().find(
         (entry) => entry.id === DEV_PREVIEW_ENTRY_ID,
       ) ?? getDevPreviewJournalEntries()[0]!;
-    const pastEntries = getDevPreviewJournalEntries().filter((entry) =>
-      entry.id !== todayEntry.id,
+    const pastEntries = getDevPreviewJournalEntries().filter(
+      (entry) => entry.id !== todayEntry.id,
     );
-    const greetingName = journalGreetingName(
+    const name = journalGreetingName(
       onboarding.displayName,
       "alex.preview@folio.local",
     );
-    const encouragingSubtitle = pickEncouragingSubtitle();
+    const greeting = t("greeting", {
+      name: name === "there" ? t("greetingFallback") : name,
+    });
+    const subtitle = t(`subtitles.${encouragingSubtitleIndex()}`);
 
     return (
       <JournalWriteBody
-        greetingName={greetingName}
-        subtitle={encouragingSubtitle}
+        greeting={greeting}
+        subtitle={subtitle}
         sourceLanguage={source}
         targetLanguage={target}
+        learningLanguages={onboarding.languages}
+        initialLanguages={supportedLanguages}
+        languageLabels={languageLabels}
         translateTrigger={translateTrigger}
         entryId={todayEntry.id}
         initialTitle={todayEntry.title}
@@ -69,30 +81,40 @@ export default async function JournalPage({
   }
 
   const user = await requireAppSession();
-  const [{ entry: todayEntry, dailyPrompt }, entries, { source, target }, onboarding] =
-    await Promise.all([
-      getOrCreateJournalEntryForDate(user.id, new Date()).then(async (draft) => ({
-        entry: draft.entry,
-        dailyPrompt: await getDailyPromptForEntry(user.id, draft.entry.id),
-      })),
-      listJournalEntries(user.id),
-      getLanguagePair(user.id),
-      getOnboardingState(user.id),
-    ]);
+  const [
+    { entry: todayEntry, dailyPrompt },
+    entries,
+    { source, target },
+    onboarding,
+  ] = await Promise.all([
+    getOrCreateJournalEntryForDate(user.id, new Date()).then(async (draft) => ({
+      entry: draft.entry,
+      dailyPrompt: await getDailyPromptForEntry(user.id, draft.entry.id),
+    })),
+    listJournalEntries(user.id),
+    getLanguagePair(user.id),
+    getOnboardingState(user.id),
+  ]);
 
   const pastEntries = entries.filter((entry) =>
     isSavedJournalEntry(entry, todayEntry.id),
   );
 
-  const greetingName = journalGreetingName(onboarding.displayName, user.email);
-  const encouragingSubtitle = pickEncouragingSubtitle();
+  const name = journalGreetingName(onboarding.displayName, user.email);
+  const greeting = t("greeting", {
+    name: name === "there" ? t("greetingFallback") : name,
+  });
+  const subtitle = t(`subtitles.${encouragingSubtitleIndex()}`);
 
   return (
     <JournalWriteBody
-      greetingName={greetingName}
-      subtitle={encouragingSubtitle}
+      greeting={greeting}
+      subtitle={subtitle}
       sourceLanguage={source}
       targetLanguage={target}
+      learningLanguages={onboarding.languages}
+      initialLanguages={supportedLanguages}
+      languageLabels={languageLabels}
       translateTrigger={translateTrigger}
       entryId={todayEntry.id}
       initialTitle={todayEntry.title}

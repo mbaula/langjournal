@@ -2,6 +2,8 @@ import { CefrLevel } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import { isUtcDateToday } from "@/lib/entries/service";
+import { resolveRequestLocale } from "@/lib/i18n/request-locale";
+import type { UiLocale } from "@/lib/i18n/locales";
 import {
   bumpCefrLevel,
   canBumpCefrLevel,
@@ -230,6 +232,7 @@ async function persistDailyPrompt(
     tooEasyStreak: number;
     tooHardStreak: number;
   },
+  locale: UiLocale,
 ) {
   await prisma.$transaction([
     prisma.journalEntry.update({
@@ -250,12 +253,14 @@ async function persistDailyPrompt(
     index,
     userLanguageUpdates.tooEasyStreak,
     userLanguageUpdates.tooHardStreak,
+    locale,
   );
 }
 
 async function assignPromptToEntry(
   entryId: string,
   userLanguage: UserLanguageRow,
+  locale: UiLocale,
 ) {
   const level = getEffectivePromptLevel(
     userLanguage.estimatedCefrLevel,
@@ -264,17 +269,26 @@ async function assignPromptToEntry(
   const seen = parseSeenIndexes(userLanguage.seenPromptIndexes);
   const { index, nextSeen } = selectNextPromptForLevel(seen, level);
 
-  return persistDailyPrompt(entryId, userLanguage.id, level, index, nextSeen, {
-    currentPromptLevel: level,
-    tooEasyStreak: userLanguage.tooEasyStreak,
-    tooHardStreak: userLanguage.tooHardStreak,
-  });
+  return persistDailyPrompt(
+    entryId,
+    userLanguage.id,
+    level,
+    index,
+    nextSeen,
+    {
+      currentPromptLevel: level,
+      tooEasyStreak: userLanguage.tooEasyStreak,
+      tooHardStreak: userLanguage.tooHardStreak,
+    },
+    locale,
+  );
 }
 
 export async function getDailyPromptForEntry(
   userId: string,
   entryId: string,
 ): Promise<DailyPromptState | null> {
+  const locale = await resolveRequestLocale();
   const context = await loadPromptContext(userId, entryId);
 
   if (!context) {
@@ -293,10 +307,11 @@ export async function getDailyPromptForEntry(
       entry.promptIndex,
       userLanguage.tooEasyStreak,
       userLanguage.tooHardStreak,
+      locale,
     );
   }
 
-  return assignPromptToEntry(entry.id, userLanguage);
+  return assignPromptToEntry(entry.id, userLanguage, locale);
 }
 
 export async function assignDailyPromptForNewDraft(
@@ -304,6 +319,7 @@ export async function assignDailyPromptForNewDraft(
   newEntryId: string,
   excludePrompt?: { level: CefrLevel; index: number } | null,
 ): Promise<DailyPromptState | null> {
+  const locale = await resolveRequestLocale();
   const context = await loadPromptContext(userId, newEntryId);
 
   if (!context || !isUtcDateToday(context.entry.entryDate)) {
@@ -342,6 +358,7 @@ export async function assignDailyPromptForNewDraft(
       tooEasyStreak: userLanguage.tooEasyStreak,
       tooHardStreak: userLanguage.tooHardStreak,
     },
+    locale,
   );
 }
 
@@ -351,6 +368,7 @@ async function advanceDailyPrompt(
   feedback?: PromptFeedback,
   target?: PromptTarget,
 ): Promise<DailyPromptState | null> {
+  const locale = await resolveRequestLocale();
   const context = await loadPromptContext(userId, entryId);
 
   if (!context || !isUtcDateToday(context.entry.entryDate)) {
@@ -365,7 +383,7 @@ async function advanceDailyPrompt(
   );
 
   if (entry.promptIndex == null || entry.promptLevel == null) {
-    return assignPromptToEntry(entry.id, userLanguage);
+    return assignPromptToEntry(entry.id, userLanguage, locale);
   }
 
   let nextLevel = effectiveLevel;
@@ -396,11 +414,19 @@ async function advanceDailyPrompt(
     preferredIndex,
   );
 
-  return persistDailyPrompt(entryId, userLanguage.id, targetLevel, index, nextSeen, {
-    currentPromptLevel: nextLevel,
-    tooEasyStreak,
-    tooHardStreak,
-  });
+  return persistDailyPrompt(
+    entryId,
+    userLanguage.id,
+    targetLevel,
+    index,
+    nextSeen,
+    {
+      currentPromptLevel: nextLevel,
+      tooEasyStreak,
+      tooHardStreak,
+    },
+    locale,
+  );
 }
 
 export async function skipDailyPrompt(

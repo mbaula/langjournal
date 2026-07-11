@@ -1,6 +1,10 @@
-export default function AppLoading() {
+import { getTranslations } from "next-intl/server";
+
+export default async function AppLoading() {
+  const t = await getTranslations("app");
+
   return (
-    <div className="animate-pulse space-y-6" aria-busy aria-label="Loading">
+    <div className="animate-pulse space-y-6" aria-busy aria-label={t("loading")}>
       <div className="h-8 w-48 rounded-md bg-muted" />
       <div className="space-y-3">
         <div className="h-4 w-full max-w-xl rounded bg-muted" />

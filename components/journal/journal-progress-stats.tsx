@@ -1,6 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { toCanvas, toJpeg } from "html-to-image";
 
@@ -12,6 +13,8 @@ import {
 } from "@/components/journal/daily-prompt-styles";
 import { getLanguageDisplayName } from "@/lib/languages/display-name";
 import type { JournalStats } from "@/lib/entries/service";
+import { useOnboardingLabels } from "@/lib/i18n/hooks";
+import type { OnboardingLanguageLevel } from "@/lib/onboarding/constants";
 import { cn } from "@/lib/utils";
 
 type JournalProgressStatsProps = {
@@ -20,7 +23,13 @@ type JournalProgressStatsProps = {
   className?: string;
 };
 
-function formatLevel(level: string): string {
+function formatLevel(
+  level: string,
+  labels: Record<OnboardingLanguageLevel, string>,
+): string {
+  if (level in labels) {
+    return labels[level as OnboardingLanguageLevel];
+  }
   const normalized = level.replace(/_/g, " ");
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
@@ -133,6 +142,8 @@ export function JournalProgressStats({
   studentName,
   className,
 }: JournalProgressStatsProps) {
+  const t = useTranslations("progress");
+  const { languageLevelLabels } = useOnboardingLabels();
   const cardRef = useRef<HTMLElement>(null);
   const [downloading, setDownloading] = useState(false);
 
@@ -180,7 +191,7 @@ export function JournalProgressStats({
         "flex h-full flex-col shadow-none",
         className,
       )}
-      aria-label="Folio Report Card"
+      aria-label={t("reportCardAria")}
     >
       <div
         className={cn(
@@ -191,7 +202,7 @@ export function JournalProgressStats({
         <div className="flex w-full flex-col items-center gap-5 text-center">
           <div className="flex w-full items-center justify-between gap-3">
             <p className="text-sm font-medium text-primary-foreground/75">
-              Folio Report Card
+              {t("reportCard")}
             </p>
             <button
               type="button"
@@ -202,7 +213,7 @@ export function JournalProgressStats({
               )}
               disabled={downloading}
               aria-label={
-                downloading ? "Saving report card" : "Download report card"
+                downloading ? t("savingReport") : t("downloadReport")
               }
               onClick={() => void handleDownload()}
             >
@@ -213,34 +224,34 @@ export function JournalProgressStats({
           <p className={dailyPromptTextClassName}>{studentName}</p>
 
           <p className="text-sm text-primary-foreground/75">
-            Writing since {stats.writingSinceYear}
+            {t("writingSince", { year: stats.writingSinceYear })}
           </p>
 
           <div className="flex w-full flex-col items-center gap-2">
             <p className="text-xs font-medium uppercase tracking-wide text-primary-foreground/60">
-              Language(s) learning
+              {t("languagesLearning")}
             </p>
             {stats.learningLanguages.length > 0 ? (
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {stats.learningLanguages.map((lang) => (
                   <ReportCardBadge key={lang.languageCode}>
                     {getLanguageDisplayName(lang.languageCode)} ·{" "}
-                    {formatLevel(lang.level)}
+                    {formatLevel(lang.level, languageLevelLabels)}
                   </ReportCardBadge>
                 ))}
               </div>
             ) : (
               <p className="text-sm text-primary-foreground/60">
-                No languages yet
+                {t("noLanguagesYet")}
               </p>
             )}
           </div>
         </div>
 
         <div className="grid w-full grid-cols-2 gap-2.5">
-          <ReportCardStat label="Total entries" value={stats.total} />
+          <ReportCardStat label={t("totalEntries")} value={stats.total} />
           <ReportCardStat
-            label="Flashcards created"
+            label={t("flashcardsCreated")}
             value={stats.flashcardCount}
           />
         </div>

@@ -1,4 +1,5 @@
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { after } from "next/server";
 
 import { Prisma } from "@prisma/client";
 
@@ -7,6 +8,7 @@ import { resolveFinishedEntryTranslations } from "@/lib/entries/finish-translati
 import { isEntrySavedForFlashcards, savedJournalEntriesWhere } from "@/lib/entries/saved-entry";
 import { syncFlashcardsForEntry, countFlashcardsForUserDisplay } from "@/lib/flashcards/service";
 import { getLanguagePair } from "@/lib/db/language";
+import { resolveEntryLanguagePair, type LanguagePair } from "@/lib/entries/entry-language";
 import { translationCoveragePercent } from "@/lib/entries/translation-coverage";
 import type { InlineTranslation } from "@/lib/entries/translate";
 import {
@@ -61,6 +63,8 @@ const getCachedJournalEntriesList = unstable_cache(
         translations: true,
         entryDate: true,
         completedAt: true,
+        sourceLanguage: true,
+        targetLanguage: true,
         createdAt: true,
         updatedAt: true,
         _count: { select: { flashcards: true } },
@@ -104,6 +108,8 @@ const getCachedEntry = unstable_cache(
         translations: true,
         entryDate: true,
         completedAt: true,
+        sourceLanguage: true,
+        targetLanguage: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -121,6 +127,7 @@ export async function getOrCreateJournalEntryForDate(
   userId: string,
   entryDate: Date,
   title?: string | null,
+  languagePair?: LanguagePair,
 ) {
   const day = utcCalendarDate(entryDate);
 
@@ -137,11 +144,15 @@ export async function getOrCreateJournalEntryForDate(
     return { entry: existing, created: false as const };
   }
 
+  const pair = languagePair ?? (await getLanguagePair(userId));
+
   const entry = await prisma.journalEntry.create({
     data: {
       userId,
       entryDate: day,
       title: title ?? null,
+      sourceLanguage: pair.source,
+      targetLanguage: pair.target,
     },
   });
 
@@ -205,7 +216,12 @@ export async function updateJournalEntryTranslations(
 ) {
   const entry = await prisma.journalEntry.findFirst({
     where: { id: entryId, userId },
-    select: { id: true, completedAt: true, entryDate: true },
+    select: {
+      id: true,
+      completedAt: true,
+      entryDate: true,
+      targetLanguage: true,
+    },
   });
 
   if (!entry) {
@@ -220,7 +236,8 @@ export async function updateJournalEntryTranslations(
   });
 
   if (isEntrySavedForFlashcards(entry)) {
-    const { target } = await getLanguagePair(userId);
+    const profile = await getLanguagePair(userId);
+    const { target } = resolveEntryLanguagePair(entry, profile);
     await syncFlashcardsForEntry(userId, entryId, target);
   }
 
@@ -235,8 +252,11 @@ export async function finishJournalEntryForToday(
     title?: string;
     body?: string;
     translations?: InlineTranslation[];
+    sourceLanguage?: string;
+    targetLanguage?: string;
   },
 ) {
+  const profile = await getLanguagePair(userId);
   const entry = await prisma.journalEntry.findFirst({
     where: { id: entryId, userId, completedAt: null },
     select: {
@@ -247,12 +267,22 @@ export async function finishJournalEntryForToday(
       entryDate: true,
       promptIndex: true,
       promptLevel: true,
+      sourceLanguage: true,
+      targetLanguage: true,
     },
   });
 
   if (!entry) {
     return { ok: false as const, error: "not_found" as const };
   }
+
+  const stampedPair = resolveEntryLanguagePair(
+    {
+      sourceLanguage: snapshot?.sourceLanguage ?? entry.sourceLanguage,
+      targetLanguage: snapshot?.targetLanguage ?? entry.targetLanguage,
+    },
+    profile,
+  );
 
   const title =
     snapshot?.title !== undefined
@@ -282,6 +312,8 @@ export async function finishJournalEntryForToday(
       data: {
         title,
         body,
+        sourceLanguage: stampedPair.source,
+        targetLanguage: stampedPair.target,
         ...(filteredTranslations !== undefined
           ? { translations: filteredTranslations }
           : {}),
@@ -294,6 +326,8 @@ export async function finishJournalEntryForToday(
         translations: true,
         entryDate: true,
         completedAt: true,
+        sourceLanguage: true,
+        targetLanguage: true,
         createdAt: true,
         updatedAt: true,
         _count: { select: { flashcards: true } },
@@ -304,6 +338,8 @@ export async function finishJournalEntryForToday(
       data: {
         userId,
         entryDate: entry.entryDate,
+        sourceLanguage: profile.source,
+        targetLanguage: profile.target,
       },
       select: {
         id: true,
@@ -312,6 +348,8 @@ export async function finishJournalEntryForToday(
         translations: true,
         entryDate: true,
         completedAt: true,
+        sourceLanguage: true,
+        targetLanguage: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -320,12 +358,22 @@ export async function finishJournalEntryForToday(
     return { completedEntry, newEntry };
   });
 
-  const { target } = await getLanguagePair(userId);
-  await syncFlashcardsForEntry(userId, completedEntry.id, target);
+  const completedEntryId = completedEntry.id;
+  const completedEntryTarget = completedEntry.targetLanguage;
 
   revalidateTag("journal-entry", { expire: 0 });
-  revalidatePath("/app/flashcards");
-  revalidatePath("/app/progress");
+  after(async () => {
+    try {
+      const target =
+        completedEntryTarget ??
+        (await getLanguagePair(userId)).target;
+      await syncFlashcardsForEntry(userId, completedEntryId, target);
+      revalidatePath("/app/flashcards");
+      revalidatePath("/app/progress");
+    } catch (error) {
+      console.error("Failed to sync flashcards after finish", error);
+    }
+  });
 
   const { _count, ...completedEntryRow } = completedEntry;
 

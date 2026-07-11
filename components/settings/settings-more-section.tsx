@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import {
   SettingsPanelRow,
@@ -8,7 +11,6 @@ import {
 import { settingsFieldRowStartClassName } from "@/components/settings/settings-field-styles";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
 
 type SettingsMoreSectionProps = {
   previewMode?: boolean;
@@ -17,6 +19,8 @@ type SettingsMoreSectionProps = {
 export function SettingsMoreSection({
   previewMode = false,
 }: SettingsMoreSectionProps) {
+  const t = useTranslations("settings.more");
+  const tCommon = useTranslations("common");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,28 +32,28 @@ export function SettingsMoreSection({
       const res = await fetch("/api/settings/account", { method: "DELETE" });
       const data = (await res.json()) as { error?: string; ok?: boolean };
       if (!res.ok) {
-        setError(data.error ?? "Could not delete account");
+        setError(data.error ?? t("deleteFailed"));
         return;
       }
       window.location.href = "/";
     } catch {
-      setError("Could not delete account");
+      setError(t("deleteFailed"));
     } finally {
       setDeleting(false);
     }
   }
 
   return (
-    <SettingsSection title="More" titleInsidePanel>
+    <SettingsSection title={t("title")} titleInsidePanel>
       <SettingsPanelRow>
         <div className={settingsFieldRowStartClassName}>
-          <Label className="pt-2">Log out</Label>
+          <Label className="pt-2">{t("logOut")}</Label>
           <div className="flex min-w-0 justify-end">
             <SignOutButton
               previewMode={previewMode}
               className={buttonVariants({ variant: "outline" })}
             >
-              {previewMode ? "Exit preview" : "Log out"}
+              {previewMode ? tCommon("exitPreview") : tCommon("logOut")}
             </SignOutButton>
           </div>
         </div>
@@ -57,19 +61,15 @@ export function SettingsMoreSection({
 
       <SettingsPanelRow>
         <div className={settingsFieldRowStartClassName}>
-          <Label className="pt-2">Delete account</Label>
+          <Label className="pt-2">{t("deleteAccount")}</Label>
           <div className="min-w-0 space-y-3">
             {previewMode ? (
               <p className="text-right text-sm text-muted-foreground">
-                Account deletion is unavailable in preview mode.
+                {t("previewDeleteUnavailable")}
               </p>
             ) : confirmingDelete ? (
               <>
-                <p className="text-sm text-foreground">
-                  Delete your account permanently? All journal entries,
-                  flashcards, and profile data will be removed. This cannot be
-                  undone.
-                </p>
+                <p className="text-sm text-foreground">{t("deleteConfirm")}</p>
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   <Button
                     type="button"
@@ -80,7 +80,7 @@ export function SettingsMoreSection({
                       setError(null);
                     }}
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </Button>
                   <Button
                     type="button"
@@ -88,7 +88,7 @@ export function SettingsMoreSection({
                     disabled={deleting}
                     onClick={() => void deleteAccount()}
                   >
-                    {deleting ? "Deleting…" : "Delete account"}
+                    {deleting ? t("deleting") : t("deleteAccount")}
                   </Button>
                 </div>
               </>
@@ -100,7 +100,7 @@ export function SettingsMoreSection({
                   className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => setConfirmingDelete(true)}
                 >
-                  Delete account
+                  {t("deleteAccount")}
                 </Button>
               </div>
             )}

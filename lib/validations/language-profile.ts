@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { UI_LOCALE_CODES } from "@/lib/i18n/locales";
+
 const langCode = z
   .string()
   .trim()
@@ -18,6 +20,14 @@ export const patchLanguageProfileSchema = z
     path: ["targetLanguage"],
   });
 
+export const patchUiLocaleSchema = z
+  .object({
+    uiLocale: z.enum(UI_LOCALE_CODES),
+  })
+  .strict();
+
 export type PatchLanguageProfileBody = z.infer<
   typeof patchLanguageProfileSchema
 >;
+
+export type PatchUiLocaleBody = z.infer<typeof patchUiLocaleSchema>;

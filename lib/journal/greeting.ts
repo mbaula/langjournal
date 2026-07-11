@@ -1,22 +1,26 @@
-const ENCOURAGING_SUBTITLES = [
-  "Meow meow, have you written anything today?",
-  "You should write something today (or else).",
-  "Yo yo, have you written anything today?",
-  "Who's a language nerd? You are!",
-  "You should probably write something today (side-eye)",
-] as const;
+const SUBTITLE_COUNT = 5;
 
-export function pickEncouragingSubtitle(
-  date: Date = new Date(),
-): string {
+export function encouragingSubtitleIndex(date: Date = new Date()): number {
   const dayIndex = Math.floor(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) /
       86_400_000,
   );
-  const index =
-    ((dayIndex % ENCOURAGING_SUBTITLES.length) + ENCOURAGING_SUBTITLES.length) %
-    ENCOURAGING_SUBTITLES.length;
-  return ENCOURAGING_SUBTITLES[index] ?? ENCOURAGING_SUBTITLES[0];
+  return (
+    ((dayIndex % SUBTITLE_COUNT) + SUBTITLE_COUNT) %
+    SUBTITLE_COUNT
+  );
+}
+
+/** @deprecated Use encouragingSubtitleIndex with i18n messages */
+export function pickEncouragingSubtitle(date: Date = new Date()): string {
+  const subtitles = [
+    "Meow meow, have you written anything today?",
+    "You should write something today (or else).",
+    "Yo yo, have you written anything today?",
+    "Who's a language nerd? You are!",
+    "You should probably write something today (side-eye)",
+  ] as const;
+  return subtitles[encouragingSubtitleIndex(date)] ?? subtitles[0];
 }
 
 export function journalGreetingName(
