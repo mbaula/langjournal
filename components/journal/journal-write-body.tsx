@@ -2,7 +2,7 @@
 
 import { ArrowDown } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { journalWriteAreaShellClassName, journalWriteEditorContainerClassName, journalWriteEditorMinHeightClassName, journalWritePageShellClassName, journalWriteTitleClassName, journalWriteViewportClassName, journalWriteWorkspaceClassName } from "@/components/journal/field-styles";
@@ -24,6 +24,7 @@ import {
   type TranslateTrigger,
 } from "@/components/journal/journal-editor";
 import type { UserLanguageEntry } from "@/lib/db/onboarding";
+import type { LanguageLabelMap } from "@/lib/languages/language-label-map";
 import { buildPastEntryLanguageTabs } from "@/lib/languages/past-entries-language-tabs";
 import type { DailyPromptState } from "@/lib/prompts/prompt-core";
 import { countWords } from "@/lib/text/word-count";
@@ -35,6 +36,9 @@ type JournalWriteBodyProps = {
   sourceLanguage: string;
   targetLanguage: string;
   learningLanguages?: readonly UserLanguageEntry[];
+  initialLanguages?: readonly { code: string; name: string }[];
+  /** Server-built code→name map so past-entry tabs hydrate safely. */
+  languageLabels?: LanguageLabelMap;
   translateTrigger?: TranslateTrigger;
   entryId: string;
   initialTitle: string | null;
@@ -132,6 +136,8 @@ export function JournalWriteBody({
   sourceLanguage,
   targetLanguage,
   learningLanguages = [],
+  initialLanguages,
+  languageLabels,
   translateTrigger,
   entryId: initialEntryId,
   initialTitle,
@@ -142,7 +148,6 @@ export function JournalWriteBody({
   initialEditEntryId,
 }: JournalWriteBodyProps) {
   const t = useTranslations("journal");
-  const locale = useLocale();
   const router = useRouter();
   const [source, setSource] = useState(sourceLanguage);
   const [target, setTarget] = useState(targetLanguage);
@@ -170,9 +175,12 @@ export function JournalWriteBody({
   const hasPastEntriesSection = useMemo(
     () =>
       savedEntries.length > 0 &&
-      buildPastEntryLanguageTabs(savedEntries, learningLanguages, locale)
-        .length > 0,
-    [learningLanguages, locale, savedEntries],
+      buildPastEntryLanguageTabs(
+        savedEntries,
+        learningLanguages,
+        languageLabels,
+      ).length > 0,
+    [languageLabels, learningLanguages, savedEntries],
   );
 
   useEffect(() => {
@@ -324,6 +332,7 @@ export function JournalWriteBody({
           source={source}
           target={target}
           learningLanguages={learningLanguages}
+          initialLanguages={initialLanguages}
           translateTrigger={translateTrigger}
           onLanguagesSaved={handleLanguagesSaved}
         />
@@ -409,6 +418,8 @@ export function JournalWriteBody({
           targetLanguage={target}
           sourceLanguage={source}
           learningLanguages={learningLanguages}
+          languageLabels={languageLabels}
+          initialLanguages={initialLanguages}
           translateTrigger={translateTrigger}
           onLanguagesSaved={handleLanguagesSaved}
           onEntryUpdated={handlePastEntryUpdated}

@@ -58,10 +58,22 @@ export function SlashTranslateHint({
   }, []);
 
   useLayoutEffect(() => {
+    if (!mounted) return;
+
+    let rafId = 0;
+    let attempts = 0;
+
     const update = () => {
       const anchor = anchorRef.current;
       const hintEl = hintRef.current;
-      if (!anchor || !hintEl) return;
+      if (!anchor || !hintEl) {
+        // Anchor/portal may not be ready on the first `//` frame — retry briefly.
+        if (attempts < 8) {
+          attempts += 1;
+          rafId = window.requestAnimationFrame(update);
+        }
+        return;
+      }
 
       setPlacement(
         computeHintPlacement(
@@ -76,10 +88,11 @@ export function SlashTranslateHint({
     window.addEventListener("resize", update);
     window.addEventListener("scroll", update, true);
     return () => {
+      window.cancelAnimationFrame(rafId);
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [anchorRef, hint, layoutKey]);
+  }, [mounted, anchorRef, hint, layoutKey]);
 
   if (!mounted) {
     return null;

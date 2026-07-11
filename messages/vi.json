@@ -13,7 +13,7 @@
       "title": "folio giúp bạn giữ nhịp viết",
       "titleBrand": "folio",
       "titleRest": "giúp bạn giữ nhịp viết.",
-      "subtitle": "Viết nhật ký bằng ngôn ngữ đích trong một app. Không còn phải chuyển tab để dịch một từ.",
+      "subtitle": "Dùng một ứng dụng để viết bằng ngôn ngữ đang học. Không cần phải chuyển giữa các tab để dịch từng từ nữa.",
       "cta": "Try Folio free"
     },
     "demo": {
@@ -22,7 +22,7 @@
     },
     "featuresOverview": {
       "title": "Học viết ngoại ngữ một cách dễ dàng",
-      "description": "Đừng mở <highlight>hàng nghìn trang web khác nhau</highlight> chỉ để viết một câu. Folio là ứng dụng thay thế mọi ứng dụng.",
+      "description": "Đừng mở <highlight>hàng nghìn trang web khác nhau</highlight> chỉ để viết một câu. Folio có thể thay thế tất cả các ứng dụng khác.",
       "write": "viết",
       "translate": "dịch",
       "practice": "luyện tập",
@@ -238,8 +238,8 @@
     "onThisPage": "Trên trang này",
     "previousPage": "Trang trước",
     "nextPage": "Trang sau",
-    "pressTabTranslate": "Nhấn Tab để dịch",
-    "pressEnterTranslate": "Nhấn Enter để dịch",
+    "pressTabTranslate": "Viết rồi nhấn tab để dịch",
+    "pressEnterTranslate": "Viết rồi nhấn enter để dịch",
     "translationFailed": "Dịch thất bại",
     "translating": "Đang dịch…",
     "help": "Trợ giúp",

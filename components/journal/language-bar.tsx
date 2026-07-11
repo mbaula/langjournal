@@ -22,6 +22,12 @@ import { getLocalizedLanguageDisplayName } from "@/lib/i18n/language-display-nam
 import { orderLearningLanguageOptions } from "@/lib/languages/learning-language-options";
 import { mergeProfileCodes } from "@/lib/languages/merge-profile-codes";
 import { resolveLanguageLabel } from "@/lib/languages/display-name";
+import {
+  fetchLanguagesCatalog,
+  getCachedLanguages,
+  setCachedLanguages,
+  subscribeCachedLanguages,
+} from "@/lib/languages/languages-cache";
 import { cn } from "@/lib/utils";
 
 import type { TranslateTrigger } from "@/components/journal/journal-editor";
@@ -35,6 +41,8 @@ type LanguageBarProps = {
   source: string;
   target: string;
   learningLanguages?: readonly UserLanguageEntry[];
+  /** Server-resolved catalog so the trigger label is correct on first paint. */
+  initialLanguages?: readonly Lang[];
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
 };
@@ -329,6 +337,7 @@ export function LanguageBar({
   source: initialSource,
   target: initialTarget,
   learningLanguages = [],
+  initialLanguages,
   translateTrigger = "enter",
   onLanguagesSaved,
 }: LanguageBarProps) {
@@ -355,7 +364,11 @@ export function LanguageBar({
     }
   }, [open, source, target]);
 
-  const [languages, setLanguages] = useState<Lang[] | null>(null);
+  const [languages, setLanguages] = useState<Lang[] | null>(() => {
+    const seed = getCachedLanguages() ?? initialLanguages ?? null;
+    if (!seed?.length) return null;
+    return mergeProfileCodes([...seed], initialSource, initialTarget);
+  });
   const [loadingList, setLoadingList] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedPulse, setSavedPulse] = useState(false);
@@ -377,6 +390,26 @@ export function LanguageBar({
   const panelCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+
+  useEffect(() => {
+    if (!initialLanguages?.length) return;
+    setCachedLanguages([...initialLanguages]);
+    setLanguages(
+      mergeProfileCodes(
+        [...initialLanguages],
+        sourceRef.current,
+        targetRef.current,
+      ),
+    );
+  }, [initialLanguages]);
+
+  useEffect(() => {
+    return subscribeCachedLanguages((cached) => {
+      setLanguages(
+        mergeProfileCodes(cached, sourceRef.current, targetRef.current),
+      );
+    });
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -442,24 +475,18 @@ export function LanguageBar({
     setError(null);
     void (async () => {
       try {
-        const res = await fetch("/api/languages");
-        const data = (await res.json()) as {
-          error?: string;
-          languages?: Lang[];
-        };
-        if (!res.ok) {
-          setError(data.error ?? t("loadLanguagesFailed"));
+        const catalog = await fetchLanguagesCatalog();
+        if (!catalog?.length) {
+          setError(t("loadLanguagesFailed"));
           return;
         }
-        if (data.languages?.length) {
-          setLanguages(
-            mergeProfileCodes(
-              data.languages,
-              sourceRef.current,
-              targetRef.current,
-            ),
-          );
-        }
+        setLanguages(
+          mergeProfileCodes(
+            catalog,
+            sourceRef.current,
+            targetRef.current,
+          ),
+        );
       } catch {
         setError(t("loadLanguagesFailed"));
       } finally {

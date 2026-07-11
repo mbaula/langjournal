@@ -13,7 +13,7 @@
       "title": "folio keeps you in the flow",
       "titleBrand": "folio",
       "titleRest": "keeps you in the flow.",
-      "subtitle": "Stay in one app while you journal in your target language. No more tab-switching to translate a word.",
+      "subtitle": "Stay in one app while you write in your target language. No more tab-switching to translate a word.",
       "cta": "Try Folio free"
     },
     "demo": {
@@ -238,8 +238,8 @@
     "onThisPage": "On this page",
     "previousPage": "Previous page",
     "nextPage": "Next page",
-    "pressTabTranslate": "Press Tab to translate",
-    "pressEnterTranslate": "Press Enter to translate",
+    "pressTabTranslate": "Write then press tab to translate",
+    "pressEnterTranslate": "Write then press enter to translate",
     "translationFailed": "Translation failed",
     "translating": "Translating…",
     "help": "Help",

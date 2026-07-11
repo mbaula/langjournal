@@ -2,15 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getAuthenticatedAppUser: vi.fn(),
-  listGoogleTranslationLanguages: vi.fn(),
+  getSupportedLanguages: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/api-user", () => ({
   getAuthenticatedAppUser: mocks.getAuthenticatedAppUser,
 }));
 
-vi.mock("@/lib/translate/google", () => ({
-  listGoogleTranslationLanguages: mocks.listGoogleTranslationLanguages,
+vi.mock("@/lib/languages/supported-languages", () => ({
+  getSupportedLanguages: mocks.getSupportedLanguages,
 }));
 
 import { GET } from "@/app/api/languages/route";
@@ -27,19 +27,19 @@ describe("api/languages route", () => {
     expect(res.status).toBe(401);
   });
 
-  it("returns Google languages when available", async () => {
+  it("returns supported languages from the shared loader", async () => {
     const languages = [{ code: "en", name: "English" }];
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
-    mocks.listGoogleTranslationLanguages.mockResolvedValueOnce(languages);
+    mocks.getSupportedLanguages.mockResolvedValueOnce(languages);
 
     const res = await GET();
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({ languages });
   });
 
-  it("falls back when Google languages are unavailable", async () => {
+  it("can return the static fallback list", async () => {
     mocks.getAuthenticatedAppUser.mockResolvedValueOnce({ id: "u1" });
-    mocks.listGoogleTranslationLanguages.mockResolvedValueOnce(null);
+    mocks.getSupportedLanguages.mockResolvedValueOnce(FALLBACK_LANGUAGES);
 
     const res = await GET();
     expect(res.status).toBe(200);

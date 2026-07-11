@@ -371,19 +371,14 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
 
   const editTranslateHint = useMemo(() => {
     if (translationLoading?.showSpinner) return null;
-    if (!editHighlight) return null;
-    if (!selectionHighlight) {
-      if (!slashHighlight) return null;
-      if (textareaSelection.start < slashHighlight.start + 2) return null;
-    }
+    // Show as soon as `//` is under the caret (including an empty segment).
+    if (!selectionHighlight && !slashHighlight) return null;
     return translateTrigger === "tab"
       ? t("pressTabTranslate")
       : t("pressEnterTranslate");
   }, [
-    editHighlight,
     selectionHighlight,
     slashHighlight,
-    textareaSelection.start,
     translationLoading?.showSpinner,
     translateTrigger,
     t,
@@ -396,7 +391,6 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
         translations={translations}
         editHighlight={editHighlight}
         translationLoading={translationLoading}
-        editTranslateHint={editTranslateHint}
         translatingLabel={t("translating")}
         hintAnchorRef={hintAnchorRef}
       />
@@ -406,7 +400,6 @@ export const JournalEditor = forwardRef<JournalEditorHandle, JournalEditorProps>
       translations,
       editHighlight,
       translationLoading,
-      editTranslateHint,
       t,
     ],
   );

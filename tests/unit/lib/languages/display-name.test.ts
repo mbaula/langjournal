@@ -9,8 +9,10 @@ describe("getLanguageDisplayName", () => {
     expect(getLanguageDisplayName("tl")).toBe("Tagalog");
   });
 
-  it("uses Intl for codes missing from the catalog", () => {
-    expect(getLanguageDisplayName("mni")).toBe("Manipuri");
+  it("returns the code for languages outside the fallback list", () => {
+    // Avoid Intl here — Node/browser ICU diverge on rarer codes.
+    expect(getLanguageDisplayName("mni")).toBe("mni");
+    expect(getLanguageDisplayName("btx")).toBe("btx");
   });
 
   it("returns the code when unknown", () => {
@@ -22,6 +24,11 @@ describe("resolveLanguageLabel", () => {
   it("prefers the loaded catalog label over fallback names", () => {
     const catalog = [{ code: "tl", name: "Filipino" }];
     expect(resolveLanguageLabel("tl", catalog)).toBe("Filipino");
+  });
+
+  it("ignores catalog placeholders that only echo the language code", () => {
+    const catalog = [{ code: "btx", name: "btx" }];
+    expect(resolveLanguageLabel("btx", catalog)).toBe("btx");
   });
 
   it("falls back to display-name helper when code is missing from catalog", () => {

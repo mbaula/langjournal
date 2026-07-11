@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import {
   JournalEntryCard,
@@ -12,7 +12,10 @@ import {
   PastEntryExpandPanel,
 } from "@/components/journal/past-entry-expand-panel";
 import type { UserLanguageEntry } from "@/lib/db/onboarding";
-import { getLocalizedLanguageDisplayName } from "@/lib/i18n/language-display-name";
+import {
+  labelFromLanguageMap,
+  type LanguageLabelMap,
+} from "@/lib/languages/language-label-map";
 import type { TranslateTrigger } from "@/components/journal/journal-editor";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +66,8 @@ type EntryListProps = {
   targetLanguage?: string;
   sourceLanguage?: string;
   learningLanguages?: readonly UserLanguageEntry[];
+  languageLabels?: LanguageLabelMap;
+  initialLanguages?: readonly { code: string; name: string }[];
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
   editingEntryId?: string | null;
@@ -106,13 +111,13 @@ export function countEntryTranslations(translations: unknown): number {
 function entryLanguageLabel(
   entry: EntryRow,
   fallbackTarget: string | undefined,
-  locale: string,
+  languageLabels?: LanguageLabelMap,
 ): string | null {
   const code = entry.targetLanguage ?? fallbackTarget;
   if (!code) {
     return null;
   }
-  return getLocalizedLanguageDisplayName(code, locale);
+  return labelFromLanguageMap(code, languageLabels);
 }
 
 export function EntryList({
@@ -120,6 +125,8 @@ export function EntryList({
   targetLanguage,
   sourceLanguage,
   learningLanguages = [],
+  languageLabels,
+  initialLanguages,
   translateTrigger,
   onLanguagesSaved,
   editingEntryId,
@@ -129,7 +136,6 @@ export function EntryList({
   onRenameTitle,
 }: EntryListProps) {
   const t = useTranslations("journal");
-  const locale = useLocale();
 
   if (entries.length === 0) {
     return (
@@ -143,7 +149,11 @@ export function EntryList({
     <ul className="flex w-full flex-col gap-10">
       {entries.map((entry) => {
         const isExpanded = editingEntryId === entry.id;
-        const languageLabel = entryLanguageLabel(entry, targetLanguage, locale);
+        const languageLabel = entryLanguageLabel(
+          entry,
+          targetLanguage,
+          languageLabels,
+        );
         const entrySourceLanguage = entry.sourceLanguage ?? sourceLanguage;
         const entryTargetLanguage = entry.targetLanguage ?? targetLanguage;
 
@@ -185,6 +195,7 @@ export function EntryList({
                       sourceLanguage={entrySourceLanguage ?? entryTargetLanguage ?? ""}
                       targetLanguage={entryTargetLanguage ?? entrySourceLanguage ?? ""}
                       learningLanguages={learningLanguages}
+                      languageCatalog={initialLanguages}
                       translateTrigger={translateTrigger}
                       onLanguagesSaved={onLanguagesSaved}
                       onSaved={onEntrySaved}

@@ -13,6 +13,8 @@ import {
   encouragingSubtitleIndex,
   journalGreetingName,
 } from "@/lib/journal/greeting";
+import { getSupportedLanguages } from "@/lib/languages/supported-languages";
+import { buildLanguageLabelMap } from "@/lib/languages/language-label-map";
 import { getDailyPromptForEntry } from "@/lib/prompts/daily-prompt";
 import {
   getOrCreateJournalEntryForDate,
@@ -36,6 +38,8 @@ export default async function JournalPage({
   const { edit: initialEditEntryId } = await searchParams;
   const t = await getTranslations("journal");
   const preview = await isAccountPreviewMode();
+  const supportedLanguages = await getSupportedLanguages();
+  const languageLabels = buildLanguageLabelMap(supportedLanguages);
 
   if (preview) {
     const { source, target } = getDevPreviewLanguagePair();
@@ -44,8 +48,8 @@ export default async function JournalPage({
       getDevPreviewJournalEntries().find(
         (entry) => entry.id === DEV_PREVIEW_ENTRY_ID,
       ) ?? getDevPreviewJournalEntries()[0]!;
-    const pastEntries = getDevPreviewJournalEntries().filter((entry) =>
-      entry.id !== todayEntry.id,
+    const pastEntries = getDevPreviewJournalEntries().filter(
+      (entry) => entry.id !== todayEntry.id,
     );
     const name = journalGreetingName(
       onboarding.displayName,
@@ -63,6 +67,8 @@ export default async function JournalPage({
         sourceLanguage={source}
         targetLanguage={target}
         learningLanguages={onboarding.languages}
+        initialLanguages={supportedLanguages}
+        languageLabels={languageLabels}
         translateTrigger={translateTrigger}
         entryId={todayEntry.id}
         initialTitle={todayEntry.title}
@@ -75,16 +81,20 @@ export default async function JournalPage({
   }
 
   const user = await requireAppSession();
-  const [{ entry: todayEntry, dailyPrompt }, entries, { source, target }, onboarding] =
-    await Promise.all([
-      getOrCreateJournalEntryForDate(user.id, new Date()).then(async (draft) => ({
-        entry: draft.entry,
-        dailyPrompt: await getDailyPromptForEntry(user.id, draft.entry.id),
-      })),
-      listJournalEntries(user.id),
-      getLanguagePair(user.id),
-      getOnboardingState(user.id),
-    ]);
+  const [
+    { entry: todayEntry, dailyPrompt },
+    entries,
+    { source, target },
+    onboarding,
+  ] = await Promise.all([
+    getOrCreateJournalEntryForDate(user.id, new Date()).then(async (draft) => ({
+      entry: draft.entry,
+      dailyPrompt: await getDailyPromptForEntry(user.id, draft.entry.id),
+    })),
+    listJournalEntries(user.id),
+    getLanguagePair(user.id),
+    getOnboardingState(user.id),
+  ]);
 
   const pastEntries = entries.filter((entry) =>
     isSavedJournalEntry(entry, todayEntry.id),
@@ -103,6 +113,8 @@ export default async function JournalPage({
       sourceLanguage={source}
       targetLanguage={target}
       learningLanguages={onboarding.languages}
+      initialLanguages={supportedLanguages}
+      languageLabels={languageLabels}
       translateTrigger={translateTrigger}
       entryId={todayEntry.id}
       initialTitle={todayEntry.title}

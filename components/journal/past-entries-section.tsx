@@ -11,6 +11,7 @@ import {
   type EntryRow,
 } from "@/components/journal/entry-list";
 import type { UserLanguageEntry } from "@/lib/db/onboarding";
+import type { LanguageLabelMap } from "@/lib/languages/language-label-map";
 import {
   buildPastEntryLanguageTabs,
   filterEntriesByLanguageTab,
@@ -37,6 +38,8 @@ type PastEntriesSectionProps = {
   targetLanguage?: string;
   sourceLanguage?: string;
   learningLanguages?: readonly UserLanguageEntry[];
+  languageLabels?: LanguageLabelMap;
+  initialLanguages?: readonly { code: string; name: string }[];
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
   onEntryUpdated?: (entry: EntryRow) => void;
@@ -108,6 +111,8 @@ export function PastEntriesSection({
   targetLanguage,
   sourceLanguage,
   learningLanguages = [],
+  languageLabels,
+  initialLanguages,
   translateTrigger,
   onLanguagesSaved,
   onEntryUpdated,
@@ -121,7 +126,7 @@ export function PastEntriesSection({
   const locale = useLocale();
   const [activeLanguageTab, setActiveLanguageTab] = useState(() =>
     resolveInitialLanguageTab(
-      buildPastEntryLanguageTabs(entries, learningLanguages, locale),
+      buildPastEntryLanguageTabs(entries, learningLanguages, languageLabels),
       targetLanguage,
     ),
   );
@@ -134,8 +139,8 @@ export function PastEntriesSection({
   const focusRequestRef = useRef<PastEntriesFocusRequest | null>(null);
 
   const languageTabs = useMemo(
-    () => buildPastEntryLanguageTabs(entries, learningLanguages, locale),
-    [entries, learningLanguages, locale],
+    () => buildPastEntryLanguageTabs(entries, learningLanguages, languageLabels),
+    [entries, languageLabels, learningLanguages],
   );
 
   const filteredEntries = useMemo(
@@ -525,6 +530,8 @@ export function PastEntriesSection({
               targetLanguage={activeLanguageTab}
               sourceLanguage={sourceLanguage}
               learningLanguages={learningLanguages}
+              languageLabels={languageLabels}
+              initialLanguages={initialLanguages}
               translateTrigger={translateTrigger}
               onLanguagesSaved={onLanguagesSaved}
               editingEntryId={editingEntryId}

@@ -48,11 +48,54 @@ describe("past entries language tabs", () => {
         { languageCode: "fr", level: "intermediate" },
         { languageCode: "es", level: "beginner" },
       ],
-      "en",
+      { fr: "French", es: "Spanish" },
     );
 
     expect(tabs.map((tab) => tab.code)).toEqual(["fr", "es"]);
+    expect(tabs[0]?.label).toBe("French");
+    expect(tabs[1]?.label).toBe("Spanish");
     expect(tabs[0]?.count).toBe(1);
     expect(tabs[1]?.count).toBe(1);
+  });
+
+  it("uses the server label map for rare language codes", () => {
+    const tabs = buildPastEntryLanguageTabs(
+      [
+        {
+          id: "3",
+          title: "Batak",
+          targetLanguage: "btx",
+          entryDate: "2026-01-03",
+          createdAt: "2026-01-03",
+          updatedAt: "2026-01-03",
+          body: "hello",
+          translations: [],
+        },
+      ],
+      [{ languageCode: "btx", level: "beginner" }],
+      { btx: "Batak Karo" },
+    );
+
+    expect(tabs).toEqual([{ code: "btx", label: "Batak Karo", count: 1 }]);
+  });
+
+  it("falls back to the code when the label map has no entry", () => {
+    const tabs = buildPastEntryLanguageTabs(
+      [
+        {
+          id: "3",
+          title: "Batak",
+          targetLanguage: "btx",
+          entryDate: "2026-01-03",
+          createdAt: "2026-01-03",
+          updatedAt: "2026-01-03",
+          body: "hello",
+          translations: [],
+        },
+      ],
+      [{ languageCode: "btx", level: "beginner" }],
+    );
+
+    expect(tabs[0]?.label).toBe("btx");
   });
 });

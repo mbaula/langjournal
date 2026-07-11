@@ -1,6 +1,9 @@
 import type { EntryRow } from "@/components/journal/entry-list";
 import type { UserLanguageEntry } from "@/lib/db/onboarding";
-import { getLocalizedLanguageDisplayName } from "@/lib/i18n/language-display-name";
+import {
+  labelFromLanguageMap,
+  type LanguageLabelMap,
+} from "@/lib/languages/language-label-map";
 
 export type PastEntryLanguageTab = {
   code: string;
@@ -32,10 +35,14 @@ export function filterEntriesByLanguageTab(
   return entries.filter((entry) => entryMatchesLanguageTab(entry, tabCode));
 }
 
+/**
+ * Build past-entry language tabs. Labels come only from `labelByCode` (server
+ * snapshot) so SSR and client hydration always match.
+ */
 export function buildPastEntryLanguageTabs(
   entries: readonly EntryRow[],
   learningLanguages: readonly UserLanguageEntry[],
-  locale: string,
+  labelByCode?: LanguageLabelMap,
 ): PastEntryLanguageTab[] {
   const codes: string[] = [];
   const seen = new Set<string>();
@@ -60,7 +67,7 @@ export function buildPastEntryLanguageTabs(
 
   return codes.map((code) => ({
     code,
-    label: getLocalizedLanguageDisplayName(code, locale),
+    label: labelFromLanguageMap(code, labelByCode),
     count: filterEntriesByLanguageTab([...entries], code).length,
   }));
 }

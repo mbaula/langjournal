@@ -43,6 +43,7 @@ type PastEntryEditorProps = {
   sourceLanguage: string;
   targetLanguage: string;
   learningLanguages?: readonly UserLanguageEntry[];
+  languageCatalog?: readonly { code: string; name: string }[];
   translateTrigger?: TranslateTrigger;
   onLanguagesSaved?: (source: string, target: string) => void;
   onSaved: (entry: EntryRow) => void;
@@ -54,6 +55,7 @@ export function PastEntryEditor({
   sourceLanguage,
   targetLanguage,
   learningLanguages = [],
+  languageCatalog,
   translateTrigger,
   onLanguagesSaved,
   onSaved,
@@ -124,6 +126,7 @@ export function PastEntryEditor({
           source={sourceLanguage}
           target={targetLanguage}
           learningLanguages={learningLanguages}
+          initialLanguages={languageCatalog}
           translateTrigger={translateTrigger}
           onLanguagesSaved={onLanguagesSaved}
         />

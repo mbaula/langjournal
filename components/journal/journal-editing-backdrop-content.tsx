@@ -29,7 +29,6 @@ function splitPlainWithHighlight(
   absBase: number,
   highlight: SlashRange,
   translationLoading: TranslationLoadingState | null,
-  editTranslateHint: string | null,
   keyCounter: { n: number },
   hintAnchorRef?: RefObject<HTMLSpanElement | null>,
 ): ReactNode[] {
@@ -56,10 +55,17 @@ function splitPlainWithHighlight(
     translationLoading.end === hi;
 
   const atHighlightEnd = hi === highlight.end;
+  // Anchor whenever the caret highlight ends here so the floating hint can
+  // position on the first `//` frame (not only after the next keystroke).
+  const attachHintAnchor = Boolean(atHighlightEnd && hintAnchorRef);
 
-  if (atHighlightEnd && editTranslateHint) {
+  if (attachHintAnchor) {
     out.push(
-      <span key={keyCounter.n++} ref={hintAnchorRef} className="inline">
+      <span
+        key={`slash-hint-anchor-${highlight.start}-${highlight.end}`}
+        ref={hintAnchorRef}
+        className="inline"
+      >
         <mark className={journalEditorTranslationHighlightClassName}>
           {segText.slice(i, j)}
           {showSpinner ? <TranslationSpinner /> : null}
@@ -88,7 +94,6 @@ export function JournalEditingBackdropContent({
   translations,
   editHighlight,
   translationLoading = null,
-  editTranslateHint = null,
   translatingLabel = "Translating…",
   hintAnchorRef,
 }: {
@@ -96,7 +101,6 @@ export function JournalEditingBackdropContent({
   translations: InlineTranslation[];
   editHighlight: SlashRange;
   translationLoading?: TranslationLoadingState | null;
-  editTranslateHint?: string | null;
   translatingLabel?: string;
   hintAnchorRef?: RefObject<HTMLSpanElement | null>;
 }) {
@@ -134,7 +138,6 @@ export function JournalEditingBackdropContent({
               absBase,
               editHighlight,
               translationLoading,
-              editTranslateHint,
               keyCounter,
               hintAnchorRef,
             ),
