@@ -30,13 +30,13 @@
     },
     "featuresDetail": {
       "writeTitle": "Viết",
-      "writeDescription": "Luyện viết với <strong>gợi ý phù hợp trình độ</strong>, từ A1 đến C2.",
+      "writeDescription": "Luyện viết với <strong>các chủ đề được thiết kế riêng</strong> cho trình độ của bạn, từ A1 đến C2.",
       "translateTitle": "Dịch",
-      "translateDescription": "Không còn mở hàng tá ứng dụng. <strong>Tìm từ bạn cần</strong> ngay trong Folio.",
+      "translateDescription": "Không cần mở hàng loạt ứng dụng nữa. <strong>Tra cứu từ vựng</strong> ngay trong Folio.",
       "practiceTitle": "Luyện tập",
-      "practiceDescription": "Folio tự động lưu <strong>từ mới vào thẻ ghi nhớ</strong> để bạn luyện tập!",
+      "practiceDescription": "Folio tự động lưu các <strong>từ mới vào thẻ ghi nhớ (flashcard)</strong> để bạn dễ dàng ôn tập!",
       "trackTitle": "Theo dõi",
-      "trackDescription": "Theo dõi chuỗi ngày, từ vựng và <strong>sự tiến bộ của bạn</strong> theo thời gian."
+      "trackDescription": "Theo dõi streak, số lượng từ vựng và <strong>sự tiến bộ của bạn</strong> theo thời gian."
     },
     "languagesShowcase": {
       "title": "Hỗ trợ hơn 160+ ngôn ngữ"
@@ -47,16 +47,16 @@
       "problemLabel": "Vấn đề",
       "solutionLabel": "Giải pháp",
       "problems": {
-        "0": "Phải chuyển app giữa câu chỉ để dịch",
-        "1": "Danh sách từ vựng mở ra rồi… không bao giờ xem lại",
-        "2": "App quá dễ hoặc khó đến mức choáng ngợp",
-        "3": "Tự học mà khó theo dõi tiến độ của bạn"
+        "0": "Phải chuyển đổi ứng dụng ngay giữa câu để tra nghĩa",
+        "1": "Những danh sách từ vựng mà bạn chẳng bao giờ mở lại",
+        "2": "Các ứng dụng hoc tiếng quá dễ hoặc quá khó",
+        "3": "Khó theo dõi tiến độ khi tự học"
       },
       "solutions": {
-        "0": "Dịch ngay giữa câu bằng lệnh //",
-        "1": "Từ được lưu vào thẻ ghi nhớ tự động",
-        "2": "Gợi ý viết vừa đủ thử thách — không quá dễ, không quá khó",
-        "3": "Streak và tiến độ được theo dõi khi bạn viết"
+        "0": "Dịch ngay khi đang viết dở câu với lệnh //",
+        "1": "Từ vựng tự động được lưu vào thẻ ghi nhớ",
+        "2": "Các gợi ý hàng ngày với độ thử thách vừa phải",
+        "3": "Theo dõi streak và tiến độ trong quá trình viết"
       }
     },
     "users": {

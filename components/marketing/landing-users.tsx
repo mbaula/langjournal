@@ -88,8 +88,10 @@ function ScenarioBubble({
     <div
       key={stepKey}
       className={cn(
-        "landing-scenario-enter mx-auto flex w-full max-w-[min(100%,16.5rem)] flex-col sm:max-w-[17.5rem]",
-        side === "left" ? "items-start" : "items-end text-right",
+        "landing-scenario-enter flex w-full max-w-[min(100%,16.5rem)] flex-col sm:max-w-[17.5rem]",
+        side === "left"
+          ? "mx-auto items-start lg:mr-0 lg:ml-auto"
+          : "mx-auto items-end text-right lg:mr-auto lg:ml-0",
       )}
     >
       <p className="mb-2.5 font-sans text-[12px] font-medium lowercase tracking-normal text-[#2C2C2C]/40">
@@ -207,17 +209,17 @@ export function LandingUsers() {
         <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-none bg-marketing-hero-panel">
           <div className="flex flex-1 items-center px-5 py-10 sm:px-8 sm:py-12 md:px-10 md:py-14 lg:px-12 lg:py-16">
             <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-x-8 xl:gap-10">
+              {/*
+                Keep both side columns in the lg grid even when empty.
+                Hiding with display:none collapses tracks and shifts the center copy.
+              */}
               <div
                 className={cn(
-                  "order-2 lg:order-1 lg:pl-11 xl:pl-12",
-                  activeScenario?.side !== "left" && "hidden",
+                  "order-2 lg:order-1 lg:col-start-1 lg:pl-11 xl:pl-12",
+                  activeScenario?.side !== "left" && "hidden lg:block",
                 )}
               >
-                <div
-                  className={cn(
-                    "relative flex w-full items-center justify-center lg:min-h-[10rem] lg:justify-start xl:min-h-[11rem]",
-                  )}
-                >
+                <div className="relative flex w-full items-center justify-center lg:min-h-[10rem] xl:min-h-[11rem]">
                   {activeScenario?.side === "left" ? (
                     <ScenarioBubble
                       stepKey={step}
@@ -228,7 +230,7 @@ export function LandingUsers() {
                 </div>
               </div>
 
-              <LandingReveal className="order-1 mx-auto flex w-full max-w-[18rem] min-w-0 flex-col items-center text-center sm:max-w-[20rem] lg:order-2 lg:justify-self-center">
+              <LandingReveal className="order-1 mx-auto flex w-full max-w-[18rem] min-w-0 flex-col items-center text-center sm:max-w-[20rem] lg:order-2 lg:col-start-2 lg:justify-self-center">
                 <p className="font-sans text-[15px] leading-relaxed text-[#2C2C2C]/60 sm:text-base">
                   {t("intro")}
                 </p>
@@ -246,15 +248,11 @@ export function LandingUsers() {
 
               <div
                 className={cn(
-                  "order-3 lg:pr-11 xl:pr-12",
-                  activeScenario?.side !== "right" && "hidden",
+                  "order-3 lg:col-start-3 lg:pr-11 xl:pr-12",
+                  activeScenario?.side !== "right" && "hidden lg:block",
                 )}
               >
-                <div
-                  className={cn(
-                    "relative flex w-full items-center justify-center lg:min-h-[10rem] lg:justify-end xl:min-h-[11rem]",
-                  )}
-                >
+                <div className="relative flex w-full items-center justify-center lg:min-h-[10rem] xl:min-h-[11rem]">
                   {activeScenario?.side === "right" ? (
                     <ScenarioBubble
                       stepKey={step}
